@@ -1,0 +1,207 @@
+import Phaser from 'phaser';
+import { FONT, GAME_WIDTH, GAME_HEIGHT, TEX, WEAPON_LABEL } from '../config/constants.js';
+
+const STATUS_LABEL = {
+  drunk: 'UBRIACO',
+  frozen: 'CONGELATO',
+  cold: 'RAFFREDDATO',
+  asleep: 'ADDORMENTATO',
+  stuck: 'BLOCCATO',
+  promotion: 'PROMOZIONE',
+  raise: 'AUMENTO x2',
+  shield: 'AUTO AZIENDALE'
+};
+
+const STATUS_COLOR = {
+  drunk: '#ffe680', frozen: '#9be7ff', cold: '#bfefff', asleep: '#c0a0ff', stuck: '#ff9f40',
+  promotion: '#ffd800', raise: '#7dff7d', shield: '#7fd4ff'
+};
+
+const WEAPON_TEX = {
+  email: TEX.P_EMAIL, teams: TEX.P_TEAMS, coffee: TEX.P_COFFEE, clock: TEX.P_CLOCK, www: TEX.P_WWW
+};
+
+const textStyle = (size, color = '#ffffff') => ({
+  fontFamily: FONT, fontSize: `${size}px`, fontStyle: 'bold', color, stroke: '#000000', strokeThickness: 3
+});
+
+// 8-bit HUD drawn in UIScene (fixed, unaffected by the game camera).
+export default class HUD {
+  constructor(scene, onWeaponTap) {
+    this.scene = scene;
+    this.root = scene.add.container(0, 0).setDepth(10);
+    this.time = 0;
+
+    // Top strip background
+    const strip = scene.add.rectangle(0, 0, GAME_WIDTH, 44, 0x000000, 0.85).setOrigin(0, 0);
+    this.root.add(strip);
+
+    // Mental health bar
+    this.root.add(scene.add.image(12, 12, TEX.UI_BRAIN).setScale(1.2));
+    this.root.add(scene.add.text(22, 4, 'SALUTE MENTALE', textStyle(9, '#9dffb0')));
+    // Stress bar
+    this.root.add(scene.add.image(12, 32, TEX.UI_STRESS).setScale(1.2));
+    this.root.add(scene.add.text(22, 24, 'STRESS', textStyle(9, '#ffb0b0')));
+    this.bars = scene.add.graphics();
+    this.root.add(this.bars);
+    this.hpText = scene.add.text(196, 9, '', textStyle(10)).setOrigin(0, 0.5);
+    this.stressText = scene.add.text(196, 29, '', textStyle(10)).setOrigin(0, 0.5);
+    this.panicText = scene.add.text(232, 29, 'PANICO!', textStyle(11, '#ff3030')).setOrigin(0, 0.5).setVisible(false);
+    this.root.add([this.hpText, this.stressText, this.panicText]);
+
+    // Level name & timer (center)
+    this.levelText = scene.add.text(GAME_WIDTH / 2, 4, '', textStyle(10, '#ffd800')).setOrigin(0.5, 0);
+    this.root.add(scene.add.image(GAME_WIDTH / 2 - 26, 30, TEX.UI_CLOCK));
+    this.timerText = scene.add.text(GAME_WIDTH / 2 - 16, 30, '', textStyle(13)).setOrigin(0, 0.5);
+    this.root.add([this.levelText, this.timerText]);
+
+    // Counters (right)
+    const rx = 520;
+    this.root.add(scene.add.image(rx, 12, TEX.UI_EURO));
+    this.euroText = scene.add.text(rx + 9, 12, '', textStyle(11, '#ffe066')).setOrigin(0, 0.5);
+    this.root.add(scene.add.image(rx, 32, TEX.UI_TICKET));
+    this.ticketText = scene.add.text(rx + 9, 32, '', textStyle(11, '#ffffff')).setOrigin(0, 0.5);
+    this.root.add(scene.add.image(rx + 70, 12, TEX.UI_VACATION));
+    this.vacText = scene.add.text(rx + 79, 12, '', textStyle(11, '#7dffd4')).setOrigin(0, 0.5);
+    this.root.add(scene.add.text(rx + 62, 26, 'FERIE', textStyle(8, '#7dffd4')));
+    this.root.add([this.euroText, this.ticketText, this.vacText]);
+
+    // Weapon / device box (tap to switch)
+    const wx = 690;
+    this.weaponBox = scene.add.rectangle(wx, 22, 100, 38, 0x1a1a40, 0.85).setStrokeStyle(2, 0x7fffd4);
+    this.deviceIcon = scene.add.image(wx - 34, 22, TEX.LAPTOP);
+    this.weaponIcon = scene.add.image(wx - 12, 22, TEX.P_EMAIL).setScale(1.4);
+    this.weaponText = scene.add.text(wx + 2, 22, '', textStyle(8, '#7fffd4')).setOrigin(0, 0.5);
+    this.noDeviceText = scene.add.text(wx, 22, 'NESSUN\nDISPOSITIVO', { ...textStyle(8, '#888888'), align: 'center' })
+      .setOrigin(0.5);
+    this.root.add([this.weaponBox, this.deviceIcon, this.weaponIcon, this.weaponText, this.noDeviceText]);
+    if (onWeaponTap) {
+      this.weaponBox.setInteractive({ useHandCursor: true });
+      this.weaponBox.on('pointerdown', onWeaponTap);
+    }
+
+    // Statuses (left, below strip)
+    this.statusText = scene.add.text(6, 50, '', { ...textStyle(10), lineSpacing: 2 });
+    this.root.add(this.statusText);
+
+    // Boss bar
+    this.bossRoot = scene.add.container(GAME_WIDTH / 2, 62).setVisible(false);
+    this.bossBg = scene.add.rectangle(0, 0, 304, 14, 0x000000, 0.8).setStrokeStyle(2, 0xffffff);
+    this.bossFill = scene.add.rectangle(-150, 0, 300, 10, 0xff3030).setOrigin(0, 0.5);
+    this.bossName = scene.add.text(0, -14, '', textStyle(10, '#ff8080')).setOrigin(0.5);
+    this.bossRoot.add([this.bossBg, this.bossFill, this.bossName]);
+
+    // Fog overlay ("HUD appannato")
+    this.fogGfx = scene.add.graphics().setDepth(20).setAlpha(0);
+    this._drawFog();
+
+    // Center banner
+    this.banner = scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40, '', {
+      ...textStyle(30), strokeThickness: 6, align: 'center'
+    }).setOrigin(0.5).setDepth(30).setVisible(false);
+  }
+
+  _drawFog() {
+    const g = this.fogGfx;
+    g.clear();
+    g.fillStyle(0xdde6ee, 0.82);
+    g.fillRect(0, 0, GAME_WIDTH, 70);
+    // Condensation blobs
+    for (let i = 0; i < 60; i++) {
+      g.fillStyle(0xffffff, Phaser.Math.FloatBetween(0.2, 0.6));
+      const s = Phaser.Math.Between(4, 14);
+      g.fillRect(Phaser.Math.Between(0, GAME_WIDTH), Phaser.Math.Between(0, 66), s, s);
+    }
+  }
+
+  update(data, delta) {
+    if (!data) return;
+    this.time += delta || 16;
+    const hp = Phaser.Math.Clamp(data.hp ?? 100, 0, 100);
+    const stress = Phaser.Math.Clamp(data.stress ?? 0, 0, 100);
+    const panic = stress >= 100;
+
+    const g = this.bars;
+    g.clear();
+    // HP
+    g.fillStyle(0x000000, 1).fillRect(100, 3, 92, 12);
+    g.fillStyle(0xffffff, 1).fillRect(101, 4, 90, 10);
+    g.fillStyle(0x222222, 1).fillRect(102, 5, 88, 8);
+    const hpCol = hp > 50 ? 0x3ce05a : hp > 25 ? 0xffd800 : 0xff3030;
+    g.fillStyle(hpCol, 1).fillRect(102, 5, Math.round(88 * hp / 100), 8);
+    // Stress
+    g.fillStyle(0x000000, 1).fillRect(100, 23, 92, 12);
+    g.fillStyle(0xffffff, 1).fillRect(101, 24, 90, 10);
+    g.fillStyle(0x222222, 1).fillRect(102, 25, 88, 8);
+    const pulse = panic && Math.floor(this.time / 150) % 2 === 0;
+    const stressCol = panic ? (pulse ? 0xff0000 : 0x880000) : stress > 70 ? 0xff6a00 : 0xff9fd0;
+    g.fillStyle(stressCol, 1).fillRect(102, 25, Math.round(88 * stress / 100), 8);
+    // pixel segments
+    g.fillStyle(0x000000, 0.35);
+    for (let x = 110; x < 190; x += 9) { g.fillRect(x, 5, 1, 8); g.fillRect(x, 25, 1, 8); }
+
+    this.hpText.setText(`${Math.round(hp)}%`);
+    this.stressText.setText(`${Math.round(stress)}%`);
+    this.panicText.setVisible(panic && pulse);
+
+    this.levelText.setText(`${data.levelId || ''}  ${data.levelName || ''}`.trim());
+    if (data.timeLeft !== undefined && data.timeLeft !== null) {
+      const t = Math.max(0, Math.ceil(data.timeLeft));
+      this.timerText.setText(`${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`);
+      this.timerText.setColor(t <= 30 && Math.floor(this.time / 250) % 2 ? '#ff4040' : '#ffffff');
+    } else {
+      this.timerText.setText('--:--');
+    }
+
+    this.euroText.setText(`${data.euro ?? 0}`);
+    this.ticketText.setText(`${data.tickets ?? 0}`);
+    this.vacText.setText(`x${data.vacationDays ?? 0}`);
+
+    const hasDevice = !!data.device;
+    this.deviceIcon.setVisible(hasDevice);
+    this.weaponIcon.setVisible(hasDevice);
+    this.weaponText.setVisible(hasDevice);
+    this.noDeviceText.setVisible(!hasDevice);
+    if (hasDevice) {
+      this.deviceIcon.setTexture(data.device === 'smartphone' ? TEX.SMARTPHONE : TEX.LAPTOP);
+      this.weaponIcon.setTexture(WEAPON_TEX[data.weapon] || TEX.P_EMAIL);
+      this.weaponText.setText(WEAPON_LABEL[data.weapon] || '');
+    }
+
+    const lines = (data.statuses || []).map((s) => {
+      const label = STATUS_LABEL[s.name] || String(s.name).toUpperCase();
+      return s.remaining === Infinity ? label : `${label} ${Math.ceil(s.remaining / 1000)}s`;
+    });
+    this.statusText.setText(lines.join('\n'));
+    const first = (data.statuses || [])[0];
+    this.statusText.setColor(first ? (STATUS_COLOR[first.name] || '#ffffff') : '#ffffff');
+  }
+
+  fog(ms) {
+    this._drawFog();
+    this.scene.tweens.killTweensOf(this.fogGfx);
+    this.fogGfx.setAlpha(1);
+    this.scene.tweens.add({ targets: this.fogGfx, alpha: 0, delay: ms * 0.6, duration: ms * 0.4 });
+  }
+
+  message(text, color = '#ffffff', ms = 2000) {
+    const b = this.banner;
+    this.scene.tweens.killTweensOf(b);
+    b.setText(text).setColor(color).setVisible(true).setAlpha(1).setScale(0.3);
+    this.scene.tweens.add({ targets: b, scale: 1, duration: 250, ease: 'Back.Out' });
+    this.scene.tweens.add({
+      targets: b, alpha: 0, delay: Math.max(300, ms - 400), duration: 400,
+      onComplete: () => b.setVisible(false)
+    });
+  }
+
+  bossBar(name, ratio) {
+    if (ratio === null || ratio === undefined) {
+      this.bossRoot.setVisible(false);
+      return;
+    }
+    this.bossRoot.setVisible(true);
+    this.bossName.setText(name || 'BOSS');
+    this.bossFill.width = Math.round(300 * Phaser.Math.Clamp(ratio, 0, 1));
+  }
+}
