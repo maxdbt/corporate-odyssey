@@ -27,7 +27,7 @@ function ensureBottleTextures(scene) {
   g.destroy();
 }
 
-// Environmental areas: heat, cold, wind, ice, water, puddle (spumante), crowd (canteen floor), ladder.
+// Environmental areas: heat, cold, wind, ice, water, puddle (spumante), wet (canteen floor), ladder.
 // Each frame they write into player.env (only ever raising flags, so enemies/hazards can also set them).
 export default class Zones {
   constructor(scene, defs = []) {
@@ -35,7 +35,6 @@ export default class Zones {
     this.zones = [];
     this.heatImmuneUntil = 0;
     this.puddleCooldownUntil = 0;
-    this.crowdWarned = false;
     defs.forEach((d) => this.add(d));
   }
 
@@ -107,12 +106,17 @@ export default class Zones {
         this.createSpumanteScene(x, y + h, w);
         break;
       }
-      case 'crowd': {
-        const crowd = s.add.particles(0, 0, TEX.FX_PX, {
-          x: { min: 0, max: 800 }, y: { min: y + 10, max: y + 40 },
-          speedY: { min: -30, max: 0 }, lifespan: 500, frequency: 200, tint: 0xff4444
-        });
-        pinToView(crowd, 0, 0, 0, 1).setDepth(DEPTH.FX).setVisible(false);
+      case 'wet': {
+        // Freshly mopped canteen floor: a wet sheen, sparkles and a yellow sign at each end.
+        s.add.rectangle(x, y + h - 4, w, 4, 0x9fdcff, 0.55).setOrigin(0).setDepth(DEPTH.DECOR + 1);
+        s.add.particles(0, 0, TEX.FX_PX, {
+          x: { min: x, max: x + w }, y: y + h - 3, speedY: { min: -12, max: -4 },
+          lifespan: 600, frequency: 140, tint: 0xffffff, alpha: { start: 1, end: 0 }
+        }).setDepth(DEPTH.DECOR + 1);
+        [x + 6, x + w - 6].forEach((sx) => s.add.image(sx, y + h, TEX.WET_SIGN).setOrigin(0.5, 1).setDepth(DEPTH.DECOR + 2));
+        s.add.text(x + w / 2, y + h - 18, 'PAVIMENTO BAGNATO', {
+          fontFamily: 'monospace', fontSize: '8px', fontStyle: 'bold', color: '#ffe066', stroke: '#000', strokeThickness: 3
+        }).setOrigin(0.5).setDepth(DEPTH.DECOR + 2).setAlpha(0.85);
         break;
       }
       default:
@@ -167,7 +171,7 @@ export default class Zones {
     for (const z of this.zones) {
       let inside;
       if (z.type === 'wind') inside = z.rect.contains(px, py);
-      else if (z.type === 'ice' || z.type === 'puddle' || z.type === 'crowd') inside = z.rect.contains(px, feet - 1);
+      else if (z.type === 'ice' || z.type === 'puddle' || z.type === 'wet') inside = z.rect.contains(px, feet - 1);
       else inside = z.rect.contains(px, py);
       const entered = inside && !z.inside;
       z.inside = inside;
@@ -194,6 +198,7 @@ export default class Zones {
           env.windX = z.force ?? -120;
           break;
         case 'ice':
+        case 'wet':
           if (player.body.blocked.down || player.body.touching.down) env.ice = true;
           break;
         case 'water':
@@ -209,16 +214,6 @@ export default class Zones {
             this.puddleCooldownUntil = time + 6000;
             audio.sfx('splash');
             this.scene.ui?.message?.('HIC! SPUMANTE!', '#fff2a0', 1200);
-          }
-          break;
-        case 'crowd':
-          GameState.addHp(-30 * dt);
-          GameState.addStress(12 * dt);
-          this.scene.cameras.main.shake(60, 0.003);
-          if (!this.crowdWarned) {
-            this.crowdWarned = true;
-            this.scene.ui?.message?.('TRAVOLTO DALLA CALCA!\nTORNA SULLE TESTE!', '#ff6666', 1500);
-            this.scene.time.delayedCall(3000, () => { this.crowdWarned = false; });
           }
           break;
         default:

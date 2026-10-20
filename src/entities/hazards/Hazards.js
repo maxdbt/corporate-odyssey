@@ -3,7 +3,6 @@ import { TEX, DEPTH, FONT } from '../../config/constants.js';
 import { GameState } from '../../state/GameState.js';
 import { audio } from '../../systems/Audio8bit.js';
 import EnemyProjectile from '../enemies/EnemyProjectile.js';
-import { Cart } from '../enemies/WorldEnemies.js';
 import { floatText } from '../enemies/fx.js';
 
 class Hazard {
@@ -96,20 +95,3 @@ export class TeamsMeteor extends Hazard {
     });
   }
 }
-
-// Spawns cleaning carts at the right edge of the camera.
-export class CartSpawner extends Hazard {
-  constructor(scene, props = {}) {
-    super(scene, { interval: 2600, ...props });
-    this.surfaceY = props.surfaceY ?? 400;
-    this.speed = props.speed ?? 220;
-  }
-
-  spawn() {
-    const view = this.scene.cameras.main.worldView;
-    const x = view.right + 50;
-    floatText(this.scene, view.right - 30, this.surfaceY - 70, '<< CARRELLO! SCIVOLA!', '#ffff60', 9, 900);
-    this.track(new Cart(this.scene, x, this.surfaceY, { speed: this.speed }));
-  }
-}
-

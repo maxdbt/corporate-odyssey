@@ -1,10 +1,10 @@
 // Single entry point used by GameScene/level data to spawn enemies and hazard controllers.
 import { Talker, ConfCall, ClientHell, Minute, Bug, Party, TeamsIcon } from './enemies/OfficeEnemies.js';
-import { Guardian, Shark, Mine, Copier, Cabinet, Cook, Cart, Stalactite, Cactus, Mirage } from './enemies/WorldEnemies.js';
-import Waterella from './enemies/Waterella.js';
+import { Guardian, Shark, Mine, Copier, Cabinet, Cook, Stalactite, Cactus, Mirage } from './enemies/WorldEnemies.js';
+import { Chef, TeamsCall, Moocher, Chief } from './enemies/CanteenEnemies.js';
 import BossClient from './bosses/BossClient.js';
 import BossCEO from './bosses/BossCEO.js';
-import { MailRain, TeamsMeteor, CartSpawner } from './hazards/Hazards.js';
+import { MailRain, TeamsMeteor } from './hazards/Hazards.js';
 
 const ENEMIES = {
   talker: Talker,
@@ -13,7 +13,6 @@ const ENEMIES = {
   minute: Minute,
   bug: Bug,
   teamsicon: TeamsIcon,
-  waterella: Waterella,
   party: Party,
   guardian: Guardian,
   shark: Shark,
@@ -21,7 +20,10 @@ const ENEMIES = {
   copier: Copier,
   cabinet: Cabinet,
   cook: Cook,
-  cart: Cart,
+  chef: Chef,
+  teamscall: TeamsCall,
+  moocher: Moocher,
+  chief: Chief,
   stalactite: Stalactite,
   cactus: Cactus,
   mirage: Mirage,
@@ -31,8 +33,7 @@ const ENEMIES = {
 
 const HAZARDS = {
   mailrain: MailRain,
-  teamsmeteor: TeamsMeteor,
-  cartspawner: CartSpawner
+  teamsmeteor: TeamsMeteor
 };
 
 export const ENEMY_TYPES = Object.keys(ENEMIES);

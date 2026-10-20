@@ -47,7 +47,7 @@ Launched by GameScene (`this.scene.launch('UIScene')`), stopped by GameScene on 
 controls above the game camera (so camera rotation/shake never affects them). Public methods MUST be safe to
 call before `create()` has run (guard internally):
 - `updateHud(data)` each frame, data = `{ hp, stress, euro, tickets, vacationDays, device, weapon, timeLeft (s),
-  levelId, levelName, statuses: [{ name, remaining (ms|Infinity) }] }`
+  levelId, levelName, statuses: [{ name, remaining (ms|Infinity) }], meal: { primo, secondo, contorno, dolce } | null }`
 - `fog(ms)` — HUD gets blurred/fogged ("HUD appannato").
 - `message(text, color = '#ffffff', ms = 2000)` — big centered 8-bit banner.
 - `bossBar(name, ratio)` — show/update boss HP bar; `ratio === null` hides it.
@@ -120,10 +120,6 @@ Enemy types & props:
 - `minute` "Ti rubo solo un minuto": clock that charges very fast in a straight line when player in sight
   (`range` default 260). Stompable.
 - `bug` Bug di sistema: small, totally random jittery movement on platforms (random hops/direction). Stompable.
-- `waterella` Waterella: hidden until player x > x-200, then emerges and FLOODS: a rising water rectangle
-  (DEPTH.WATER, semi-transparent blue) fills the camera area up to `props.floodTop` (default 200) for
-  `props.duration` (8000) then recedes; while player is in water set `player.env.underwater = true` and drain
-  hp slowly; 3 stomps/hits to defeat (defeating her drains the water). Not a boss.
 - `party` Collega festaiolo (1-1): stationary dancing, throws bouncing panettone slices; contact → stress +20,
   `scene.scene.get('UIScene').fog(3000)`. Stompable.
 - `guardian` Guardiano del Budget: armored tuxedo, patrols `props.patrol` px, hp 3, stomp deals 1.
@@ -134,8 +130,14 @@ Enemy types & props:
 - `cabinet` Armadio d'archivio: stationary, harmless on contact; drops a falling `folder` when the player is
   within 70 px horizontally (cooldown).
 - `cook` Cuoco arrabbiato: throws plastic trays in arcs toward the player. props `{ dir }`.
-- `cart` Carrello delle pulizie: moves LEFT at `props.speed` (220) along a surface (y = surface), no gravity.
-  Hitbox spans from surface-60 to surface-16: player must slide (slide body 14 px tall) under it. Not stompable.
+- Canteen (2-1, `src/entities/enemies/CanteenEnemies.js`, need `scene.canteen` = `src/systems/Canteen.js`):
+  - `chef` stands on a counter and throws dishes / Teams icons at the player. props `{ rate, mix: { good, hot,
+    spoiled, teams, ticket } }` (weights). Invulnerable, harmless on contact.
+  - `teamscall` Teams icon thrown by a chef; hops like `teamsicon` once landed. Contact → `canteen.teamsCall()`:
+    call window in the HUD, `stuck` 5 s, stress +20. Stompable.
+  - `moocher` colleague who runs to dishes lying on the floor and eats them. Stompable.
+  - `chief` the boss: patrols `props.patrol` px; seeing the player on his floor in front of him (or touching
+    him) → stress +15 (4 s cooldown). Invulnerable; players avoid him on the tables.
 - `stalactite` Stalattite-scadenza: x,y = ceiling attach point; falls when player passes under (|dx| < 40).
 - `cactus` Cactus-faldone: static, damages on contact. `mirage` Oasi miraggio: harmless oasis that turns into
   a pile of worksheets (`PAPERPILE`) when player within 80 px, stress +10 once, then damages on contact.
@@ -153,8 +155,6 @@ Hazard controller types:
   player.x in `[from, to]`, every `interval` ms (900).
 - `teamsmeteor` Loghi Teams giganti come meteoriti (with a short warning shadow) while player.x in `[from, to]`;
   hit → `player.applyStatus('asleep', 3000)` + hp -5.
-- `cartspawner` spawns `cart` at the right edge of the camera every `interval` ms while player.x in `[from, to]`,
-  props `{ surfaceY, speed }`.
 
 Enemy projectiles: class(es) added to `scene.enemyBullets` (then configure body). Implement
 `onHitPlayer(player)` (default takeDamage then destroy) and optional `onHitWall()`.

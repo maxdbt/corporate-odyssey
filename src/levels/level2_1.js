@@ -1,59 +1,64 @@
 import { TEX } from '../config/constants.js';
-import { row, arc } from './helpers.js';
+import { row, arc, FLOOR } from './helpers.js';
 
-const FLOOR1 = 418;     // 1-tile canteen floor
-const HEADS = 374;      // top of the queue heads (28x44 people standing on the floor)
+const TABLE = FLOOR - 34;    // top of a canteen table
+const COUNTER = FLOOR - 42;  // top of a self-service counter (where the cooks stand)
 
-const cookBlocks = [900, 1700, 2600, 3400, 4300, 5100];
+// Cook stations: x, ms between throws, what they throw (weights).
+const CHEFS = [
+  [900, 1500, { good: 6, hot: 3, ticket: 1 }],
+  [2400, 1250, { good: 5, hot: 2, spoiled: 3, teams: 2, ticket: 1 }],
+  [3750, 950, { good: 5, hot: 3, spoiled: 3, teams: 3, ticket: 1 }]
+];
 
-// 2-1 La Mensa: forced scrolling over an endless queue of heads, trays, cleaning carts, golden dish.
+// 2-1 La Pausa Pranzo: catch a full meal (primo, secondo, contorno, dolce) thrown by the cooks,
+// dodge spoiled and burning dishes, Teams calls, the lunch thief and the boss, then pay at the cassa.
 export default {
   id: '2-1',
   theme: 'canteen',
   groundTex: TEX.T_CANTEEN,
-  width: 6400,
-  timeLimit: 150,
-  autoscroll: 105,
-  start: [100, HEADS],
-  ground: [[0, 199, 1]],
-  queue: {
-    from: 20,
-    to: 6190,
-    floorY: FLOOR1,
-    gaps: [[700, 760], [1300, 1360], [2100, 2190], [2900, 2960], [3600, 3700], [4500, 4560], [5300, 5400]]
-  },
-  blocks: cookBlocks.map((x) => [x, 290, 64, 16]),
-  zones: [{ type: 'crowd', x: 0, y: 392, w: 6400, h: 58 }],
+  width: 5600,
+  timeLimit: 200,
+  canteen: {},
+  start: [80, FLOOR],
+  ground: [[0, 174, 2]],
+  counters: CHEFS.map(([x]) => [x, FLOOR]),
+  tables: [
+    [330, FLOOR], [560, FLOOR], [690, FLOOR], [1110, FLOOR], [1260, FLOOR],
+    [1560, FLOOR], [1760, FLOOR], [1960, FLOOR], [2160, FLOOR],
+    [2620, FLOOR], [2860, FLOOR], [3200, FLOOR], [3420, FLOOR],
+    [4000, FLOOR], [4150, FLOOR], [4400, FLOOR], [4620, FLOOR], [4840, FLOOR], [5060, FLOOR]
+  ],
+  zones: [{ type: 'wet', x: 3560, y: FLOOR - 14, w: 340, h: 14 }],
   enemies: [
-    ...cookBlocks.map((x) => ['cook', x + 32, 290, { dir: -1 }]),
-    ['confcall', 2000, 200, { range: 200 }],
-    ['confcall', 3800, 200, { range: 200 }],
-    ['bug', 4800, HEADS]
+    ...CHEFS.map(([x, rate, mix]) => ['chef', x, COUNTER, { rate, mix }]),
+    ['chief', 1760, FLOOR, { patrol: 420 }],
+    ['teamsicon', 2950, FLOOR],
+    ['moocher', 3420, FLOOR, { patrol: 120 }],
+    ['moocher', 4060, FLOOR, { patrol: 100 }],
+    ['chief', 4620, FLOOR, { patrol: 520, dir: 1 }]
   ],
-  hazards: [['cartspawner', { from: 500, to: 5900, interval: 3200, surfaceY: HEADS, speed: 230 }]],
   items: [
-    ...row('euro', 300, 340, 6),
-    ...arc('euro', 690, 340, 4, 24, 50),
-    ...row('ticket', 920, 260, 2),
-    ...arc('euro', 1290, 340, 4, 24, 50),
-    ['car', 1500, 330],
-    ...row('euro', 1720, 260, 2),
-    ...row('euro', 1800, 340, 6),
-    ['coffee', 2050, 320],
-    ...arc('euro', 2100, 330, 5, 22, 60),
-    ...row('ticket', 2620, 260, 2),
-    ...arc('euro', 2890, 340, 4, 24, 50),
-    ['promotion', 3100, 320],
-    ...row('euro', 3200, 340, 8),
-    ...arc('euro', 3600, 330, 5, 24, 60),
-    ['coffee', 4000, 320],
-    ...row('euro', 4320, 260, 2),
-    ...arc('euro', 4490, 340, 4, 24, 50),
-    ['raise', 4700, 320],
-    ...row('euro', 4800, 340, 8),
-    ...row('ticket', 5120, 260, 2),
-    ...arc('euro', 5300, 330, 5, 24, 60),
-    ...row('euro', 5600, 340, 10)
+    ...row('euro', 200, FLOOR - 20, 5),
+    ...row('ticket', 300, TABLE - 20, 3),
+    ...row('ticket', 540, TABLE - 20, 3),
+    ...arc('euro', 1150, TABLE - 20, 5, 22, 40),
+    ['coffee', 1400, FLOOR - 24],
+    ...row('euro', 1530, TABLE - 20, 3),
+    ...row('euro', 1730, TABLE - 20, 3),
+    ...row('euro', 1930, TABLE - 20, 3),
+    ...row('ticket', 2130, TABLE - 20, 3),
+    ['vacation', 2750, FLOOR - 20],
+    ...arc('euro', 2840, TABLE - 20, 5, 22, 40),
+    ...row('ticket', 3180, TABLE - 20, 3),
+    ['car', 3300, TABLE - 60],
+    ...row('euro', 3980, TABLE - 20, 3),
+    ['coffee', 4280, FLOOR - 24],
+    ...row('ticket', 4380, TABLE - 20, 3),
+    ['raise', 4620, TABLE - 60],
+    ...row('euro', 4820, TABLE - 20, 3),
+    ...row('ticket', 5040, TABLE - 20, 3)
   ],
-  goal: { type: 'dish', x: 6260, y: FLOOR1 }
+  terminals: [[3050, FLOOR]],
+  goal: { type: 'cassa', x: 5400, y: FLOOR }
 };

@@ -103,15 +103,6 @@ export function generateItems(scene) {
     p.disc(6, 10.5, 3, 0x111111).disc(20, 10.5, 3, 0x111111).r(5, 9, 2, 2, 0x999999).r(19, 9, 2, 2, 0x999999);
   });
 
-  makeTex(scene, TEX.GOLDEN_DISH, 28, 18, (p) => {
-    p.r(2, 12, 24, 4, GOLD_D).r(0, 11, 28, 3, GOLD).r(4, 16, 20, 2, GOLD_D).r(2, 11, 24, 1, GOLD_L);
-    // pasta mound with tomato sauce and basil
-    p.r(6, 5, 16, 6, 0xfff0a0).r(8, 3, 12, 3, 0xfff0a0);
-    for (let x = 7; x < 21; x += 2) p.r(x, 5 + (x % 3), 1, 4, 0xe8c860);
-    p.r(10, 2, 8, 3, 0xd02010).r(13, 0, 3, 2, 0x20a030);
-    p.r(1, 1, 2, 2, 0xffffff).r(24, 3, 2, 2, 0xffffff).r(25, 0, 1, 1, 0xffffff);
-  });
-
   makeTex(scene, TEX.TERMINAL, 24, 26, drawTerminal);
   makeTex(scene, TEX.DOOR_EXIT, 32, 48, drawDoor);
 

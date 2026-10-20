@@ -101,20 +101,6 @@ function platforms(scene) {
   postit(TEX.POSTIT_ORANGE, 0xffb74d, 0xc07820);
   postit(TEX.POSTIT_GREEN, 0xaed581, 0x6a9a3a);
 
-  // Queue people: head on top (walkable), shoulders/back below.
-  const queue = (key, hair, shirt, skin, seed) => makeTex(scene, key, 28, 44, (p) => {
-    p.r(6, 0, 16, 14, hair).r(4, 4, 20, 10, hair).r(6, 0, 16, 2, 0xffffff, 0.15);
-    p.r(4, 12, 4, 6, skin).r(20, 12, 4, 6, skin); // ears/neck
-    p.r(8, 14, 12, 6, skin);
-    p.r(0, 18, 28, 26, shirt).r(0, 18, 28, 2, 0xffffff, 0.2);
-    const r = rng(seed);
-    if (r() > 0.5) p.r(12, 20, 4, 24, 0x000000, 0.2);
-    p.r(2, 30, 3, 14, 0x000000, 0.2).r(23, 30, 3, 14, 0x000000, 0.2);
-  });
-  queue(TEX.QUEUE1, 0x2b1a0e, 0x2a6ad4, 0xf1c27d, 1);
-  queue(TEX.QUEUE2, 0xe0c060, 0xc0392b, 0xf5d0a9, 2);
-  queue(TEX.QUEUE3, 0x6b3a1f, 0x27ae60, 0xc68642, 3);
-
   makeTex(scene, TEX.COUNTER, 96, 56, (p) => {
     p.r(0, 14, 96, 42, 0xa8b0b8).r(0, 14, 96, 4, 0xe0e6ec).r(0, 52, 96, 4, 0x6f7780);
     for (let x = 8; x < 96; x += 24) p.r(x, 22, 16, 26, 0x8f979f).box(x, 22, 16, 26, 0x6f7780);

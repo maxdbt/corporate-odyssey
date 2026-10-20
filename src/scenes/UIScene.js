@@ -89,6 +89,10 @@ export default class UIScene extends Phaser.Scene {
     else if (this._pending) this._pending.boss = [name, ratio];
   }
 
+  teamsCall(ms) {
+    if (this.hud) this.hud.teamsCall(ms);
+  }
+
   getTouchState() {
     return this.touch ? this.touch.getState() : null;
   }

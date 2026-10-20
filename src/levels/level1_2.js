@@ -1,7 +1,7 @@
 import { TEX } from '../config/constants.js';
 import { FLOOR, DESK_TOP, row, arc } from './helpers.js';
 
-// 1-2 Estate d'Inferno: heat zones (stress + slow), polar AC zones (freeze + slippery), Waterella.
+// 1-2 Estate d'Inferno: heat zones (stress + slow), polar AC zones (freeze + slippery).
 export default {
   id: '1-2',
   theme: 'summer',
@@ -37,7 +37,6 @@ export default {
     ['minute', 1800, FLOOR, { range: 260 }],
     ['confcall', 2200, 170, { range: 220 }],
     ['clienthell', 2732, FLOOR, { dir: -1 }],
-    ['waterella', 3200, FLOOR, { floodTop: 220, duration: 8000 }],
     ['bug', 3630, 296],
     ['talker', 4100, FLOOR],
     ['copier', 4800, FLOOR, { dir: -1 }],

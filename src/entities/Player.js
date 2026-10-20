@@ -117,8 +117,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this._floatText('PROMOZIONE!', '#ffd800');
         break;
       case 'drunk':
+      case 'nausea':
+        if (this.statuses.has(name === 'drunk' ? 'nausea' : 'drunk')) break; // already dizzy
         this.inputQueue = [];
-        this._floatText('HIC!', '#ffe680');
+        this._floatText(name === 'drunk' ? 'HIC!' : 'BLEAH!', name === 'drunk' ? '#ffe680' : '#b8f070');
         break;
       case 'shield':
         this._floatText('AUTO AZIENDALE!', '#7fd4ff');
@@ -130,6 +132,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   hasStatus(name) {
     return this.statuses.has(name);
+  }
+
+  // Drunk (spumante) and nausea (spoiled canteen food) share the same wobbly, delayed controls.
+  isDizzy() {
+    return this.statuses.has('drunk') || this.statuses.has('nausea');
   }
 
   clearStatus(name) {
@@ -165,6 +172,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         audio.music(this.scene.bossActive ? 'boss' : 'level');
         break;
       case 'drunk':
+      case 'nausea':
+        if (this.isDizzy()) break;
         this.inputQueue = [];
         this._resetCamera();
         break;
@@ -312,7 +321,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if (env.ice) k = 0.015;
     else if (this.hasStatus('cold')) k = 0.04;
     else k = grounded ? 0.35 : 0.2;
-    if (this.hasStatus('drunk') && grounded && !disabled) {
+    if (this.isDizzy() && grounded && !disabled) {
       target += Math.sin(this.clock / 280) * 90;
     }
 
@@ -372,7 +381,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   _applyDrunkDelay(input) {
-    if (!this.hasStatus('drunk')) return input;
+    if (!this.isDizzy()) return input;
     this.inputQueue.push({ t: this.clock, s: input });
     const cutoff = this.clock - DRUNK_DELAY;
     let out = null;
@@ -509,7 +518,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     // Drunk camera sway
-    if (this.hasStatus('drunk')) {
+    if (this.isDizzy()) {
       const cam = this.scene.cameras.main;
       cam.setRotation(Math.sin(this.clock / 420) * 0.045);
       cam.setZoom(RENDER_SCALE * (1.02 + Math.sin(this.clock / 610) * 0.025));

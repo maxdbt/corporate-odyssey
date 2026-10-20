@@ -152,30 +152,6 @@ const G = {
     f1: ['.K....K.', '..GGGG..', '.GGWGGW.', 'GGGMGGGG', '.GKGGKG.', 'K.K..K.K'],
     f2: ['K......K', '..GGGG..', '.GGWGGW.', 'GGGGGMGG', '.GKGGKG.', '.K.KK.K.']
   },
-  waterella: {
-    pal: { L: 0x1b4f9c, B: 0x3fa9f5, D: 0x2070c0, W: 0xffffff, K: 0x0a1030, C: 0xbfe8ff },
-    body: [
-      '.......LL.......',
-      '......LBBL......',
-      '.....LBBCBL.....',
-      '....LBBBCBBL....',
-      '...LBBBBBBBBL...',
-      '..LBBWWBBWWBBL..',
-      '..LBBWKBBWKBBL..',
-      '.LBBBBBBBBBBBBL.',
-      '.LBBBKKKKKKBBBL.',
-      '.LBBKWKWKWKBBBL.',
-      '.LBBBKKKKKKBBBL.',
-      'LBBBBBBBBBBBBBBL',
-      'LBBBDBBBBBBDBBBL',
-      'LBBBBBBBBBBBBBBL',
-      'LBBDBBBBBBBBDBBL',
-      'LBBBBBBBBBBBBBBL',
-      '.LBBBBBBBBBBBBL.'
-    ],
-    drip1: ['L.LBB.LBBL.BBL.L', '.L.L...LL...L.L.', '..........L.....'],
-    drip2: ['.LBBL.BBL.LBBL..', '..L.L..L.L..L.L.', '....L.......L...']
-  },
   shark: {
     pal: { G: 0x7f8c99, E: 0x111111, N: 0x1f2a44, W: 0xffffff, T: 0xc0392b, L: 0xb8c4cc },
     f1: [
@@ -314,17 +290,6 @@ function drawCabinet(p) {
   p.r(3, 0, 4, 2, 0x2060c0).r(9, 0, 4, 2, 0xc03030).r(15, 0, 4, 2, 0x20a040);
 }
 
-function drawCart(p) {
-  // 44x28. Upper part is the frame the player must slide under; wheels at bottom.
-  p.r(2, 2, 40, 3, 0x9aa3ad).r(2, 2, 3, 22, 0x9aa3ad).r(39, 2, 3, 22, 0x9aa3ad);
-  p.r(6, 5, 14, 12, 0xffd000).r(6, 5, 14, 2, 0xffe866).box(6, 5, 14, 12, 0x9a7a00); // bucket
-  p.r(24, 0, 2, 18, 0x8b5a2b).r(21, 16, 8, 4, 0xe8e0d0); // mop
-  p.r(30, 8, 8, 10, 0x2a8ad4).r(32, 6, 4, 2, 0xffffff); // spray bottle
-  p.r(2, 18, 40, 4, 0x6f7780).r(2, 18, 40, 1, 0xd0d6dc);
-  p.disc(8, 24, 3.5, 0x222222).disc(36, 24, 3.5, 0x222222);
-  p.r(7, 23, 2, 2, 0x888888).r(35, 23, 2, 2, 0x888888);
-}
-
 function drawSiren(p) {
   p.disc(8, 8, 6, 0xe01818).r(3, 4, 3, 3, 0xff8080);
   p.r(2, 12, 12, 4, 0x333333).r(2, 12, 12, 1, 0x777777);
@@ -413,10 +378,6 @@ export function generateEnemies(scene) {
   gridTex(scene, TEX.BUG1, G.bug.f1, G.bug.pal);
   gridTex(scene, TEX.BUG2, G.bug.f2, G.bug.pal);
 
-  const w = G.waterella;
-  gridTex(scene, TEX.WATERELLA1, stack(w.body, w.drip1), w.pal);
-  gridTex(scene, TEX.WATERELLA2, stack(w.body, w.drip2), w.pal);
-
   gridTex(scene, TEX.SHARK1, G.shark.f1, G.shark.pal);
   gridTex(scene, TEX.SHARK2, G.shark.f2, G.shark.pal);
   gridTex(scene, TEX.MINE, G.mine.rows, G.mine.pal);
@@ -424,7 +385,6 @@ export function generateEnemies(scene) {
   gridTex(scene, TEX.CACTUS, G.cactus.rows, G.cactus.pal);
 
   makeTex(scene, TEX.CABINET, 24, 56, drawCabinet);
-  makeTex(scene, TEX.CART, 44, 28, drawCart);
   makeTex(scene, TEX.STALACTITE, 12, 26, drawStalactite);
   makeTex(scene, TEX.TEAMS_METEOR, 32, 32, drawTeamsMeteor);
   makeTex(scene, TEX.MIRAGE, 40, 24, drawMirage);

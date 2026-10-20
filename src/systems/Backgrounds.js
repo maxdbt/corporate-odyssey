@@ -1,5 +1,6 @@
-import { GAME_WIDTH, GAME_HEIGHT, DEPTH } from '../config/constants.js';
-import { pinToView } from '../utils/view.js';
+import Phaser from 'phaser';
+import { GAME_WIDTH, GAME_HEIGHT, DEPTH, TEX, ANIM, FONT } from '../config/constants.js';
+import { pinToView, viewLeft } from '../utils/view.js';
 
 // Themed parallax backgrounds drawn with Graphics primitives (no images).
 const THEMES = {
@@ -59,17 +60,31 @@ export function drawBackground(scene, theme, worldW) {
       break;
     }
     case 'canteen': {
+      // Tiled wall, big windows on the garden, menu boards and a wainscot.
       mid.fillStyle(t.wall, 1).fillRect(0, 40, midW, 360);
-      for (let x = 0; x < midW; x += 24) for (let y = 40; y < 400; y += 24) {
-        mid.fillStyle(((x + y) / 24) % 2 ? 0xd6dcda : 0xeef2f1, 1).fillRect(x, y, 23, 23);
+      for (let x = 0; x < midW; x += 24) for (let y = 40; y < 250; y += 24) {
+        mid.fillStyle(((x + y) / 24) % 2 ? 0xdfe6e3 : 0xf2f5f4, 1).fillRect(x, y, 23, 23);
       }
-      for (let x = 60; x < midW; x += 300) {
-        mid.fillStyle(0x2a2a2a, 1).fillRect(x, 70, 150, 80);
-        mid.fillStyle(0xffffff, 1).fillRect(x + 10, 80, 60, 4).fillRect(x + 10, 96, 90, 4).fillRect(x + 10, 112, 70, 4).fillRect(x + 10, 128, 100, 4);
-        mid.fillStyle(0xffd800, 1).fillRect(x + 110, 80, 30, 10);
+      mid.fillStyle(0x7fb8a8, 1).fillRect(0, 250, midW, 150);
+      mid.fillStyle(0x5f9888, 1).fillRect(0, 250, midW, 6);
+      for (let x = 40; x < midW; x += 360) {
+        mid.fillStyle(0x4a5a60, 1).fillRect(x - 4, 66, 168, 128);
+        mid.fillStyle(0x9fe0ff, 1).fillRect(x, 70, 160, 120);
+        mid.fillStyle(0x6fc060, 1).fillRect(x, 150, 160, 40);
+        mid.fillStyle(0x3f9a40, 1).fillEllipse(x + 40, 150, 50, 34).fillEllipse(x + 120, 146, 60, 40);
+        mid.fillStyle(0xffffff, 0.6).fillRect(x + 12, 80, 30, 6).fillRect(x + 100, 92, 40, 6);
+        mid.fillStyle(0x4a5a60, 1).fillRect(x + 78, 70, 4, 120).fillRect(x, 128, 160, 4);
+        // menu board
+        const mx = x + 200;
+        mid.fillStyle(0x6b4a2b, 1).fillRect(mx - 4, 76, 118, 92);
+        mid.fillStyle(0x203028, 1).fillRect(mx, 80, 110, 84);
+        mid.fillStyle(0xffd800, 1).fillRect(mx + 30, 86, 50, 6);
+        mid.fillStyle(0xffffff, 0.85);
+        [100, 114, 128, 142, 156].forEach((y, k) => mid.fillRect(mx + 10, y, 50 + ((k * 23) % 40), 3).fillRect(mx + 92, y, 10, 3));
       }
       far.fillStyle(0xffffff, 0.6);
       for (let x = 0; x < farW; x += 140) far.fillRect(x, 10, 70, 10);
+      drawCanteenDiners(scene, worldW);
       break;
     }
     case 'meeting': {
@@ -133,4 +148,63 @@ export function drawBackground(scene, theme, worldW) {
     default:
       break;
   }
+}
+
+// Canteen: rows of tables with colleagues eating, on their own parallax layer (scroll factor 0.75).
+// Purely decorative: they chew, turn around and chat with each other.
+const DINER_ANIMS = [ANIM.EATER_A, ANIM.EATER_B, ANIM.EATER_C];
+const DINER_LINES = ['BUONO!', 'CHE FAME', 'HAI VISTO LA MAIL?', 'IL CAPO...', 'PASSAMI IL SALE', 'BLA BLA', 'GNAM', 'DI NUOVO PASTA?', 'RIUNIONE ALLE 14?'];
+
+function drawCanteenDiners(scene, worldW) {
+  const SF = 0.75;
+  const TOP = 312;           // table top (view coordinates): further back than the playable tables
+  const S = 0.8;             // smaller = farther away
+  const nearW = worldW * SF + GAME_WIDTH;
+  // Far floor the diners sit on, darker than the playable checkerboard.
+  const floor = pinToView(scene.add.graphics(), 0, 0, 0, 0).setDepth(DEPTH.BG + 3);
+  floor.fillStyle(0x5f8078, 1).fillRect(0, TOP + 26, GAME_WIDTH, GAME_HEIGHT - TOP - 26);
+  floor.fillStyle(0x4a6660, 1).fillRect(0, TOP + 26, GAME_WIDTH, 3);
+  const tables = pinToView(scene.add.graphics(), 0, 0, SF, 0).setDepth(DEPTH.BG + 4);
+  const diners = [];
+  const r = rnd(4242);
+  for (let x = 30; x < nearW; x += 230 + Math.floor(r() * 60)) {
+    const w = 100;
+    // diners behind the table, some facing each other
+    const seats = 2 + Math.floor(r() * 2);
+    for (let i = 0; i < seats; i++) {
+      const dx = x + 18 + i * ((w - 36) / Math.max(1, seats - 1));
+      const d = scene.add.sprite(0, 0, TEX.EATER_A1).setOrigin(0.5, 1).setDepth(DEPTH.BG + 3).setTint(0xc8d0cc).setScale(S);
+      pinToView(d, dx, TOP + 8, SF, 0);
+      d.px = dx;
+      d.setFlipX(r() < 0.5);
+      d.play({ key: DINER_ANIMS[Math.floor(r() * 3)], frameRate: 1.5 + r() * 2, startFrame: Math.floor(r() * 2) });
+      diners.push(d);
+    }
+    tables.fillStyle(0xa08058, 1).fillRect(x, TOP, w, 5);
+    tables.fillStyle(0xbfa070, 1).fillRect(x, TOP, w, 2);
+    tables.fillStyle(0x6a7379, 1).fillRect(x + 6, TOP + 5, 3, 22).fillRect(x + w - 9, TOP + 5, 3, 22);
+    // trays and glasses on the table
+    for (let tx = x + 10; tx < x + w - 20; tx += 34) {
+      tables.fillStyle(0xc05030, 1).fillRect(tx, TOP - 2, 16, 2);
+      tables.fillStyle(0xe8e8e8, 1).fillRect(tx + 4, TOP - 4, 7, 2);
+      tables.fillStyle(0xbfefff, 0.8).fillRect(tx + 19, TOP - 6, 2, 6);
+    }
+  }
+  // Every so often a diner turns around and says something.
+  scene.time.addEvent({
+    delay: 1300,
+    loop: true,
+    callback: () => {
+      const left = viewLeft(scene.cameras.main) * SF;
+      const visible = diners.filter((d) => d.px - left > 60 && d.px - left < GAME_WIDTH - 60);
+      if (!visible.length) return;
+      const d = Phaser.Utils.Array.GetRandom(visible);
+      d.toggleFlipX();
+      const t = scene.add.text(0, 0, Phaser.Utils.Array.GetRandom(DINER_LINES), {
+        fontFamily: FONT, fontSize: '7px', fontStyle: 'bold', color: '#ffffff', stroke: '#000', strokeThickness: 2
+      }).setOrigin(0.5, 1).setDepth(DEPTH.BG + 5).setAlpha(0.9);
+      pinToView(t, d.px, TOP - 16, SF, 0);
+      scene.tweens.add({ targets: t, y: t.y - 10, alpha: 0, delay: 700, duration: 600, onComplete: () => t.destroy() });
+    }
+  });
 }

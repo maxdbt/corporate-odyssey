@@ -16,17 +16,18 @@ export const BRIEFS = {
     tips: [
       'Le zone di CALDO rallentano e alzano lo stress.',
       'L\'aria condizionata al massimo ti congela per un attimo.',
-      'Attento a Waterella e alle icone di Teams che saltellano.',
+      'Attento alle icone di Teams che saltellano.',
       'Prendi al volo il BIGLIETTO AEREO: una vacanza ti aspetta!'
     ]
   },
   '2-1': {
-    where: 'Mensa aziendale, ore 13:00. La fila è infinita.',
-    goal: 'Lo schermo avanza da solo: corri sulle teste della fila fino al piatto d\'oro.',
+    where: 'Mensa aziendale, ore 13:00. I cuochi lanciano i piatti al volo.',
+    goal: 'Prendi un pasto completo (PRIMO, SECONDO, CONTORNO, DOLCE) e paga alla CASSA.',
     tips: [
-      'Non cadere nella calca: perdi salute e accumuli stress.',
-      'Schiva i carrelli delle pulizie.',
-      'Se resti indietro rispetto allo schermo, è finita.'
+      'Piatti col FUMO scottano: aspetta che si raffreddino. Quelli VERDI sono avariati.',
+      'Il DOLCE toglie stress, i buoni pasto valgono come i bonus.',
+      'Le icone di Teams ti chiamano "solo un minuto": 5 secondi bloccato!',
+      'Il capo ti vede se cammini per terra davanti a lui: passa sopra i tavoli.'
     ]
   },
   '3-1': {

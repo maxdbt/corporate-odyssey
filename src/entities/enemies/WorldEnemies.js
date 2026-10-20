@@ -185,31 +185,6 @@ export class Cook extends Enemy {
   }
 }
 
-// Carrello delle pulizie: crosses right-to-left; slide under it.
-export class Cart extends Enemy {
-  constructor(scene, x, y, props = {}) {
-    super(scene, x, y, TEX.CART, {
-      kind: 'cart', hp: 99, stompable: false, invulnerable: true, damage: { hp: 15, stress: 10 }
-    });
-    // Raised cart (big laundry bag on top): bottom at surface-16 so a sliding player passes under.
-    this.setScale(1.5);
-    this.y = y - 16;
-    this.body.setAllowGravity(false);
-    this.body.setImmovable(true);
-    this.speed = props.speed || 220;
-    this.surfaceY = y;
-    this.shadow = this.attach(scene.add.ellipse(x, y - 2, 50, 6, 0x000000, 0.35).setDepth(this.depth - 1));
-  }
-
-  think() {
-    this.body.setVelocityX(-this.speed * this.speedMult());
-    this.body.setVelocityY(0);
-    this.shadow.setPosition(this.x, this.surfaceY - 2);
-    const v = this.scene.cameras.main.worldView;
-    if (this.x < v.x - 120) this.destroy();
-  }
-}
-
 // Stalattiti-scadenze: fall when the player walks under.
 export class Stalactite extends Enemy {
   constructor(scene, x, y) {

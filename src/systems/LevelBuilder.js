@@ -11,15 +11,16 @@ import Collectible from '../entities/Collectible.js';
     desks:     [[x, y, glass?]]                                one-way desks, x = left, y = top surface
     platforms: [[x, y, w, tex?]]                               one-way 16px tall platforms
     postits:   [[x, y, color]]                                 vanishing post-its (1.5 s), color yellow|orange|green
-    queue:     { from, to, floorY, gaps: [[x0, x1]] }          canteen queue: heads are one-way platforms
     ladders:   [[x, top, bottom]]                              x = center
-    zones:     [{ type, x, y, w, h, force? }]                  heat|cold|wind|ice|water|puddle|crowd
+    zones:     [{ type, x, y, w, h, force? }]                  heat|cold|wind|ice|water|puddle|wet
     enemies:   [[type, x, y, props?]]                          ground enemies: y = surface
     hazards:   [[type, props]]
     items:     [[kind, x, y]]                                  x,y = center
     terminals: [[x, y, quizId]]                                y = surface
     decor:     [[tex, x, y]]                                   y = bottom
-    goal:      { type: 'door'|'dish', x, y }                   y = surface
+    tables:    [[x, y]]                                        canteen tables (one-way), x = center, y = floor
+    counters:  [[x, y]]                                        canteen counters (one-way top), x = center, y = floor
+    goal:      { type: 'door'|'cassa', x, y }                  y = surface (cassa = canteen checkout)
     boss:      { type, triggerX, x, y, arena }                 exit door appears after defeat (unless final)
     autoscroll: speed px/s (optional), final: bool
   }
@@ -27,7 +28,6 @@ import Collectible from '../entities/Collectible.js';
 
 const ICE_TEX = [TEX.T_ICE, TEX.ICE_PLATFORM];
 const POSTIT_TEX = { yellow: TEX.POSTIT_YELLOW, orange: TEX.POSTIT_ORANGE, green: TEX.POSTIT_GREEN };
-const QUEUE_TEX = [TEX.QUEUE1, TEX.QUEUE2, TEX.QUEUE3];
 
 export default class LevelBuilder {
   constructor(scene, level) {
@@ -48,7 +48,8 @@ export default class LevelBuilder {
     (L.desks || []).forEach(([x, y, glass]) => this.desk(x, y, glass));
     (L.platforms || []).forEach(([x, y, w, tex]) => this.platform(x, y, w, tex || TEX.T_BLOCK));
     (L.postits || []).forEach(([x, y, color]) => this.postit(x, y, color));
-    if (L.queue) this.queue(L.queue);
+    (L.tables || []).forEach(([x, y]) => this.table(x, y));
+    (L.counters || []).forEach(([x, y]) => this.counter(x, y));
     (L.ladders || []).forEach(([x, top, bottom]) => this.ladder(x, top, bottom));
     (L.decor || []).forEach(([tex, x, y]) => this.scene.add.image(x, y, tex).setOrigin(0.5, 1).setDepth(DEPTH.DECOR));
     (L.items || []).forEach(([kind, x, y]) => new Collectible(this.scene, x, y, kind));
@@ -95,23 +96,16 @@ export default class LevelBuilder {
     z.postit = { sprite, triggered: false, homeX: x };
   }
 
-  queue({ from, to, floorY, gaps = [] }) {
-    const s = this.scene;
-    const inGap = (x) => gaps.some(([a, b]) => x + 14 > a && x - 14 < b);
-    let segStart = null;
-    let i = 0;
-    for (let x = from; x <= to; x += 28, i++) {
-      if (inGap(x)) {
-        if (segStart !== null) { this.oneWayBody(segStart - 14, floorY - 44, x - segStart, 8); segStart = null; }
-        continue;
-      }
-      const img = s.add.image(x, floorY, QUEUE_TEX[(i * 7 + (i >> 2)) % 3]).setOrigin(0.5, 1).setDepth(DEPTH.PLATFORMS);
-      if (i % 2) img.setFlipX(true);
-      // hungry crowd sways (visual only)
-      s.tweens.add({ targets: img, angle: { from: -2, to: 2 }, duration: 500 + (i % 5) * 90, yoyo: true, repeat: -1 });
-      if (segStart === null) segStart = x;
-    }
-    if (segStart !== null) this.oneWayBody(segStart - 14, floorY - 44, to - segStart + 28, 8);
+  // Canteen table: walk under it, jump on top of it.
+  table(x, y) {
+    this.scene.add.image(x, y, TEX.CANTEEN_TABLE).setOrigin(0.5, 1).setDepth(DEPTH.PLATFORMS);
+    this.oneWayBody(x - 40, y - 34, 80);
+  }
+
+  // Self-service counter: the cook stands on its top (behind the sneeze guard).
+  counter(x, y) {
+    this.scene.add.image(x, y, TEX.COUNTER).setOrigin(0.5, 1).setDepth(DEPTH.DECOR + 1);
+    this.oneWayBody(x - 48, y - 42, 96);
   }
 
   ladder(x, top, bottom) {
@@ -134,15 +128,11 @@ export default class LevelBuilder {
 
   goal({ type, x, y }) {
     const s = this.scene;
-    if (type === 'dish') {
-      s.add.image(x, y, TEX.COUNTER).setOrigin(0.5, 1).setDepth(DEPTH.PLATFORMS);
-      this.solid(x - 48, y - 56, 96, 56 + (GAME_HEIGHT - y), null);
-      const dish = s.physics.add.staticImage(x, y - 56, TEX.GOLDEN_DISH).setOrigin(0.5, 1).refreshBody().setDepth(DEPTH.ITEMS);
-      s.add.particles(0, 0, TEX.FX_SPARK, {
-        x: { min: x - 16, max: x + 16 }, y: { min: y - 80, max: y - 60 }, speedY: { min: -30, max: -10 },
-        lifespan: 800, frequency: 120, tint: 0xffd800
-      }).setDepth(DEPTH.FX);
-      s.goal = dish;
+    if (type === 'cassa') {
+      s.goal = s.physics.add.staticImage(x, y, TEX.CASSA).setOrigin(0.5, 1).refreshBody().setDepth(DEPTH.DECOR + 2);
+      s.goal.label = s.add.text(x, y - 66, 'CASSA', {
+        fontFamily: 'monospace', fontSize: '12px', fontStyle: 'bold', color: '#ff6060', stroke: '#000', strokeThickness: 3
+      }).setOrigin(0.5).setDepth(DEPTH.DECOR + 2);
     } else {
       s.goal = s.physics.add.staticImage(x, y, TEX.DOOR_EXIT).setOrigin(0.5, 1).refreshBody().setDepth(DEPTH.DECOR + 2);
       s.add.text(x, y - 60, 'USCITA', {

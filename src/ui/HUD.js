@@ -1,8 +1,10 @@
 import Phaser from 'phaser';
 import { FONT, GAME_WIDTH, GAME_HEIGHT, TEX, WEAPON_LABEL } from '../config/constants.js';
+import { COURSES, COURSE_TEX } from '../systems/Canteen.js';
 
 const STATUS_LABEL = {
   drunk: 'UBRIACO',
+  nausea: 'NAUSEA',
   frozen: 'CONGELATO',
   cold: 'RAFFREDDATO',
   asleep: 'ADDORMENTATO',
@@ -13,7 +15,7 @@ const STATUS_LABEL = {
 };
 
 const STATUS_COLOR = {
-  drunk: '#ffe680', frozen: '#9be7ff', cold: '#bfefff', asleep: '#c0a0ff', stuck: '#ff9f40',
+  drunk: '#ffe680', nausea: '#b8f070', frozen: '#9be7ff', cold: '#bfefff', asleep: '#c0a0ff', stuck: '#ff9f40',
   promotion: '#ffd800', raise: '#7dff7d', shield: '#7fd4ff'
 };
 
@@ -175,6 +177,71 @@ export default class HUD {
     this.statusText.setText(lines.join('\n'));
     const first = (data.statuses || [])[0];
     this.statusText.setColor(first ? (STATUS_COLOR[first.name] || '#ffffff') : '#ffffff');
+
+    this._updateTray(data.meal);
+  }
+
+  // Canteen meal tray (top right): one slot per course, lit when collected.
+  _updateTray(meal) {
+    if (!meal) { this.tray?.setVisible(false); return; }
+    if (!this.tray) {
+      const s = this.scene;
+      this.tray = s.add.container(GAME_WIDTH - 156, 50);
+      const bg = s.add.rectangle(0, 0, 150, 34, 0xd84a2a, 0.9).setOrigin(0).setStrokeStyle(2, 0x000000);
+      const label = s.add.text(75, 1, 'VASSOIO', textStyle(7, '#ffe066')).setOrigin(0.5, 0);
+      this.trayIcons = COURSES.map((c, i) => {
+        const x = 20 + i * 36;
+        const icon = s.add.image(x, 21, COURSE_TEX[c]).setScale(1.5);
+        const check = s.add.text(x + 9, 24, 'v', textStyle(9, '#7CFC00'));
+        return { c, icon, check };
+      });
+      this.tray.add([bg, label, ...this.trayIcons.flatMap((t) => [t.icon, t.check])]);
+      this.root.add(this.tray);
+    }
+    this.tray.setVisible(true);
+    this.trayIcons.forEach(({ c, icon, check }) => {
+      icon.setAlpha(meal[c] ? 1 : 0.3).setTint(meal[c] ? 0xffffff : 0x000000);
+      check.setVisible(!!meal[c]);
+    });
+  }
+
+  // Teams call window: "ti rubo solo un minuto" with a call timer, closes after ms.
+  teamsCall(ms) {
+    const s = this.scene;
+    this.callWin?.destroy();
+    const c = s.add.container(GAME_WIDTH / 2, 190).setDepth(25);
+    const W = 300, H = 140;
+    const parts = [
+      s.add.rectangle(4, 4, W, H, 0x000000, 0.5),
+      s.add.rectangle(0, 0, W, H, 0x2b2b40).setStrokeStyle(2, 0x000000),
+      s.add.rectangle(0, -H / 2 + 10, W, 20, 0x5b5fc7),
+      s.add.text(-W / 2 + 8, -H / 2 + 10, 'Teams - Chiamata in corso', textStyle(8, '#ffffff')).setOrigin(0, 0.5),
+      s.add.text(W / 2 - 10, -H / 2 + 10, 'x', textStyle(9, '#ffffff')).setOrigin(0.5),
+      s.add.circle(-W / 2 + 46, -6, 24, 0x7b83eb).setStrokeStyle(2, 0xffffff),
+      s.add.text(-W / 2 + 46, -6, 'RS', textStyle(14, '#ffffff')).setOrigin(0.5),
+      s.add.text(-W / 2 + 84, -30, 'RESPONSABILE', textStyle(9, '#b4b8ff')),
+      s.add.text(-W / 2 + 84, -14, '"TI RUBO SOLO\nUN MINUTO..."', { ...textStyle(12, '#ffffff'), lineSpacing: 2 }),
+      s.add.rectangle(-30, H / 2 - 22, 40, 18, 0xc4314b),
+      s.add.text(-30, H / 2 - 22, 'FINE', textStyle(8, '#ffffff')).setOrigin(0.5)
+    ];
+    const timer = s.add.text(30, H / 2 - 22, '00:00', textStyle(10, '#7CFC00')).setOrigin(0, 0.5);
+    c.add([...parts, timer]);
+    c.setScale(0.2);
+    s.tweens.add({ targets: c, scale: 1, duration: 200, ease: 'Back.Out' });
+    // Timer runs at "meeting speed": 5 real seconds look like a full minute.
+    const start = s.time.now;
+    const ev = s.time.addEvent({
+      delay: 100, loop: true, callback: () => {
+        const sec = Math.min(60, Math.floor((s.time.now - start) / ms * 60));
+        timer.setText(`00:${String(sec).padStart(2, '0')}`.replace('00:60', '01:00'));
+      }
+    });
+    this.callWin = c;
+    s.time.delayedCall(ms, () => {
+      ev.remove();
+      s.tweens.add({ targets: c, scale: 0, duration: 150, onComplete: () => c.destroy() });
+      if (this.callWin === c) this.callWin = null;
+    });
   }
 
   fog(ms) {

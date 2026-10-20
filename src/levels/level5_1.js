@@ -33,7 +33,6 @@ export default {
     ['guardian', 2200, FLOOR, { patrol: 180 }],
     ['bug', 2560, 300],
     ['talker', 2900, FLOOR],
-    ['waterella', 3500, FLOOR, { floodTop: 200, duration: 8000 }],
     ['guardian', 3700, FLOOR, { patrol: 160 }],
     ['confcall', 4100, 160, { range: 220 }],
     ['clienthell', 4432, FLOOR, { dir: -1 }],

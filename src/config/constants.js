@@ -53,7 +53,6 @@ export const TEX = {
   CLIENTHELL: 'clienthell',                             // 24x28
   MINUTE1: 'minute1', MINUTE2: 'minute2',               // 20x22
   BUG1: 'bug1', BUG2: 'bug2',                           // 16x12
-  WATERELLA1: 'waterella1', WATERELLA2: 'waterella2',   // 32x40
   PARTY1: 'party1', PARTY2: 'party2',                   // 24x32
   GUARDIAN1: 'guardian1', GUARDIAN2: 'guardian2',       // 24x34
   SHARK1: 'shark1', SHARK2: 'shark2',                   // 44x22
@@ -61,7 +60,6 @@ export const TEX = {
   COPIER: 'copier',                                     // 32x28
   CABINET: 'cabinet',                                   // 24x56
   COOK1: 'cook1', COOK2: 'cook2',                       // 24x34
-  CART: 'cart',                                         // 44x28
   STALACTITE: 'stalactite',                             // 12x26
   TEAMS_METEOR: 'teams_meteor',                         // 32x32
   CACTUS: 'cactus',                                     // 20x34 (cactus shaped like a binder)
@@ -112,7 +110,6 @@ export const TEX = {
   PROMOTION: 'promotion',     // 16x16
   RAISE: 'raise',             // 16x16
   CAR: 'car',                 // 26x14
-  GOLDEN_DISH: 'golden_dish', // 28x18
   TERMINAL: 'terminal',       // 24x26 (quiz computer)
   DOOR_EXIT: 'door_exit',     // 32x48
   BEACH_FLAG: 'beach_flag',   // 16x32 (active checkpoint marker)
@@ -126,8 +123,9 @@ export const TEX = {
   DESK: 'desk',               // 64x26 (top surface = top 6px)
   DESK_GLASS: 'desk_glass',   // 64x20
   POSTIT_YELLOW: 'postit_yellow', POSTIT_ORANGE: 'postit_orange', POSTIT_GREEN: 'postit_green', // 44x12
-  QUEUE1: 'queue1', QUEUE2: 'queue2', QUEUE3: 'queue3', // 28x44 (person head+shoulders, head on top)
   COUNTER: 'counter',         // 96x56 (canteen counter)
+  CANTEEN_TABLE: 'canteen_table', // 80x34 (top surface = top 6px)
+  CASSA: 'cassa',             // 48x56 (canteen checkout = level exit)
   LADDER: 'ladder',           // 20x32 (tileable vertically)
   ICE_PLATFORM: 'ice_platform', // 64x16
 
@@ -142,6 +140,12 @@ export const TEX = {
   AC_VENT: 'ac_vent',         // 32x12
   SEAWEED: 'seaweed',         // 16x32
   GOLD_FRAME: 'gold_frame',   // 32x40 (painting on golden wall)
+  WET_SIGN: 'wet_sign',       // 14x22 (yellow "wet floor" sign)
+  EATER_A1: 'eater_a1', EATER_A2: 'eater_a2', EATER_B1: 'eater_b1', EATER_B2: 'eater_b2',
+  EATER_C1: 'eater_c1', EATER_C2: 'eater_c2', // 24x26 seated colleagues eating (fork down/up)
+
+  // Canteen dishes 16x12 (thrown by the cooks)
+  DISH_PRIMO: 'dish_primo', DISH_SECONDO: 'dish_secondo', DISH_CONTORNO: 'dish_contorno', DISH_DOLCE: 'dish_dolce',
 
   // UI icons 12x12
   UI_BRAIN: 'ui_brain', UI_STRESS: 'ui_stress', UI_EURO: 'ui_euro', UI_TICKET: 'ui_ticket',
@@ -154,11 +158,11 @@ export const ANIM = {
   CONFCALL_FLY: 'confcall_fly',     // confcall1, confcall2
   MINUTE_RUN: 'minute_run',         // minute1, minute2
   BUG_WIGGLE: 'bug_wiggle',         // bug1, bug2
-  WATERELLA_IDLE: 'waterella_idle', // waterella1, waterella2
   PARTY_DANCE: 'party_dance',       // party1, party2
   GUARDIAN_WALK: 'guardian_walk',   // guardian1, guardian2
   SHARK_SWIM: 'shark_swim',         // shark1, shark2
   COOK_THROW: 'cook_throw',         // cook1, cook2
+  EATER_A: 'eater_a', EATER_B: 'eater_b', EATER_C: 'eater_c', // eater_x1, eater_x2
   EURO_SPIN: 'euro_spin',           // euro1, euro2
   EXPLOSION: 'explosion'            // fx_explosion1..3, no repeat
 };
@@ -167,7 +171,7 @@ export const ANIM = {
 export const LEVEL_META = [
   { id: '1-1', world: 'Mondo 1: L\'Open Space', name: 'Natale in Ufficio' },
   { id: '1-2', world: 'Mondo 1: L\'Open Space', name: 'Estate d\'Inferno' },
-  { id: '2-1', world: 'Mondo 2: La Mensa Aziendale', name: 'La Fila Infinita' },
+  { id: '2-1', world: 'Mondo 2: La Mensa Aziendale', name: 'La Pausa Pranzo' },
   { id: '3-1', world: 'Mondo 3: La Sala Riunioni', name: 'Il Limbo dei Post-it' },
   { id: '4-1', world: 'Mondo 4: La Trasferta', name: 'La Fuga di Cervelli (Deserto)' },
   { id: '4-2', world: 'Mondo 4: La Trasferta', name: 'La Riorganizzazione (Ghiacciaio)' },

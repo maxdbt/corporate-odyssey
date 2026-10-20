@@ -12,6 +12,7 @@ import Zones from '../systems/Zones.js';
 import WeaponSystem from '../systems/WeaponSystem.js';
 import { drawBackground } from '../systems/Backgrounds.js';
 import { nextQuizId } from '../data/quizzes.js';
+import Canteen from '../systems/Canteen.js';
 
 const PIT_DAMAGE = 20;
 const BURNOUT_DELAY = 1400;
@@ -79,6 +80,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.weapons = new WeaponSystem(this);
     this.setupColliders();
+    this.canteen = level.canteen ? new Canteen(this, this.fromCheckpoint ? GameState.checkpoint.meal : null) : null;
 
     // Enemies and hazards
     (level.enemies || []).forEach(([type, x, y, props]) => this.spawnEnemy(type, x, y, props));
@@ -122,9 +124,6 @@ export default class GameScene extends Phaser.Scene {
         ? 'RIPRENDI DAL GIORNO DI FERIE!'
         : `${level.id}  ${level.name.toUpperCase()}`;
       this.ui?.message?.(msg, '#ffd800', 2200);
-      if (level.autoscroll && !this.fromCheckpoint) {
-        this.time.delayedCall(2300, () => this.ui?.message?.('CORRI! LA FILA NON ASPETTA!', '#ffffff', 1500));
-      }
       if (GameState.levelMods.enemySpeedMult > 1) {
         this.time.delayedCall(2400, () => this.ui?.message?.('NEMICI PIU\' VELOCI DEL 15%!', '#ff8080', 1500));
       }
@@ -213,7 +212,7 @@ export default class GameScene extends Phaser.Scene {
     });
     this.physics.add.overlap(p, this.items, (pl, item) => this.collect(item));
     this.physics.add.overlap(p, this.terminals, (pl, t) => this.openTerminal(t));
-    if (this.goal) this.physics.add.overlap(p, this.goal, () => this.levelComplete());
+    if (this.goal) this.physics.add.overlap(p, this.goal, () => this.reachGoal());
   }
 
   // Remember the last firm ground (solid or permanent one-way) for pit respawns.
@@ -290,6 +289,7 @@ export default class GameScene extends Phaser.Scene {
       case 'vacation':
         GameState.vacationDays++;
         GameState.checkpoint = { levelIndex: this.levelIndex, x: item.x, y: this.surfaceBelow(item.x, item.y) };
+        if (this.canteen) GameState.checkpoint.meal = { ...this.canteen.slots };
         this.placeFlag(GameState.checkpoint.x, GameState.checkpoint.y);
         audio.sfx('checkpoint');
         ui?.message?.('GIORNO DI FERIE! CHECKPOINT', '#00e0ff', 1600);
@@ -447,6 +447,12 @@ export default class GameScene extends Phaser.Scene {
 
   // ---------------------------------------------------------------- flow
 
+  // The canteen checkout only lets you out with a complete meal on the tray.
+  reachGoal() {
+    if (this.ended || (this.canteen && !this.canteen.allowExit())) return;
+    this.levelComplete();
+  }
+
   levelComplete() {
     if (this.ended) return;
     this.ended = true;
@@ -551,7 +557,7 @@ export default class GameScene extends Phaser.Scene {
     if (GameState.hp <= 0) this.burnout('BURNOUT!');
     else if (this.timeLeft <= 0) { this.timeLeft = 0; this.burnout('TEMPO SCADUTO! BURNOUT!'); }
     else if (p.y > GAME_HEIGHT + 60) this.fallInPit();
-    else if (this.autoscroll && this.goal && p.x > this.goal.x - 40 && p.body.bottom <= this.goal.y + 60) this.levelComplete();
+    else if (this.autoscroll && this.goal && p.x > this.goal.x - 40 && p.body.bottom <= this.goal.y + 60) this.reachGoal();
   }
 
   cleanupBullets() {
@@ -573,7 +579,8 @@ export default class GameScene extends Phaser.Scene {
       timeLeft: Math.max(0, Math.ceil(this.timeLeft)),
       levelId: this.level.id,
       levelName: this.level.name,
-      statuses: this.player?.statusList?.() ?? []
+      statuses: this.player?.statusList?.() ?? [],
+      meal: this.canteen ? this.canteen.slots : null
     };
   }
 
@@ -583,6 +590,8 @@ export default class GameScene extends Phaser.Scene {
     this.weapons?.destroy();
     this.hazards.forEach((h) => { try { h.destroy?.(); } catch (e) { /* already gone */ } });
     this.hazards = [];
+    try { this.canteen?.destroy(); } catch (e) { /* already gone */ }
+    this.canteen = null;
     this.inputCtl?.destroy?.();
     // The camera may already be destroyed during shutdown; create() resets it anyway.
     this.cameras?.main?.setRotation(0);
