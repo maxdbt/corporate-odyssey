@@ -190,7 +190,7 @@ Effect keys (all optional): `stress` (delta), `stressSet` (absolute), `hp` (delt
 grants device 'laptop' if none), `promotion` (seconds).
 
 ## Menu / GameOver / Victory (PLAYER/UI)
-- MenuScene: title "CORPORATE ODYSSEY", character select (Uomo / Donna, big preview of the sprites, keyboard
+- MenuScene: title "CORPORATE ODYSSEY", character select (Jack / Wendy, big preview of the sprites, keyboard
   left/right + Enter/Space, or tap), controls help for PC and mobile, level selector (from `LEVEL_META`,
   default 1-1). Start: `GameState.newGame(char); this.scene.start('GameScene', { levelIndex })`.
 - GameOverScene `{ levelIndex }`: "BURNOUT!". Options: "Usa 1 Giorno di Ferie" (only if

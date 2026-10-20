@@ -8,7 +8,7 @@ const style = (size, color = '#ffffff', extra = {}) => ({
   fontFamily: FONT, fontSize: `${size}px`, fontStyle: 'bold', color, stroke: '#000000', strokeThickness: 4, ...extra
 });
 
-const CHAR_LABEL = { man: 'UOMO', woman: 'DONNA' };
+const CHAR_LABEL = { man: 'JACK', woman: 'WENDY' };
 const CHAR_DESC = { man: 'Digital Specialist', woman: 'Digital Manager' };
 
 export default class MenuScene extends Phaser.Scene {
