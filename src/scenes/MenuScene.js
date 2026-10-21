@@ -101,10 +101,17 @@ export default class MenuScene extends Phaser.Scene {
         else if (k === 'E') this._changeScenario(1);
         else if (k >= '1' && k <= '9') this._selectScenario(Number(k) - 1);
         else if (k === 'ENTER' || k === ' ' || k === 'Z') this._start();
+        else if (k === 'M') this._toggleAudio();
       });
     }
     this.input.on('pointerdown', () => { audio.unlock(); audio.music('menu'); });
     audio.music('menu');
+
+    // Audio toggle (M or click), top-right
+    this.audioText = this.add.text(GAME_WIDTH - 10, 10, '', style(9, '#cccccc', { strokeThickness: 3 }))
+      .setOrigin(1, 0).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { audio.unlock(); this._toggleAudio(); });
+    this._refreshAudio();
 
     this.starting = false;
     this._buildScenarioChips();
@@ -138,6 +145,16 @@ export default class MenuScene extends Phaser.Scene {
       x += w;
     }
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.35).setOrigin(0);
+  }
+
+  _toggleAudio() {
+    audio.toggleMute();
+    this._refreshAudio();
+  }
+
+  _refreshAudio() {
+    this.audioText.setText(audio.muted ? 'M = AUDIO OFF' : 'M = AUDIO ON');
+    this.audioText.setColor(audio.muted ? '#ff8080' : '#cccccc');
   }
 
   _changeWorld(d) {

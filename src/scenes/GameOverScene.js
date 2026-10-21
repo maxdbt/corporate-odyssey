@@ -37,7 +37,18 @@ export default class GameOverScene extends Phaser.Scene {
     spr.setTint(0xbbbbbb);
 
     this.options = [];
-    const canUseVacation = GameState.hasCheckpoint() && GameState.vacationDays > 0;
+    const bossCheckpoint = GameState.hasCheckpoint() && GameState.checkpoint.boss;
+    const canUseVacation = !bossCheckpoint && GameState.hasCheckpoint() && GameState.vacationDays > 0;
+    if (bossCheckpoint) {
+      this.options.push({
+        label: 'RIPARTI DAL MOSTRO FINALE',
+        color: '#7dffd4',
+        action: () => {
+          GameState.revive();
+          this.scene.start('GameScene', { levelIndex: this.levelIndex, fromCheckpoint: true });
+        }
+      });
+    }
     if (canUseVacation) {
       this.options.push({
         label: `USA 1 GIORNO DI FERIE (${GameState.vacationDays} disponibili)`,
@@ -72,7 +83,7 @@ export default class GameOverScene extends Phaser.Scene {
       t.on('pointerdown', () => this._choose(i));
       return t;
     });
-    if (!canUseVacation) {
+    if (!canUseVacation && !bossCheckpoint) {
       this.add.text(GAME_WIDTH / 2, 380, 'Raccogli i Giorni di Ferie nei livelli: fungono da checkpoint!',
         style(10, '#7dffd4')).setOrigin(0.5);
     }

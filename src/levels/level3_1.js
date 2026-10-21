@@ -52,6 +52,7 @@ export default {
   boss: {
     type: 'boss_client',
     triggerX: 4120,
+    checkpoint: 4050,   // free respawn point after the post-its
     x: 4560,
     y: 200,
     arena: { left: 4000, right: 4800, floorY: FLOOR },

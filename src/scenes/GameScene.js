@@ -463,6 +463,12 @@ export default class GameScene extends Phaser.Scene {
     this.bossSpawned = true;
     this.bossActive = true;
     const a = b.arena;
+    // Free checkpoint at the arena entrance: dying in the boss fight restarts from here.
+    if (b.checkpoint && !GameState.checkpoint?.boss) {
+      GameState.checkpoint = { levelIndex: this.levelIndex, x: b.checkpoint, y: this.surfaceBelow(b.checkpoint, 0), boss: true };
+      this.placeFlag(GameState.checkpoint.x, GameState.checkpoint.y);
+      audio.sfx('checkpoint');
+    }
     const cam = this.cameras.main;
     cam.stopFollow();
     cam.pan(a.left + (a.right - a.left) / 2, GAME_HEIGHT / 2, 600, 'Sine.easeInOut', false, (c, prog) => {
