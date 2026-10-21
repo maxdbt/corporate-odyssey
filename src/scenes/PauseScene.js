@@ -134,7 +134,7 @@ export default class PauseScene extends Phaser.Scene {
     cell('A', 12, 'P / ESC / INVIO = RIPRENDI', '#7f6000');
     cell('C', 12, 'I = BRIEF DEL LIVELLO', '#7f6000');
     cell('A', 13, 'R = RICOMINCIA LIVELLO', '#7f6000');
-    cell('C', 13, 'Q = TORNA AL MENU', '#7f6000');
+    cell('C', 13, 'U = TORNA AL MENU', '#7f6000');
     cell('A', 14, '(se passa il capo, sembri al lavoro)', '#a0a0a0');
 
     // Interactive "buttons" for touch
@@ -166,7 +166,7 @@ export default class PauseScene extends Phaser.Scene {
       ['P', 'ESC', 'ENTER'].forEach((k) => kb.on(`keydown-${k}`, () => this.resume()));
       kb.on('keydown-I', () => this.openBrief());
       kb.on('keydown-R', () => this.restart());
-      kb.on('keydown-Q', () => this.toMenu());
+      kb.on('keydown-U', () => this.toMenu());
       kb.on('keydown-UP', () => this.moveSel(-1));
       kb.on('keydown-DOWN', () => this.moveSel(1));
     }

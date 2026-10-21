@@ -59,6 +59,7 @@ export default {
     ...row('euro', 4820, TABLE - 20, 3),
     ...row('ticket', 5040, TABLE - 20, 3)
   ],
+  mysteryDish: [1960, TABLE - 80],
   terminals: [[3050, FLOOR]],
   goal: { type: 'cassa', x: 5400, y: FLOOR }
 };

@@ -254,7 +254,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     const panic = GameState.isPanicking();
     if (panic) {
       input = { ...input, left: input.right, right: input.left, up: input.down, down: input.up };
-      if (!this.wasPanicking) this._floatText('PANICO!', '#ff3030');
+      if (!this.wasPanicking) {
+        this._floatText('PANICO!', '#ff3030');
+        this.scene.ui?.message?.('PANICO!\nCOMANDI INVERTITI', '#ff3030', 1800);
+      }
+    } else if (this.wasPanicking) {
+      this._floatText('CALMA RITROVATA', '#9dffb0');
     }
     this.wasPanicking = panic;
 

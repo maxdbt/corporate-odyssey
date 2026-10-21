@@ -38,6 +38,7 @@ export default class UIScene extends Phaser.Scene {
     };
     this.input.keyboard?.on('keydown-I', () => overlay('BriefScene'));
     this.input.keyboard?.on('keydown-P', () => overlay('PauseScene'));
+    this.input.keyboard?.on('keydown-ESC', () => overlay('QuitScene'));
     [['i', 761, 'BriefScene'], ['II', 785, 'PauseScene']].forEach(([label, x, key]) => {
       this.add.rectangle(x, 22, 20, 30, 0x1a1a40, 0.85).setStrokeStyle(2, 0xffd800).setDepth(11)
         .setInteractive({ useHandCursor: true }).on('pointerdown', () => overlay(key));

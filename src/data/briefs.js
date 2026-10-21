@@ -27,7 +27,8 @@ export const BRIEFS = {
       'Piatti col FUMO scottano: aspetta che si raffreddino. Quelli VERDI sono avariati.',
       'Il DOLCE toglie stress, i buoni pasto valgono come i bonus.',
       'Le icone di Teams ti chiamano "solo un minuto": 5 secondi bloccato!',
-      'Il capo ti vede se cammini per terra davanti a lui: passa sopra i tavoli.'
+      'Il capo ti vede se cammini per terra davanti a lui: passa sopra i tavoli.',
+      'Lo SPEZZATINO MISTERIOSO che fluttua... mangialo a tuo rischio!'
     ]
   },
   '3-1': {

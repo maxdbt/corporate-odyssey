@@ -10,7 +10,7 @@ export default class InputController {
     this.keys = kb ? kb.addKeys({
       left: K.LEFT, right: K.RIGHT, up: K.UP, down: K.DOWN,
       a: K.A, d: K.D, w: K.W, s: K.S,
-      space: K.SPACE, z: K.Z, x: K.X, c: K.C, v: K.V
+      space: K.SPACE, z: K.Z, x: K.X, c: K.C, v: K.V, q: K.Q, e: K.E
     }, true, false) : null;
     this.prev = { jump: false, attack: false, switchWeapon: false, slide: false };
     this._unlockOnce = () => audio.unlock();
@@ -35,8 +35,8 @@ export default class InputController {
     const downHeld = down('down') || down('s') || !!(t && t.down);
     const jump = down('space') || down('z') || !!(t && t.jump);
     const run = down('x') || !!(t && t.run);
-    const attack = down('c') || !!(t && t.attack);
-    const switchWeapon = down('v');
+    const attack = down('c') || down('q') || !!(t && t.attack);
+    const switchWeapon = down('v') || down('e');
 
     const state = {
       left, right, up, down: downHeld, jump, run,

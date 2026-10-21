@@ -92,6 +92,8 @@ export default class GameScene extends Phaser.Scene {
     });
 
     if (level.planeTicket) this.createPlaneTicket(...level.planeTicket);
+    if (level.mysteryDish) this.createMysteryDish(...level.mysteryDish);
+    this.forcedRunUntil = 0;
 
     // Camera
     const cam = this.cameras.main;
@@ -165,12 +167,62 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
+  // Floating mysterious stew (2-1): instant stomach ache, the player runs off and lands in ToiletScene.
+  createMysteryDish(x, y) {
+    if (!this.textures.exists('mystery_dish')) {
+      const g = this.make.graphics({ x: 0, y: 0 }, false);
+      g.fillStyle(0x000000).fillRect(0, 6, 20, 9);
+      g.fillStyle(0xe8eef2).fillRect(1, 7, 18, 7);
+      g.fillStyle(0x9aa6ae).fillRect(3, 13, 14, 2);
+      g.fillStyle(0x6b5a1a).fillRect(3, 3, 14, 5);
+      g.fillStyle(0x8fa030).fillRect(5, 2, 4, 3).fillRect(11, 3, 3, 2);
+      g.fillStyle(0xd04060).fillRect(8, 4, 2, 2);
+      g.fillStyle(0x7fdc50).fillRect(4, 0, 1, 2).fillRect(10, 0, 1, 1).fillRect(15, 0, 1, 2);
+      g.generateTexture('mystery_dish', 20, 15);
+      g.destroy();
+    }
+    const d = this.physics.add.image(x, y, 'mystery_dish').setScale(1.5).setDepth(DEPTH.FX);
+    d.body.setAllowGravity(false);
+    const glow = this.add.circle(x, y, 16, 0xb040ff, 0.3).setDepth(DEPTH.FX - 1);
+    const label = this.add.text(x, y - 24, 'SPEZZATINO MISTERIOSO', {
+      fontFamily: 'monospace', fontSize: '8px', fontStyle: 'bold', color: '#d8a0ff', stroke: '#000', strokeThickness: 3
+    }).setOrigin(0.5).setDepth(DEPTH.FX);
+    const stink = this.add.particles(0, 0, TEX.FX_PX, {
+      follow: d, followOffset: { y: -8 }, speedY: { min: -30, max: -15 }, speedX: { min: -10, max: 10 },
+      lifespan: 700, frequency: 90, tint: [0x9acd50, 0xd8a0ff], alpha: { start: 1, end: 0 }
+    }).setDepth(DEPTH.FX);
+    this.tweens.add({ targets: [d, glow, label], y: '-=18', duration: 900, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+    this.tweens.add({ targets: glow, scale: 1.4, alpha: 0.1, duration: 600, yoyo: true, repeat: -1 });
+    this.physics.add.overlap(this.player, d, () => {
+      if (!d.active || this.ended) return;
+      d.destroy(); glow.destroy(); label.destroy(); stink.destroy();
+      audio.sfx('hurt');
+      this.ui?.message?.('MAL DI PANCIA!\nDEVO TROVARE UN BAGNO!', '#b8f070', 1400);
+      this.player.setTint(0xb8f070);
+      this.cameras.main.shake(300, 0.006);
+      this.forcedRunUntil = this.time.now + 1300;
+      this.time.delayedCall(1100, () => {
+        this.cameras.main.fadeOut(300, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+          this.player.clearTint();
+          this.player.body.setVelocity(0, 0);
+          this.events.once('resume', () => this.cameras.main.fadeIn(400, 0, 0, 0));
+          this.openOverlay('ToiletScene');
+        });
+      });
+    });
+  }
+
   // Pauses the level under an overlay scene (brief 'I', pause 'P'); the overlay resumes it.
   openOverlay(key) {
-    if (this.ended || !this.scene.isActive()) return;
+    // The key that just closed another overlay (e.g. ESC on the pause sheet) must not open a new one.
+    if (this.ended || !this.scene.isActive() || performance.now() - (this.resumedAt || 0) < 250) return;
     this.scene.pause();
     // Keys released while paused would stay "down" on resume.
-    this.events.once('resume', () => this.input.keyboard?.resetKeys());
+    this.events.once('resume', () => {
+      this.resumedAt = performance.now();
+      this.input.keyboard?.resetKeys();
+    });
     this.scene.launch(key, { levelIndex: this.levelIndex, timeLeft: this.timeLeft });
     this.scene.bringToTop(key);
   }
@@ -299,7 +351,7 @@ export default class GameScene extends Phaser.Scene {
         GameState.device = item.kind;
         GameState.weapon = item.kind === 'laptop' ? 'email' : 'teams';
         audio.sfx('powerup');
-        ui?.message?.(`${item.kind === 'laptop' ? 'LAPTOP' : 'SMARTPHONE'}! ARMA: ${WEAPON_LABEL[GameState.weapon]}\nC/ATTACCA = SPARA  V = CAMBIA ARMA`, '#7CFC00', 2200);
+        ui?.message?.(`${item.kind === 'laptop' ? 'LAPTOP' : 'SMARTPHONE'}! ARMA: ${WEAPON_LABEL[GameState.weapon]}\nC/Q = SPARA  V/E = CAMBIA ARMA`, '#7CFC00', 2200);
         break;
       case 'promotion':
         p.applyStatus('promotion', 8000);
@@ -536,7 +588,9 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
 
-    const input = this.inputCtl.update();
+    let input = this.inputCtl.update();
+    // Stomach ache: runs to the right on its own.
+    if (time < this.forcedRunUntil) input = { ...input, left: false, right: true, run: true, jump: false, jumpPressed: false, attackPressed: false };
     if (input.jumpPressed || input.attackPressed) audio.unlock?.();
 
     this.hazards.forEach((h) => h.update?.(time, delta));
@@ -598,6 +652,8 @@ export default class GameScene extends Phaser.Scene {
     this.scene.stop('UIScene');
     this.scene.stop('QuizScene');
     this.scene.stop('BriefScene');
+    this.scene.stop('QuitScene');
+    this.scene.stop('ToiletScene');
     this.scene.stop('BeachScene');
   }
 }

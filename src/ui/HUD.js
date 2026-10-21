@@ -48,7 +48,7 @@ export default class HUD {
     this.root.add(this.bars);
     this.hpText = scene.add.text(196, 9, '', textStyle(10)).setOrigin(0, 0.5);
     this.stressText = scene.add.text(196, 29, '', textStyle(10)).setOrigin(0, 0.5);
-    this.panicText = scene.add.text(232, 29, 'PANICO!', textStyle(11, '#ff3030')).setOrigin(0, 0.5).setVisible(false);
+    this.panicText = scene.add.text(232, 29, 'PANICO! COMANDI INVERTITI', textStyle(9, '#ff3030')).setOrigin(0, 0.5).setVisible(false);
     this.root.add([this.hpText, this.stressText, this.panicText]);
 
     // Level name & timer (center)
@@ -144,7 +144,7 @@ export default class HUD {
 
     this.hpText.setText(`${Math.round(hp)}%`);
     this.stressText.setText(`${Math.round(stress)}%`);
-    this.panicText.setVisible(panic && pulse);
+    this.panicText.setVisible(panic).setColor(pulse ? '#ff3030' : '#ffffff');
 
     this.levelText.setText(`${data.levelId || ''}  ${data.levelName || ''}`.trim());
     if (data.timeLeft !== undefined && data.timeLeft !== null) {

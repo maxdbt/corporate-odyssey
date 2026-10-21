@@ -77,7 +77,7 @@ export default class MenuScene extends Phaser.Scene {
     // Controls help
     const touch = this.sys.game.device.input.touch;
     const pc = 'PC: FRECCE/WASD muovi, GIU accovacciati, SU/GIU scale\n' +
-      'SPAZIO/Z salta (x2 doppio salto)  X corsa  GIU+X scivolata\nC attacca  V cambia arma  M audio  P pausa  I brief';
+      'SPAZIO/Z salta (x2 doppio salto)  X corsa  GIU+X scivolata\nC/Q attacca  V/E cambia arma  M audio  P pausa  I brief  ESC esci';
     const mobile = 'MOBILE: D-PAD a sinistra, SALTA / SCIVOLA (tieni = corsa) / ATTACCA a destra\n' +
       'Tocca l\'icona dell\'arma per cambiarla  -  i = brief  -  II = pausa';
     this.add.text(GAME_WIDTH / 2, 412, touch ? `${mobile}\n${pc.split('\n')[0]}` : `${pc}\n${mobile.split('\n')[0]}`,
