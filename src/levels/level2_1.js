@@ -51,7 +51,7 @@ export default {
     ['vacation', 2750, FLOOR - 20],
     ...arc('euro', 2840, TABLE - 20, 5, 22, 40),
     ...row('ticket', 3180, TABLE - 20, 3),
-    ['car', 3300, TABLE - 60],
+    ['tickets10', 3300, TABLE - 60],
     ...row('euro', 3980, TABLE - 20, 3),
     ['coffee', 4280, FLOOR - 24],
     ...row('ticket', 4380, TABLE - 20, 3),

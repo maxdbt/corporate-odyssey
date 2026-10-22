@@ -156,16 +156,21 @@ export const TEX = {
   DF_PERFUME: 'df_perfume', DF_CHOCO: 'df_choco', DF_WATCH: 'df_watch', // 14x14 duty free goods
   DOG1: 'dog1', DOG2: 'dog2',                 // 28x20 sniffer dog
   THIEF1: 'thief1', THIEF2: 'thief2',         // 24x32 pickpocket
+  ACTIVIST1: 'activist1', ACTIVIST2: 'activist2', // 24x32 petition volunteer
+  CONSULTANT1: 'consultant1', CONSULTANT2: 'consultant2', // 24x32 client's consultant (NegotiationScene)
+  PETITION: 'petition',       // 80x56 petition stand "Salva il Lonfo nano"
   T_AIRPORT: 't_airport', T_STATION: 't_station', // 32x32 floors
   BENCH: 'bench',             // 64x22 (waiting-room bench, top surface = top 6px)
   SHELF: 'shelf',             // 96x48 (duty free shelf)
   BOARD: 'board',             // 64x40 (departures board)
   KIOSK: 'kiosk',             // 64x56 (desert rental kiosk)
+  FOOD_STAND: 'food_stand',   // 80x64 (ground-leg food stand, forced stop; dishes food_* 40x30)
   GATE_DESK: 'gate_desk',     // 40x40 (document check desk)
   TRAIN_DOOR: 'train_door',   // 64x60 (train carriage = station exit)
   GATE_DOOR: 'gate_door',     // 40x56 (boarding gate = airport exit)
   OFFICE: 'office',           // 96x96 (client office building = desert exit)
   CAMEL: 'camel', MOTO: 'moto', TAXI: 'taxi', // mounts (see Player.mount)
+  CAMEL_WING: 'camel_wing',   // 28x14 wing of the flying camel (with the dates)
   UMBRELLA_OPEN: 'umbrella_open', // 24x12 parasol over the player
 
   // UI icons 12x12
@@ -209,7 +214,7 @@ export const LEVEL_META = [
 ];
 
 // Debug: every trip stage is selectable from the menu. false = only "La Valigia" (the full trip).
-export const TRIP_STAGES_IN_MENU = true;
+export const TRIP_STAGES_IN_MENU = false;
 
 export const WEAPONS = ['email', 'teams', 'coffee', 'clock', 'www'];
 export const WEAPON_LABEL = {

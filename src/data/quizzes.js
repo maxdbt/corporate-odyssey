@@ -380,19 +380,90 @@ export const QUIZZES = {
         outcome: 'Il sistema non l\'ha presa bene.\nSALUTE MENTALE +10%   +3 NEMICI "BUG DI SISTEMA"'
       }
     ]
+  },
+  // ---- Trasferta: desert (level4_desert quizSetting)
+  19: {
+    setting: 'desert',
+    title: 'IL MIRAGGIO',
+    question: 'All\'orizzonte compare un ufficio climatizzato\ncon tanto di distributore d\'acqua.',
+    choices: [
+      {
+        label: 'Corri verso l\'ufficio.',
+        effects: { stress: 15, timer: -15 },
+        outcome: 'Era un miraggio. Sabbia, e ancora sabbia.\nSTRESS +15%   -15 SECONDI SUL TIMER'
+      },
+      {
+        label: 'Bevi un sorso e prosegui.',
+        effects: { hp: 15 },
+        outcome: 'Idratazione prima di tutto.\nSALUTE MENTALE +15%'
+      },
+      {
+        label: 'Scrivi al capo se lo vede anche lui.',
+        effects: { stress: 10, timer: -5 },
+        outcome: '"Mettiamo una call per approfondire."\nSTRESS +10%   -5 SECONDI SUL TIMER'
+      }
+    ]
+  },
+  20: {
+    setting: 'desert',
+    title: 'LA TEMPESTA DI SABBIA',
+    question: 'Si alza una tempesta di sabbia\nproprio durante la call con il cliente.',
+    choices: [
+      {
+        label: 'Ti ripari dietro una duna e aspetti.',
+        effects: { stress: -10, timer: -10 },
+        outcome: 'Tempesta passata, nervi salvi.\nSTRESS -10%   -10 SECONDI SUL TIMER'
+      },
+      {
+        label: 'Continui la call urlando.',
+        effects: { stress: 20, euro: 20 },
+        outcome: 'Il cliente apprezza la grinta.\nSTRESS +20%   BONUS +20 EUR'
+      },
+      {
+        label: '"Ti perdo... c\'e\' sabbia nel microfono!"',
+        effects: { hp: 15, nextLevelEnemySpeed: 1.1 },
+        outcome: 'Call chiusa. Ma il cliente ti aspetta agguerrito.\nSALUTE MENTALE +15%\nNEMICI DEL PROSSIMO LIVELLO +10% VELOCI'
+      }
+    ]
+  },
+  21: {
+    setting: 'desert',
+    title: 'IL MERCANTE DI TAPPETI',
+    question: 'Un mercante ti offre un tappeto volante\n"usato pochissimo, prezzo speciale".',
+    choices: [
+      {
+        label: 'Lo compri al volo.',
+        effects: { euro: -20, timer: 20 },
+        outcome: 'Vola davvero! Per un po\'.\n-20 EUR   +20 SECONDI SUL TIMER'
+      },
+      {
+        label: 'Contratti per un\'ora.',
+        effects: { hp: 10, timer: -15 },
+        outcome: 'Niente tappeto, ma ti regala un te\' alla menta.\nSALUTE MENTALE +10%   -15 SECONDI SUL TIMER'
+      },
+      {
+        label: 'Rifiuti educatamente.',
+        effects: { stress: 5 },
+        outcome: 'Ti segue per due chilometri: "prezzo speciale!"\nSTRESS +5%'
+      }
+    ]
   }
 };
 
 export const QUIZ_IDS = Object.keys(QUIZZES).map(Number);
 
-// Shuffled deck: each terminal shows a different quiz, no repeats until all have been seen.
-let deck = [];
-let lastId = null;
-export function nextQuizId() {
-  if (!deck.length) {
-    deck = Phaser.Utils.Array.Shuffle([...QUIZ_IDS]);
-    if (deck.length > 1 && deck[deck.length - 1] === lastId) deck.unshift(deck.pop());
+// Shuffled deck per setting (level.quizSetting, default 'office'): each terminal shows a different quiz
+// that fits the place, no repeats until all of that setting have been seen.
+const decks = {};
+const lastIds = {};
+export function nextQuizId(setting = 'office') {
+  const ids = QUIZ_IDS.filter((id) => (QUIZZES[id].setting || 'office') === setting);
+  if (!ids.length) return nextQuizId('office');
+  let deck = decks[setting];
+  if (!deck?.length) {
+    deck = decks[setting] = Phaser.Utils.Array.Shuffle([...ids]);
+    if (deck.length > 1 && deck[deck.length - 1] === lastIds[setting]) deck.unshift(deck.pop());
   }
-  lastId = deck.pop();
-  return lastId;
+  lastIds[setting] = deck.pop();
+  return lastIds[setting];
 }

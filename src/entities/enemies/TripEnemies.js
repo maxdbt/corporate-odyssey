@@ -1,4 +1,4 @@
-// Trip (Mondo 4) characters: the airport sniffer dog and the station pickpocket.
+// Trip (Mondo 4) characters: the airport sniffer dog, the station pickpocket, the petition volunteers.
 import Phaser from 'phaser';
 import { TEX } from '../../config/constants.js';
 import { GameState } from '../../state/GameState.js';
@@ -125,6 +125,70 @@ export class Pickpocket extends Enemy {
     } else {
       floatText(this.scene, this.x, this.y - 36, 'BECCATO!', '#7CFC00', 9, 900);
     }
+    super.die(type);
+  }
+}
+
+// Volontario della raccolta firme "Salva il Lonfo nano": waits at the stand, then chases you when you
+// pass by. If he catches you: blocked while you sign (stress, seconds lost). Run away or stomp him.
+export class Petitioner extends Enemy {
+  constructor(scene, x, y, props = {}) {
+    super(scene, x, y, TEX.ACTIVIST1, {
+      kind: 'petitioner', hp: 1, stompable: true, damage: { hp: 0, stress: 0 }, bodySize: [16, 30]
+    });
+    this.homeX = props.home ?? x;
+    this.state = 'wait';
+    this.dir = -1;
+    this.chaseUntil = 0;
+    this.shoutAt = 0;
+  }
+
+  think(now) {
+    const p = this.target;
+    let speed = 0;
+    const near = p && Math.abs(p.body.bottom - this.body.bottom) < 60;
+    if (this.state === 'wait') {
+      if (near && Math.abs(p.x - this.x) < 140 && !p.hasStatus('invuln')) {
+        this.state = 'chase';
+        this.chaseUntil = now + 5000;
+        floatText(this.scene, this.x, this.y - 36, 'UNA FIRMA PER IL LONFO NANO?!', '#7CFC00', 8, 900);
+        audio.sfx('quiz');
+      } else if (now > this.shoutAt) {
+        this.shoutAt = now + Phaser.Math.Between(2500, 4000);
+        floatText(this.scene, this.x, this.y - 36, Phaser.Utils.Array.GetRandom(['SALVA IL LONFO!', 'SOLO UNA FIRMA!', 'IL LONFO NON VAPOLA!']), '#b8ff9a', 7, 800);
+      }
+      if (p) this.dir = sign(p.x - this.x);
+    } else if (this.state === 'chase') {
+      if (!p || now > this.chaseUntil || Math.abs(p.x - this.x) > 420) this.state = 'back';
+      else { this.dir = sign(p.x - this.x); speed = 200; }
+    } else {
+      // back / done: walk home, 'done' never chases again.
+      if (Math.abs(this.x - this.homeX) > 6) { this.dir = sign(this.homeX - this.x); speed = 110; }
+      else if (this.state === 'back') this.state = 'wait';
+    }
+    if (this.onGround() && !this.groundAhead(this.dir)) speed = 0;
+    this.body.setVelocityX(this.dir * speed * this.speedMult());
+    this.setFlipX(this.dir < 0);
+    stepFrames(this, now, TEX.ACTIVIST1, TEX.ACTIVIST2, 110);
+  }
+
+  onPlayerContact(player) {
+    if (this.state !== 'chase' || this.dead || player.hasStatus('invuln')) return;
+    this.state = 'done';
+    player.applyStatus('stuck', 2500);
+    player.applyStatus('invuln', 3500);
+    player.body.setVelocityX(0);
+    GameState.addStress(10);
+    const s = this.scene;
+    s.timeLeft = Math.max(1, s.timeLeft - 5);
+    audio.sfx('hurt');
+    s.ui?.message?.('FIRMA QUI! E QUI! E ANCHE QUI!\nSTRESS +10%  -5s', '#7CFC00', 2000);
+    floatText(s, player.x, player.y - 60, 'GRAZIE! IL LONFO TI RINGRAZIA', '#b8ff9a', 8, 1400);
+  }
+
+  die(type) {
+    if (this.dead) return;
+    floatText(this.scene, this.x, this.y - 36, 'FIRMERO\' ONLINE!', '#b8ff9a', 9, 900);
     super.die(type);
   }
 }

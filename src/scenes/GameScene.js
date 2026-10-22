@@ -392,6 +392,11 @@ export default class GameScene extends Phaser.Scene {
         ui?.message?.('L\'AUMENTO! BONUS x2 PER 15s', '#7CFC00', 1600);
         audio.sfx('powerup');
         break;
+      case 'tickets10':
+        if (GameState.addBonus('ticket', 10 * mult)) audio.sfx('powerup');
+        else audio.sfx('coin');
+        ui?.message?.(`+${10 * mult} BUONI PASTO!`, '#7CFC00', 1600);
+        break;
       case 'car':
         p.applyStatus('shield', Infinity);
         ui?.message?.('AUTO AZIENDALE! SCUDO ATTIVO', '#00e0ff', 1600);
@@ -455,7 +460,7 @@ export default class GameScene extends Phaser.Scene {
     t.label?.destroy();
     audio.sfx('quiz');
     this.scene.pause();
-    this.scene.launch('QuizScene', { quizId: nextQuizId() });
+    this.scene.launch('QuizScene', { quizId: nextQuizId(this.level.quizSetting) });
     this.scene.bringToTop('QuizScene');
   }
 
@@ -693,6 +698,7 @@ export default class GameScene extends Phaser.Scene {
     this.scene.stop('QuitScene');
     this.scene.stop('ToiletScene');
     this.scene.stop('RentalScene');
+    this.scene.stop('FoodScene');
     this.scene.stop('BeachScene');
   }
 }

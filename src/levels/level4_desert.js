@@ -2,7 +2,7 @@ import { TEX } from '../config/constants.js';
 import { FLOOR, row, arc } from './helpers.js';
 
 // 4-7 Il Deserto (trip ground leg): headwind, a stretch on foot, then rent a camel, a motorbike or a taxi
-// at the kiosk and ride to the client's office.
+// at the kiosk, forced stop at the food stand and ride to the client's office.
 export default {
   id: '4-7',
   theme: 'desert',
@@ -55,7 +55,7 @@ export default {
     ...row('euro', 3310, 260, 4),
     ...arc('euro', 3050, 330, 4, 22, 70),
     ['miles', 3590, 290],
-    ...arc('euro', 3990, 320, 6, 24, 80),
+    ...arc('euro', 4130, 320, 5, 24, 80),
     ['coffee', 4640, 320],
     ...arc('euro', 4980, 330, 4, 22, 70),
     ['budget', 5490, 290],
@@ -63,6 +63,8 @@ export default {
     ...row('euro', 6000, 340, 6)
   ],
   rental: [1830, FLOOR],
+  food: [3950, FLOOR],
   terminals: [[2700, 354, 1]],
+  quizSetting: 'desert',
   goal: { type: 'office', x: 6260, y: FLOOR }
 };

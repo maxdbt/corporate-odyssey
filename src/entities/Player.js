@@ -34,7 +34,8 @@ const POSE_BODY = {
 // Trip rentals (4-7 Deserto). lift = how high the rider sits; wind = 0 immune .. 1 full headwind.
 // immune: enemy kinds ignored on contact; crash: kinds that throw you off; ram: destroys what it hits.
 export const MOUNTS = {
-  camel: { tex: TEX.CAMEL, label: 'DROMEDARIO', body: [36, 40], lift: 16, speed: 180, run: 220, jump: -500, wind: 0, immune: ['cactus', 'mirage'] },
+  // turbo / flap: with the dates the camel goes much faster and flaps its wings when you jump in mid-air.
+  camel: { tex: TEX.CAMEL, label: 'DROMEDARIO', body: [36, 40], lift: 16, speed: 180, run: 220, jump: -500, wind: 0, immune: ['cactus', 'mirage'], turbo: 1.6, flap: -340 },
   moto: { tex: TEX.MOTO, label: 'MOTO', body: [36, 34], lift: 8, speed: 300, run: 360, jump: -420, wind: 0.3, crash: ['cactus'] },
   taxi: { tex: TEX.TAXI, label: 'TAXI', body: [44, 34], lift: 6, speed: 250, run: 290, jump: -400, wind: 0, ram: true }
 };
@@ -98,11 +99,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.isCrouching = false;
     this._endClimb();
     const sprite = this.scene.add.image(this.x, this.y, cfg.tex).setOrigin(0.5, 1).setDepth(DEPTH.PLAYER + 1);
-    this.mount = { type, cfg, sprite, nextBalk: this.clock + Phaser.Math.Between(5000, 8000), balkUntil: 0 };
+    const turbo = type === 'camel' && GameState.hasItem('dates');
+    this.mount = { type, cfg, sprite, turbo, nextBalk: this.clock + Phaser.Math.Between(5000, 8000), balkUntil: 0 };
+    if (turbo) this.mount.wings = this.scene.add.image(this.x, this.y, TEX.CAMEL_WING).setOrigin(0.5, 1).setDepth(DEPTH.PLAYER + 2).setVisible(false);
     this.bodyCategory = null;
     this._setPose('idle');
     if (this.body) this.y -= cfg.lift;
-    this._floatText(cfg.label + '!', '#ffd800');
+    this._floatText(turbo ? 'TURBO DROMEDARIO!' : cfg.label + '!', '#ffd800');
   }
 
   // silent = no tumble animation (replaced by another mount or level end).
@@ -110,6 +113,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     const m = this.mount;
     if (!m) return;
     this.mount = null;
+    m.wings?.destroy();
     if (silent) m.sprite.destroy();
     else {
       this.scene.tweens.add({
@@ -329,7 +333,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     const m = this.mount;
     if (m) {
       // Camel without dates: balks every few seconds.
-      if (m.type === 'camel' && !GameState.hasItem('dates') && this.clock >= m.nextBalk) {
+      if (m.type === 'camel' && !m.turbo && this.clock >= m.nextBalk) {
         m.balkUntil = this.clock + 1600;
         m.nextBalk = this.clock + Phaser.Math.Between(6000, 9000);
         this._floatText('IL DROMEDARIO SI IMPUNTA!', '#ffb000');
@@ -385,7 +389,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     // Speed & friction
     let speed = input.run ? RUN_SPEED : WALK_SPEED;
-    if (m) speed = (input.run ? m.cfg.run : m.cfg.speed) * (m.type === 'camel' && GameState.hasItem('dates') ? 1.15 : 1);
+    if (m) speed = (input.run ? m.cfg.run : m.cfg.speed) * (m.turbo ? m.cfg.turbo : 1);
     else speed *= env.speedMult;
     if (this.hasStatus('promotion')) speed *= 1.5;
     if (this.hasStatus('cold')) speed *= 1.4;
@@ -434,6 +438,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       if (buffered && canCoyote && !this.isCrouching) {
         this._jump(m ? m.cfg.jump : JUMP_V);
         audio.sfx('jump');
+      } else if (input.jumpPressed && !canCoyote && m?.turbo) {
+        // Flying camel: every jump in mid-air is a wing flap.
+        this._jump(this.y > 110 ? m.cfg.flap : 0);   // ceiling: stays under the HUD
+        m.flapAt = this.clock;
+        audio.sfx('doublejump');
+        this._puff();
       } else if (input.jumpPressed && !canCoyote && !this.doubleJumpUsed && !m) {
         this.doubleJumpUsed = true;
         this._jump(DOUBLE_JUMP_V);
@@ -611,6 +621,17 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       const bob = grounded && moving ? Math.round(Math.sin(this.clock / 70)) : 0;
       ms.setPosition(this.x, body.bottom + bob).setFlipX(this.facing < 0);
       ms.setTint(this.clock < this.mount.balkUntil ? 0xffb080 : 0xffffff);
+      const w = this.mount.wings;
+      if (w) {
+        // Wings open in the air and beat faster right after a flap.
+        const beat = this.clock - (this.mount.flapAt || -9999) < 300 ? 50 : 120;
+        w.setVisible(!grounded).setPosition(this.x - this.facing * 6, body.bottom - 18).setFlipX(this.facing < 0)
+          .setScale(1, Math.floor(this.clock / beat) % 2 ? 1 : -0.6);
+      }
+      if (this.mount.turbo && grounded && moving && this.clock >= (this.mount.dustAt || 0)) {
+        this.mount.dustAt = this.clock + 70;
+        this._dust(body.bottom);
+      }
     }
 
     // Umbrella as a parasol in the desert sun.
@@ -691,9 +712,18 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
+  // Turbo camel: sand cloud behind the hooves.
+  _dust(y) {
+    const p = this.scene.add.rectangle(this.x - this.facing * 20, y - 2, 6, 6, 0xe8c890).setDepth(DEPTH.FX);
+    this.scene.tweens.add({
+      targets: p, x: p.x - this.facing * Phaser.Math.Between(20, 40), y: y - Phaser.Math.Between(4, 14),
+      alpha: 0, scale: 2, duration: 350, onComplete: () => p.destroy()
+    });
+  }
+
   preDestroy() {
     if (this.shieldGfx) this.shieldGfx.destroy();
-    if (this.mount) this.mount.sprite.destroy();
+    if (this.mount) { this.mount.sprite.destroy(); this.mount.wings?.destroy(); }
     if (this.parasol) this.parasol.destroy();
     try { this._resetCamera(); } catch (e) { /* camera already gone on shutdown */ }
     super.preDestroy();

@@ -5,6 +5,7 @@ import { TEX, ANIM, DEPTH } from '../config/constants.js';
 const KIND_TEX = {
   euro: TEX.EURO1,
   ticket: TEX.TICKET,
+  tickets10: TEX.TICKET,
   coffee: TEX.COFFEE,
   water: TEX.WATER,
   vacation: TEX.VACATION,
@@ -22,7 +23,7 @@ const KIND_TEX = {
   df_watch: TEX.DF_WATCH
 };
 
-const POWERUPS = ['laptop', 'smartphone', 'promotion', 'raise', 'car', 'vacation', 'budget', 'miles', 'upgrade'];
+const POWERUPS = ['laptop', 'smartphone', 'promotion', 'raise', 'car', 'tickets10', 'vacation', 'budget', 'miles', 'upgrade'];
 
 export default class Collectible extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, kind) {
@@ -34,6 +35,8 @@ export default class Collectible extends Phaser.Physics.Arcade.Sprite {
     this.body.setAllowGravity(false);
     this.body.setImmovable(true);
     this.setDepth(DEPTH.ITEMS);
+    // The +10 meal-ticket bonus is a bigger ticket
+    if (kind === 'tickets10') this.setScale(1.6);
 
     if (kind === 'euro' && scene.anims.exists(ANIM.EURO_SPIN)) {
       this.play({ key: ANIM.EURO_SPIN, startFrame: Phaser.Math.Between(0, 1) });

@@ -15,6 +15,7 @@ export default {
   ground: [[0, 137]],
   benches: [[480, FLOOR], [1300, FLOOR], [1480, FLOOR], [2600, FLOOR], [3450, FLOOR], [3630, FLOOR]],
   platforms: [[760, 300, 64, 'luggage'], [920, 250, 64, 'luggage'], [2000, 290, 64, 'luggage'], [2160, 240, 64, 'luggage'], [2950, 290, 64, 'luggage']],
+  petition: [1150, 3200],
   decor: [
     [TEX.BOARD, 300, 200], [TEX.BOARD, 1100, 200], [TEX.BOARD, 1900, 200], [TEX.BOARD, 2800, 200], [TEX.BOARD, 3700, 200],
     [TEX.PLANT, 2380, FLOOR]

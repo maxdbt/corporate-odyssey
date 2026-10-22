@@ -3,22 +3,22 @@ import { GAME_WIDTH, GAME_HEIGHT, TEX } from '../config/constants.js';
 import { GameState } from '../state/GameState.js';
 import { audio } from '../systems/Audio8bit.js';
 import { setupStaticCamera } from '../utils/view.js';
-import { TRANSPORT } from '../data/trip.js';
+import { TRANSPORT, TRIP_FUND } from '../data/trip.js';
 import { ensureTrip, setTransport, goNext } from '../systems/Trip.js';
 import { tstyle } from '../ui/TripUI.js';
 
 const CARDS = [
   {
     kind: 'train',
-    lines: ['Costa meno: piu\' budget', 'da spendere in trasferta.', '', 'IMPREVISTI:', 'borseggiatori, Wi-Fi che cade,', 'vicino che urla al telefono.']
+    lines: ['Biglietto economico: resta piu\'', 'budget da spendere in trasferta.', '', 'IMPREVISTI:', 'borseggiatori, Wi-Fi che cade,', 'vicino che urla al telefono.']
   },
   {
     kind: 'plane',
-    lines: ['Costa di piu\': meno budget,', `ma arrivi prima (+${TRANSPORT.plane.timeBonus}s a terra).`, '', 'IMPREVISTI:', 'duty free, cane antidroga,', 'turbolenza, vicino chiacchierone.']
+    lines: ['Biglietto caro: resta meno budget,', `ma arrivi prima (+${TRANSPORT.plane.timeBonus}s a terra).`, '', 'IMPREVISTI:', 'duty free, cane antidroga,', 'turbolenza, vicino chiacchierone.']
   }
 ];
 
-// Trip stage 2: train (more budget) or plane (less budget, more time on the ground leg).
+// Trip stage 2: train (cheap ticket, more budget left) or plane (dear ticket, more time on the ground leg).
 export default class TransportScene extends Phaser.Scene {
   constructor() {
     super('TransportScene');
@@ -38,7 +38,7 @@ export default class TransportScene extends Phaser.Scene {
     [0x1a2a5a, 0x22346a, 0x2a3e7a, 0x324888].forEach((c, i) => g.fillStyle(c).fillRect(0, i * 112, GAME_WIDTH, 113));
 
     this.add.text(GAME_WIDTH / 2, 30, 'COME CI VAI?', tstyle(22, '#ffd800', { strokeThickness: 5 })).setOrigin(0.5);
-    this.add.text(GAME_WIDTH / 2, 58, 'L\'amministrazione ti assegna il budget in base al mezzo scelto.', tstyle(10)).setOrigin(0.5);
+    this.add.text(GAME_WIDTH / 2, 58, `L'amministrazione ti da' ${TRIP_FUND} € per tutta la trasferta: il biglietto si paga da qui.`, tstyle(10)).setOrigin(0.5);
 
     this.cards = CARDS.map((c, i) => {
       const x = GAME_WIDTH / 2 + (i === 0 ? -180 : 180);
@@ -49,8 +49,9 @@ export default class TransportScene extends Phaser.Scene {
       this.add.text(x, y - 128, TRANSPORT[c.kind].label, tstyle(20, '#ffffff')).setOrigin(0.5);
       if (c.kind === 'train') this.add.image(x, y - 50, TEX.TRAIN_DOOR).setScale(1.6);
       else this.drawPlane(x, y - 52);
-      this.add.text(x, y + 10, `BUDGET: ${TRANSPORT[c.kind].budget} €`, tstyle(15, '#7CFC00')).setOrigin(0.5);
-      this.add.text(x, y + 30, c.lines.join('\n'), tstyle(9, '#dddddd', { align: 'center', lineSpacing: 3 })).setOrigin(0.5, 0);
+      this.add.text(x, y - 2, `BIGLIETTO: ${TRANSPORT[c.kind].cost} €`, tstyle(14, c.kind === 'train' ? '#7CFC00' : '#ff9f60')).setOrigin(0.5);
+      this.add.text(x, y + 18, `BUDGET CHE TI RESTA: ${TRANSPORT[c.kind].budget} €`, tstyle(10, '#ffd800')).setOrigin(0.5);
+      this.add.text(x, y + 36, c.lines.join('\n'), tstyle(9, '#dddddd', { align: 'center', lineSpacing: 3 })).setOrigin(0.5, 0);
       return { frame };
     });
     this.add.text(GAME_WIDTH / 2, 430, 'SINISTRA/DESTRA scegli  -  INVIO conferma  -  oppure TOCCA due volte', tstyle(9, '#cccccc')).setOrigin(0.5);

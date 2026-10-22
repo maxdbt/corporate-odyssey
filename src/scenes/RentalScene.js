@@ -23,7 +23,7 @@ export default class RentalScene extends Phaser.Scene {
     const dates = GameState.hasItem('dates');
     const options = OPTIONS.map((o) => ({
       label: `${o.label}  -  ${PRICES[o.type]} €`,
-      note: o.type === 'camel' ? (dates ? 'hai i DATTERI: non si impuntera\'!' : 'senza datteri ogni tanto si impunta') : o.note,
+      note: o.type === 'camel' ? (dates ? 'hai i DATTERI: turbo e... vola!' : 'senza datteri ogni tanto si impunta') : o.note,
       disabled: GameState.canAfford(PRICES[o.type]) ? null : 'budget insufficiente'
     }));
     options.push({ label: 'PROSEGUO A PIEDI (gratis)', note: 'controvento...' });

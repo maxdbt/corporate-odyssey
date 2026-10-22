@@ -180,7 +180,8 @@ level flow. Creates BEFORE spawning anything:
   checkpoint (do NOT call beginLevel), else `GameState.beginLevel(levelIndex)`.
 
 Quiz terminals: on touch, `this.scene.pause(); this.scene.launch('QuizScene', { quizId })` (each terminal
-used once). QuizScene shows the question (keyboard 1/2/3 or A/B/C, arrows+Enter, or tap), calls
+used once; `quizId = nextQuizId(level.quizSetting)`: one shuffled deck per setting, quizzes carry
+`setting` (default `'office'`), e.g. level4_desert uses `quizSetting: 'desert'` so no office quizzes there). QuizScene shows the question (keyboard 1/2/3 or A/B/C, arrows+Enter, or tap), calls
 `this.scene.get('GameScene').applyEffects(choice.effects)`, shows the outcome text, then
 `this.scene.resume('GameScene'); this.scene.stop()`.
 
@@ -204,18 +205,29 @@ One trip in stages, with a BUDGET bar carried across them in `GameState.trip`
 (`{ items, transport, budget, maxBudget, stageIndex, stageBudget }`; `hasItem / budget / canAfford / spend / addBudget`).
 - Stages are `LEVEL_META` entries with `trip: true`; entries with `scene` are static scenes (PackingScene,
   TransportScene, JourneyScene plane/train, NegotiationScene), the others are GameScene levels.
+- The suitcase holds `SUITCASE_SIZE` (10) items; `itemTex(id, character)` gives per-character icons for
+  underwear, suit and swimsuit.
 - ALWAYS start a level with `startLevel(scene, index)` and advance with `goNext(scene, index)`: they route to the
   static scene and pick the branch: 4-1 Valigia → 4-2 Mezzo → 4-3 Aeroporto | 4-4 Stazione → 4-5 Volo | 4-6 Treno →
   random ground leg from `GROUND_LEGS` (now only 4-7 Deserto) → 4-10 Cliente → 5-1.
 - `beginStage(index)` stores the budget at stage start (a replay restores it); `ensureTrip(index)` builds a default
   trip when a stage is started directly from the menu (debug, `TRIP_STAGES_IN_MENU`). `finishTrip()` converts the
   leftover budget to euro (`BUDGET_TO_EURO`) and clears the trip.
-- Data (items, transports, prices): `src/data/trip.js`. Shared dialogs/HUD for static scenes: `src/ui/TripUI.js`.
+- Data (items, transports, prices, food stand menus): `src/data/trip.js`. `TRIP_FUND` (480) is the whole allowance:
+  the ticket is paid out of it (train 180 → 300 left, plane 300 → 180 left but +60s on the clock). Shared dialogs/HUD for static scenes: `src/ui/TripUI.js`.
 - In-level trip props live in `src/systems/TripLevel.js` (`scene.tripLevel`): falling drops from the departure
   boards (`tripdrops` hazard), duty free shelves, document check, rental kiosk (opens `RentalScene` overlay →
-  `rent(type)` → `player.mountUp(type)`), taxi meter, sniffer search. Enemies Sniffer / Pickpocket in
-  `entities/enemies/TripEnemies.js`.
+  `rent(type)` → `player.mountUp(type)`), taxi meter, sniffer search, petition stand (`level.petition: [x...]`,
+  spawns two `Petitioner`s that chase you and block you to sign), food stand (`level.food: [x, y]`, forced stop →
+  `FoodScene` overlay: 3 dishes from `FOOD_MENUS`, shuffled good / trip (5s hallucination) / toxic (5s in the
+  toilet), `FOOD_OUTCOMES`). Enemies Sniffer / Pickpocket / Petitioner in `entities/enemies/TripEnemies.js`.
 - Mounts: `MOUNTS` in Player.js (camel / moto / taxi); while mounted no double jump, slide or ladders;
+  the camel with the DATES item is turbo (`cfg.turbo` speed, wings, mid-air jumps = flaps `cfg.flap`);
   GameScene.playerVsEnemy asks `player.mountContact(enemy)` first (immune / ram / crash).
+- NegotiationScene phases: question 1 (first impression) → dodge the requests (18s, jump with SPACE) →
+  consultants (stomp them or throw e-mails with C/Q; some hop over e-mails) → questions 2-4 → outcome.
+  Each action phase scores 0-2 from the patience left; `MAX_POINTS` 12.
+- JourneyScene: the train keeps the side cabin; the plane is a front view (`drawPlaneCabin`: window wall, two
+  seats + aisle + two seats, seated passengers `pax_*` from `gfx/trip.js`, hostess with trolley, seat-belt sign).
 - 4-8 Ghiacciaio and 4-9 Mare are still the old levels: to become ground legs they need their own mounts
   (sled / snowmobile, submarine / boat / seahorse) and an entry in `GROUND_LEGS`.

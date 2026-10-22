@@ -23,7 +23,7 @@ const OUTCOMES = {
 };
 
 // Toilet, monster and black-hole textures, generated once.
-function ensureToiletTextures(scene) {
+export function ensureToiletTextures(scene) {
   if (scene.textures.exists('wc_toilet')) return;
   const g = scene.make.graphics({ x: 0, y: 0 }, false);
   // Shiny white toilet 40x48

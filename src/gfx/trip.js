@@ -2,9 +2,10 @@
 import { makeTex } from './painter.js';
 import { TEX } from '../config/constants.js';
 
-// Suitcase item icon key; underwear and suit depend on the character.
+// Suitcase item icon key; underwear, suit and swimsuit depend on the character.
+const PER_CHARACTER = ['underwear', 'suit', 'swimsuit'];
 export const itemTex = (id, character = 'man') =>
-  (id === 'underwear' || id === 'suit' ? `trip_${id}_${character}` : `trip_${id}`);
+  (PER_CHARACTER.includes(id) ? `trip_${id}_${character}` : `trip_${id}`);
 
 // 16x16 icons, 1 texture pixel = 1 px.
 const ICONS = {
@@ -91,7 +92,13 @@ const ICONS = {
     [[3, 6], [7, 4], [10, 7], [5, 9]].forEach(([x, y]) => p.r(x, y, 4, 3, 0x7a3a12).r(x, y, 4, 1, 0xa0581f));
     p.r(2, 12, 12, 2, 0xc8a060);
   },
-  swimsuit: (p) => {
+  swimsuit_man: (p) => {
+    // Swim trunks with a drawstring
+    p.r(2, 4, 12, 4, 0x2a6ad8).r(2, 8, 5, 5, 0x2a6ad8).r(9, 8, 5, 5, 0x2a6ad8).r(7, 8, 2, 2, 0x2a6ad8);
+    p.r(2, 4, 12, 1, 0x1a4aa8).r(7, 5, 1, 3, 0xffffff).r(8, 5, 1, 3, 0xffffff);
+    p.r(3, 11, 3, 1, 0xffd800).r(10, 11, 3, 1, 0xffd800);
+  },
+  swimsuit_woman: (p) => {
     p.r(3, 3, 3, 4, 0x20c0c0).r(10, 3, 3, 4, 0x20c0c0).r(3, 9, 10, 4, 0x20c0c0).r(6, 13, 4, 2, 0x20c0c0);
     p.r(6, 4, 4, 1, 0x108080).r(5, 10, 1, 1, 0xffd800).r(10, 11, 1, 1, 0xffd800);
   }
@@ -150,6 +157,26 @@ function characters(scene) {
     if (f) p.r(6, 22, 5, 8, 0x1f2a44).r(13, 22, 5, 6, 0x1f2a44).r(5, 30, 6, 2, 0xffffff).r(14, 28, 6, 2, 0xffffff);
     else p.r(7, 22, 4, 8, 0x1f2a44).r(13, 22, 4, 8, 0x1f2a44).r(6, 30, 6, 2, 0xffffff).r(13, 30, 6, 2, 0xffffff);
   }));
+  // Client's consultant: slick hair, glasses, grey suit, tablet under the arm, two frames.
+  [TEX.CONSULTANT1, TEX.CONSULTANT2].forEach((key, f) => makeTex(scene, key, 24, 32, (p) => {
+    p.r(7, 0, 10, 4, 0x2a1a0a).r(6, 1, 2, 4, 0x2a1a0a).r(7, 3, 10, 9, 0xf1c27d).r(16, 1, 2, 2, 0x2a1a0a);
+    p.r(7, 6, 4, 3, 0x111111).r(13, 6, 4, 3, 0x111111).r(11, 7, 2, 1, 0x111111).r(8, 7, 2, 1, 0x9be7ff).r(14, 7, 2, 1, 0x9be7ff);
+    p.r(10, 10, 4, 1, 0xa05a3a);
+    p.r(5, 12, 14, 11, 0x5a6270).r(10, 12, 4, 6, 0xffffff).r(11, 13, 2, 6, 0x2a6ad8).r(5, 12, 14, 1, 0x7a8290);
+    p.r(3, 13, 3, 8, 0x5a6270).r(18, 13, 3, 8, 0x5a6270).r(19, 15, 5, 7, 0x1a1a1a).r(20, 16, 3, 5, 0x5ab4ff);
+    if (f) p.r(6, 23, 5, 7, 0x3a404a).r(13, 23, 5, 5, 0x3a404a).r(5, 30, 6, 2, 0x111111).r(14, 28, 6, 2, 0x111111);
+    else p.r(7, 23, 4, 7, 0x3a404a).r(13, 23, 4, 7, 0x3a404a).r(6, 30, 6, 2, 0x111111).r(13, 30, 6, 2, 0x111111);
+  }));
+  // Petition volunteer: green "LONFO" t-shirt, curly hair, clipboard held out, two frames.
+  [TEX.ACTIVIST1, TEX.ACTIVIST2].forEach((key, f) => makeTex(scene, key, 24, 32, (p) => {
+    p.r(6, 0, 12, 5, 0xc0602a).r(5, 2, 2, 5, 0xc0602a).r(17, 2, 2, 5, 0xc0602a);   // curly hair
+    p.r(7, 4, 10, 8, 0xf1c27d).r(9, 7, 2, 1, 0x111111).r(13, 7, 2, 1, 0x111111).r(10, 10, 4, 1, 0xd05050);
+    p.r(5, 12, 14, 10, 0x3ca03c).r(5, 12, 14, 1, 0x60c860).r(8, 15, 8, 4, 0xffffff).r(9, 16, 6, 2, 0x3ca03c);
+    p.r(3, 13, 3, 7, 0x3ca03c).r(18, 13, 4, 4, 0x3ca03c);
+    p.r(19, 11, 5, 7, 0xa0703a).r(20, 12, 3, 5, 0xffffff).r(20, 13, 3, 1, 0x333333).r(20, 15, 2, 1, 0x333333);
+    if (f) p.r(6, 22, 5, 8, 0x5a6a9a).r(13, 22, 5, 6, 0x5a6a9a).r(5, 30, 6, 2, 0x6a4a2a).r(14, 28, 6, 2, 0x6a4a2a);
+    else p.r(7, 22, 4, 8, 0x5a6a9a).r(13, 22, 4, 8, 0x5a6a9a).r(6, 30, 6, 2, 0x6a4a2a).r(13, 30, 6, 2, 0x6a4a2a);
+  }));
 }
 
 function props(scene) {
@@ -182,11 +209,49 @@ function props(scene) {
       p.r(4, y, 18, 3, 0xffd800).r(26, y, 14, 3, 0xffffff).r(44, y, 16, 3, y % 12 ? 0x3ce05a : 0xff3030);
     }
   });
+  // Petition stand: table with a green cloth, a sign-up sheet and the poster of the Lonfo nano.
+  makeTex(scene, TEX.PETITION, 80, 56, (p) => {
+    p.r(10, 0, 2, 34, 0x6a4a2a).r(68, 0, 2, 34, 0x6a4a2a).r(8, 0, 64, 20, 0xfff8e0).box(8, 0, 64, 20, 0x3ca03c);
+    // the Lonfo nano: small furry green creature with big eyes
+    p.disc(40, 11, 7, 0x6ad06a).r(33, 4, 3, 3, 0x6ad06a).r(44, 4, 3, 3, 0x6ad06a);
+    p.disc(37, 10, 2.5, 0xffffff).disc(43, 10, 2.5, 0xffffff).r(37, 10, 1, 1, 0x111111).r(43, 10, 1, 1, 0x111111);
+    p.r(39, 15, 3, 1, 0x2a6a2a).r(14, 6, 14, 2, 0x3ca03c).r(14, 10, 10, 2, 0x3ca03c).r(52, 6, 14, 2, 0x3ca03c).r(56, 10, 10, 2, 0x3ca03c);
+    p.r(0, 34, 80, 22, 0x3ca03c).r(0, 34, 80, 3, 0x60c860).r(0, 52, 80, 4, 0x2a7a2a);
+    p.r(14, 30, 18, 6, 0xffffff).r(16, 31, 12, 1, 0x888888).r(16, 33, 10, 1, 0x888888).r(36, 29, 2, 7, 0x2a2a8a);
+    p.r(52, 28, 14, 8, 0xffd800).r(56, 26, 6, 2, 0x8a6a00).disc(26, 44, 5, 0xffffff).disc(26, 44, 3, 0x6ad06a);
+  });
   makeTex(scene, TEX.KIOSK, 64, 56, (p) => {
     p.r(4, 22, 56, 34, 0xc8a060).r(4, 22, 56, 3, 0x8a6a30).r(8, 30, 20, 16, 0x6a4a20);
     for (let x = 0; x < 64; x += 8) p.r(x, 8, 8, 14, (x / 8) % 2 ? 0xffffff : 0xe8323c);
     p.r(0, 6, 64, 3, 0x8a1a1a).r(2, 22, 2, 34, 0x6a4a20).r(60, 22, 2, 34, 0x6a4a20);
     p.r(32, 30, 24, 12, 0xfff4e0).text('RENT', 35, 33, 0xd02020);
+  });
+  // Food stand: palm-leaf roof, counter, steaming pot.
+  makeTex(scene, TEX.FOOD_STAND, 80, 64, (p) => {
+    p.r(6, 18, 4, 46, 0x6a4a20).r(70, 18, 4, 46, 0x6a4a20).r(4, 36, 72, 28, 0xb07a3a).r(4, 36, 72, 4, 0x8a5a20);
+    for (let x = 0; x < 80; x += 10) p.r(x, 8 + (x % 20 ? 2 : 0), 12, 12, (x / 10) % 2 ? 0x3ca03c : 0x2a8a2a);
+    p.r(0, 6, 80, 4, 0x5a3a1a).r(14, 22, 52, 12, 0xfff4dc).text('CIBO', 30, 25, 0xd02020);
+    p.r(48, 44, 18, 10, 0x4a4a4a).r(46, 42, 22, 3, 0x6a6a6a).r(52, 38, 2, 4, 0xffffff, 0.7).r(58, 36, 2, 6, 0xffffff, 0.7);
+    p.r(12, 46, 10, 6, 0xffd800).r(26, 46, 10, 6, 0xd04020).r(10, 52, 30, 2, 0x6a4a20);
+  });
+  // Dishes of the desert food stand (40x30).
+  makeTex(scene, 'food_panino', 40, 30, (p) => {
+    p.r(2, 22, 36, 6, 0xffffff).r(0, 26, 40, 3, 0xd8d8d8);
+    p.r(5, 8, 30, 6, 0xe0b060).r(7, 6, 26, 2, 0xe0b060).r(4, 14, 32, 4, 0x8a4a1a).r(5, 15, 6, 2, 0xa06a2a).r(20, 15, 8, 2, 0xa06a2a);
+    p.r(5, 18, 30, 4, 0xd8a050).r(10, 9, 2, 1, 0xfff0c0).r(20, 8, 2, 1, 0xfff0c0).r(28, 9, 2, 1, 0xfff0c0);
+  });
+  makeTex(scene, 'food_cannelloni', 40, 30, (p) => {
+    p.r(2, 22, 36, 6, 0xffffff).r(0, 26, 40, 3, 0xd8d8d8);
+    [6, 15, 24].forEach((x) => p.r(x, 12, 9, 10, 0xf0d8a0).r(x, 12, 9, 2, 0xfff0c8).r(x + 3, 15, 3, 4, 0xc08040));
+    p.r(4, 10, 32, 4, 0xd03018).r(8, 9, 4, 2, 0xff5a3a).r(22, 9, 6, 2, 0xff5a3a).r(14, 8, 2, 2, 0x3ca03c).r(30, 9, 2, 2, 0x3ca03c);
+  });
+  makeTex(scene, 'food_dunette', 40, 30, (p) => {
+    p.r(2, 22, 36, 6, 0xffffff).r(0, 26, 40, 3, 0xd8d8d8);
+    [[4, 22, 12], [14, 22, 14], [26, 22, 11]].forEach(([x, y, w]) => {
+      for (let i = 0; i < w / 2; i++) p.r(x + i, y - i, w - 2 * i, 1, i % 3 ? 0xe8b860 : 0xd8a040);
+      p.r(x + w / 2 - 1, y - w / 2, 2, 1, 0xffffff);
+    });
+    p.r(9, 18, 1, 1, 0xffffff).r(21, 16, 1, 1, 0xffffff).r(31, 18, 1, 1, 0xffffff);
   });
   makeTex(scene, TEX.GATE_DESK, 40, 40, (p) => {
     p.r(0, 14, 40, 26, 0x4a5a6a).r(0, 14, 40, 3, 0x8a9aaa).r(4, 0, 32, 12, 0x1a1a1a).r(6, 2, 28, 8, 0x2a6ad8);
@@ -224,6 +289,10 @@ function mounts(scene) {
     [[10, 26], [16, 26], [28, 26], [33, 26]].forEach(([x, y]) => p.r(x, y, 3, 14, d));
     p.r(4, 12, 4, 2, d).r(2, 14, 2, 6, d);
   });
+  makeTex(scene, TEX.CAMEL_WING, 28, 14, (p) => {
+    p.r(10, 10, 18, 4, 0xffffff).r(4, 6, 20, 4, 0xffffff).r(0, 2, 16, 4, 0xffffff).r(0, 0, 8, 2, 0xffffff);
+    p.r(4, 4, 10, 1, 0xc8d8e8).r(8, 8, 12, 1, 0xc8d8e8).r(14, 12, 12, 1, 0xc8d8e8);
+  });
   makeTex(scene, TEX.MOTO, 44, 26, (p) => {
     p.disc(8, 19, 6.5, 0x111111).disc(8, 19, 3, 0x9a9a9a).disc(36, 19, 6.5, 0x111111).disc(36, 19, 3, 0x9a9a9a);
     p.r(10, 10, 24, 6, 0xd02020).r(14, 6, 14, 5, 0xd02020).r(14, 6, 14, 1, 0xff8080).r(30, 2, 3, 10, 0x333333);
@@ -238,7 +307,86 @@ function mounts(scene) {
   });
 }
 
+// Seated passenger seen from the front (40x52, drawn at scale 2 in the plane cabin).
+function seated(p, o) {
+  const S = 0xf1c27d;
+  const SD = 0xd8a060;
+  const H = o.hair;
+  const dark = 0x3a2a1a;
+  const sleeve = o.jacket ?? o.shirt;
+  // Legs: thighs towards the viewer, shins down to the shoes
+  p.r(10, 38, 20, 6, o.legs).r(10, 43, 20, 1, 0x000000, 0.25);
+  p.r(11, 44, 7, 6, o.legs).r(22, 44, 7, 6, o.legs).r(10, 49, 9, 3, o.shoes).r(21, 49, 9, 3, o.shoes);
+  // Torso
+  p.r(10, 21, 20, 1, o.shirt).r(9, 22, 22, 17, o.shirt);
+  if (o.jacket) p.r(9, 22, 8, 17, o.jacket).r(23, 22, 8, 17, o.jacket).r(16, 24, 1, 5, o.jacket).r(23, 24, 1, 5, o.jacket);
+  if (o.collar) p.r(16, 22, 3, 2, o.collar).r(21, 22, 3, 2, o.collar);
+  if (o.vneck) p.r(18, 22, 4, 2, S).r(19, 24, 2, 2, S);
+  if (o.tie) p.r(19, 23, 2, 2, o.tie).r(18, 25, 4, 7, o.tie).r(19, 32, 2, 1, o.tie);
+  if (o.badge) p.r(25, 26, 3, 4, 0x3498db).r(25, 26, 3, 1, 0xffffff);
+  if (o.stripe) p.r(9, 30, 22, 2, o.stripe);
+  // Arms resting on the lap
+  p.r(5, 23, 4, 13, sleeve).r(31, 23, 4, 13, sleeve).r(5, 23, 4, 1, 0xffffff, 0.2).r(31, 23, 4, 1, 0xffffff, 0.2);
+  p.r(8, 35, 6, 4, sleeve).r(26, 35, 6, 4, sleeve).r(12, 36, 4, 3, S).r(24, 36, 4, 3, S);
+  if (o.book) p.r(11, 30, 18, 9, o.book).r(19, 30, 2, 9, 0xfff4dc).r(13, 32, 4, 1, 0xffd800).r(23, 32, 4, 1, 0xffd800);
+  // Neck and head
+  p.r(17, 19, 6, 3, SD).r(13, 5, 14, 15, S).r(12, 8, 1, 9, S).r(27, 8, 1, 9, S).r(11, 10, 2, 4, SD).r(27, 10, 2, 4, SD);
+  p.r(14, 19, 12, 1, S);
+  // Hair
+  if (o.hairStyle === 'short') p.r(13, 2, 14, 5, H).r(12, 4, 2, 6, H).r(26, 4, 2, 6, H).r(15, 1, 10, 1, H).r(14, 6, 5, 1, H);
+  if (o.hairStyle === 'long') p.r(12, 2, 16, 5, H).r(10, 5, 4, 19, H).r(26, 5, 4, 19, H).r(14, 6, 6, 2, H).r(15, 1, 10, 1, H);
+  if (o.hairStyle === 'bald') p.r(12, 8, 2, 6, H).r(26, 8, 2, 6, H).r(17, 5, 4, 1, 0xffffff, 0.45);
+  if (o.hairStyle === 'bun') p.r(13, 2, 14, 5, H).r(17, 0, 6, 3, H).r(12, 5, 2, 6, H).r(26, 5, 2, 6, H);
+  if (o.hairStyle === 'curly') {
+    p.r(11, 1, 18, 6, H).r(10, 4, 3, 8, H).r(27, 4, 3, 8, H);
+    [12, 16, 20, 24].forEach((x) => p.r(x, 0, 3, 1, H));
+  }
+  // Face
+  p.r(15, 9, 4, 1, o.hairStyle === 'bald' ? dark : H).r(21, 9, 4, 1, o.hairStyle === 'bald' ? dark : H);
+  if (o.eyes === 'closed') p.r(15, 12, 4, 1, dark).r(21, 12, 4, 1, dark);
+  else p.r(16, 11, 2, 2, 0x111111).r(22, 11, 2, 2, 0x111111).r(16, 11, 1, 1, 0xffffff).r(22, 11, 1, 1, 0xffffff);
+  p.r(19, 13, 2, 2, SD).r(14, 14, 2, 1, 0xf0a0a0, 0.7).r(24, 14, 2, 1, 0xf0a0a0, 0.7);
+  if (o.beard) p.r(13, 14, 14, 6, H).r(12, 12, 2, 5, H).r(26, 12, 2, 5, H);
+  if (o.mustache) p.r(16, 14, 8, 2, H);
+  const lip = o.lips || 0x8a3a2a;
+  if (o.mouth === 'open') p.r(17, 16, 6, 3, 0x6a1a1a).r(18, 16, 4, 1, 0xffffff).r(18, 18, 4, 1, 0xd05050);
+  else if (o.mouth === 'flat') p.r(18, 17, 4, 1, lip);
+  else p.r(17, 17, 6, 1, lip).r(16, 16, 1, 1, lip).r(23, 16, 1, 1, lip);
+  if (o.glasses) p.box(15, 10, 4, 4, 0x222222).box(21, 10, 4, 4, 0x222222).r(19, 11, 2, 1, 0x222222);
+  if (o.headphones) p.r(12, 1, 16, 2, 0x333333).r(11, 2, 2, 7, 0x333333).r(27, 2, 2, 7, 0x333333).r(9, 8, 4, 7, o.headphones).r(27, 8, 4, 7, o.headphones);
+  if (o.mask) p.r(12, 9, 16, 5, o.mask).r(15, 11, 3, 1, 0xffffff).r(22, 11, 3, 1, 0xffffff);
+}
+
+const PAX = {
+  pax_man: { hair: 0x2b1a0e, hairStyle: 'short', shirt: 0xf4f8fc, collar: 0xffffff, tie: 0xc0392b, legs: 0x1f2a44, shoes: 0x111111, badge: true },
+  pax_woman: { hair: 0x7a2e12, hairStyle: 'long', shirt: 0x16a085, vneck: true, legs: 0x2c3e50, shoes: 0xd0304a, lips: 0xd0304a, badge: true },
+  pax_chatty1: { hair: 0x8a7a6a, hairStyle: 'bald', shirt: 0x3ca03c, collar: 0x2a8a2a, legs: 0xb8a070, shoes: 0x5a3a1a, mustache: true, mouth: 'smile' },
+  pax_chatty2: { hair: 0x8a7a6a, hairStyle: 'bald', shirt: 0x3ca03c, collar: 0x2a8a2a, legs: 0xb8a070, shoes: 0x5a3a1a, mustache: true, mouth: 'open' },
+  pax_reader: { hair: 0xe8c860, hairStyle: 'bun', shirt: 0x8a3ab0, vneck: true, legs: 0x3a3a4a, shoes: 0x222222, glasses: true, book: 0x2a6ad8, mouth: 'flat', lips: 0xb04060 },
+  pax_music: { hair: 0x3a2a1a, hairStyle: 'curly', shirt: 0xe07a20, stripe: 0xffffff, legs: 0x4a5a8a, shoes: 0xffffff, beard: true, headphones: 0xd02020, eyes: 'closed' },
+  pax_sleeper: { hair: 0x5a5a5a, hairStyle: 'short', shirt: 0x6a7a8a, jacket: 0x3a4250, collar: 0xffffff, tie: 0x2a6ad8, legs: 0x3a4250, shoes: 0x111111, mask: 0x2a2a6a, mouth: 'open' }
+};
+
+// Flight attendant (32x60, front view) and her trolley (40x34).
+function hostess(p) {
+  const S = 0xf1c27d;
+  p.r(10, 1, 12, 5, 0x2b1a0e).r(13, 0, 6, 2, 0x2b1a0e).r(9, 4, 2, 6, 0x2b1a0e).r(21, 4, 2, 6, 0x2b1a0e);
+  p.r(10, 4, 12, 12, S).r(12, 8, 2, 2, 0x111111).r(18, 8, 2, 2, 0x111111).r(14, 13, 4, 1, 0xd0304a).r(11, 11, 2, 1, 0xf0a0a0).r(19, 11, 2, 1, 0xf0a0a0);
+  p.r(9, 2, 14, 2, 0x1a2a5a).r(14, 16, 4, 2, S);
+  p.r(7, 18, 18, 18, 0x1a2a5a).r(13, 18, 6, 3, 0xd02020).r(15, 21, 2, 4, 0xd02020).r(20, 22, 3, 2, 0xffd800);
+  p.r(4, 19, 3, 15, 0x1a2a5a).r(25, 19, 3, 15, 0x1a2a5a).r(4, 34, 3, 3, S).r(25, 34, 3, 3, S);
+  p.r(8, 36, 16, 10, 0x1a2a5a).r(10, 46, 4, 11, S).r(18, 46, 4, 11, S).r(9, 57, 6, 3, 0x111111).r(17, 57, 6, 3, 0x111111);
+}
+function trolley(p) {
+  p.r(0, 0, 40, 30, 0xc8ccd4).box(0, 0, 40, 30, 0x6a6e76).r(0, 0, 40, 4, 0xe8eaee).r(2, 10, 36, 1, 0x8a8e96).r(2, 20, 36, 1, 0x8a8e96);
+  p.r(4, 5, 6, 4, 0xd02020).r(14, 5, 6, 4, 0x3ca03c).r(24, 5, 8, 4, 0xffd800).r(16, 13, 8, 5, 0x2a6ad8);
+  p.disc(6, 31, 3, 0x222222).disc(34, 31, 3, 0x222222);
+}
+
 export function generateTrip(scene) {
+  Object.entries(PAX).forEach(([key, look]) => makeTex(scene, key, 40, 52, (p) => seated(p, look)));
+  makeTex(scene, 'hostess', 32, 60, hostess);
+  makeTex(scene, 'trolley', 40, 34, trolley);
   Object.entries(ICONS).forEach(([id, draw]) => makeTex(scene, `trip_${id}`, 16, 16, draw));
   pickups(scene);
   characters(scene);

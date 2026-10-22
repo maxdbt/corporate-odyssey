@@ -47,7 +47,8 @@ export const BRIEFS = {
       'Dai tabelloni piovono SCIOPERI e RITARDI: schivali. MIGLIA, UPGRADE e BUDGET EXTRA: prendili!',
       'Il DUTY FREE tenta: toccare la merce costa budget.',
       'Il cane antidroga ti punta: se ti raggiunge, perquisizione!',
-      'Al controllo documenti serve il DOCUMENTO d\'identita\'.'
+      'Al controllo documenti serve il DOCUMENTO d\'identita\'.',
+      'Banchetto SALVA IL LONFO NANO: i volontari ti rincorrono per una firma. Corri!'
     ]
   },
   '4-4': {
@@ -56,7 +57,8 @@ export const BRIEFS = {
     tips: [
       'Dai tabelloni piovono SCIOPERI e RITARDI: schivali. MIGLIA, UPGRADE e BUDGET EXTRA: prendili!',
       'I BORSEGGIATORI ti corrono incontro per rubarti il budget.',
-      'Schiacciali per recuperare il portafoglio.'
+      'Schiacciali per recuperare il portafoglio.',
+      'Banchetto SALVA IL LONFO NANO: i volontari ti rincorrono per una firma. Corri!'
     ]
   },
   '4-7': {
@@ -64,9 +66,10 @@ export const BRIEFS = {
     goal: 'Raggiungi l\'UFFICIO DEL CLIENTE controvento.',
     tips: [
       'Al NOLEGGIO scegli un mezzo: DROMEDARIO, MOTO o TAXI, ognuno con un prezzo.',
-      'Il dromedario senza DATTERI ogni tanto si impunta.',
+      'Il dromedario senza DATTERI ogni tanto si impunta. Con i datteri: TURBO, e in aria vola!',
       'Il taxi ha il TASSAMETRO: consuma budget mentre corre.',
-      'Al SOLE A PICCO l\'ombrello fa da parasole.'
+      'Al SOLE A PICCO l\'ombrello fa da parasole.',
+      'Al CHIOSCO DEL CIBO ti fermi per forza: solo un piatto su tre e\' buono...'
     ]
   },
   '4-8': {

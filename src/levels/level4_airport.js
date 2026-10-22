@@ -17,6 +17,7 @@ export default {
   platforms: [[850, 300, 64, 'luggage'], [1000, 250, 64, 'luggage'], [3150, 290, 64, 'luggage'], [3300, 240, 64, 'luggage']],
   dutyFree: [[1400, 'df_perfume'], [1580, 'df_choco'], [1760, 'df_watch'], [1940, 'df_perfume']],
   docCheck: [2300, FLOOR],
+  petition: [800, 3420],
   decor: [
     [TEX.BOARD, 300, 200], [TEX.BOARD, 1150, 200], [TEX.BOARD, 2150, 200], [TEX.BOARD, 3050, 200], [TEX.BOARD, 3950, 200],
     [TEX.PLANT, 2240, FLOOR], [TEX.PLANT, 4120, FLOOR]

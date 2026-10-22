@@ -1,5 +1,5 @@
 // Trip (Mondo 4) additions to a GameScene level: falling departure-board events, duty free, document
-// check, desert rental kiosk with the taxi meter, budget pickups.
+// check, petition stands, desert rental kiosk with the taxi meter, food stand, budget pickups.
 import Phaser from 'phaser';
 import { TEX, DEPTH, FONT } from '../config/constants.js';
 import { GameState } from '../state/GameState.js';
@@ -50,6 +50,8 @@ export default class TripLevel {
     (level.dutyFree || []).forEach(([x, kind]) => this.dutyFreeShelf(x, kind));
     if (level.docCheck) this.docDesk(...level.docCheck);
     if (level.rental) this.kiosk(...level.rental);
+    (level.petition || []).forEach((x) => this.petitionStand(x));
+    if (level.food) this.foodStand(...level.food);
   }
 
   // ---------------------------------------------------------------- drops
@@ -203,6 +205,34 @@ export default class TripLevel {
     });
   }
 
+  // Petition stand "Salva il Lonfo nano": two volunteers chase you when you pass by.
+  petitionStand(x) {
+    const s = this.scene;
+    const floor = this.level.start[1];
+    s.add.image(x, floor, TEX.PETITION).setOrigin(0.5, 1).setDepth(DEPTH.DECOR + 1);
+    const label = s.add.text(x, floor - 58, 'SALVA IL LONFO NANO!\nRACCOLTA FIRME', style(8, '#7CFC00')).setOrigin(0.5, 1).setDepth(DEPTH.DECOR + 2);
+    s.tweens.add({ targets: label, scale: 1.08, duration: 400, yoyo: true, repeat: -1 });
+    [-30, 34].forEach((dx) => s.spawnEnemy('petitioner', x + dx, floor, { home: x + dx }));
+  }
+
+  // Food stand: forced stop (full-height trigger, even for a flying camel), opens FoodScene.
+  foodStand(x, y) {
+    const s = this.scene;
+    s.add.image(x, y, TEX.FOOD_STAND).setOrigin(0.5, 1).setDepth(DEPTH.DECOR + 1);
+    const label = s.add.text(x, y - 70, 'CHIOSCO DEL CIBO\nSOSTA OBBLIGATA', style(9, '#ffb000')).setOrigin(0.5, 1).setDepth(DEPTH.DECOR + 2);
+    s.tweens.add({ targets: label, y: y - 75, duration: 500, yoyo: true, repeat: -1 });
+    const z = s.add.zone(x, 225, 24, 450);
+    s.physics.add.existing(z, true);
+    this.foodDone = false;
+    s.physics.add.overlap(s.player, z, () => {
+      if (this.foodDone || s.ended) return;
+      this.foodDone = true;
+      s.player.body.setVelocity(0, 0);
+      s.ui?.message?.('SOSTA OBBLIGATA!', '#ffb000', 900);
+      s.time.delayedCall(250, () => s.openOverlay('FoodScene'));
+    });
+  }
+
   // Desert rental kiosk: opens the RentalScene choice.
   kiosk(x, y) {
     const s = this.scene;
@@ -238,7 +268,7 @@ export default class TripLevel {
     s.player.mountUp(type);
     this.parked?.[type]?.setVisible(false);
     audio.sfx('powerup');
-    const extra = type === 'taxi' ? `\nTASSAMETRO: ${TAXI_METER} €/s` : type === 'camel' && !GameState.hasItem('dates') ? '\nSENZA DATTERI SI IMPUNTA!' : '';
+    const extra = type === 'taxi' ? `\nTASSAMETRO: ${TAXI_METER} €/s` : type === 'camel' ? (GameState.hasItem('dates') ? '\nDATTERI: TURBO! SALTA IN ARIA PER VOLARE' : '\nSENZA DATTERI SI IMPUNTA!') : '';
     s.ui?.message?.(`NOLEGGIATO! -${PRICES[type]} €${extra}`, '#ffd800', 1800);
   }
 
