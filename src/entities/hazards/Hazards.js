@@ -46,6 +46,26 @@ class Hazard {
   }
 }
 
+// Trip departure boards: strikes, delays, miles, upgrades and budget fall around the player
+// (objects and effects live in systems/TripLevel.js). props.mix = weights per kind.
+export class TripDrops extends Hazard {
+  constructor(scene, props = {}) {
+    super(scene, { interval: 1700, ...props });
+    this.mix = props.mix || { strike: 1, delay: 1, miles: 1 };
+  }
+
+  spawn(p) {
+    const trip = this.scene.tripLevel;
+    if (!trip) return;
+    const view = this.scene.cameras.main.worldView;
+    const lead = p.body ? p.body.velocity.x * 0.6 : 0;
+    const entries = Object.entries(this.mix);
+    let roll = Math.random() * entries.reduce((s, [, w]) => s + w, 0);
+    const kind = (entries.find(([, w]) => (roll -= w) <= 0) || entries[0])[0];
+    trip.spawnDrop(kind, p.x + lead + (Math.random() * 360 - 140), view.y + 50);
+  }
+}
+
 // Le Mail: envelopes raining vertically from the top of the screen.
 export class MailRain extends Hazard {
   constructor(scene, props = {}) {

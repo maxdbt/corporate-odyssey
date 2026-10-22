@@ -2,9 +2,10 @@
 import { Talker, ConfCall, ClientHell, Minute, Bug, Party, TeamsIcon } from './enemies/OfficeEnemies.js';
 import { Guardian, Shark, Mine, Copier, Cabinet, Cook, Stalactite, Cactus, Mirage } from './enemies/WorldEnemies.js';
 import { Chef, TeamsCall, Moocher, Chief } from './enemies/CanteenEnemies.js';
+import { Sniffer, Pickpocket } from './enemies/TripEnemies.js';
 import BossClient from './bosses/BossClient.js';
 import BossCEO from './bosses/BossCEO.js';
-import { MailRain, TeamsMeteor } from './hazards/Hazards.js';
+import { MailRain, TeamsMeteor, TripDrops } from './hazards/Hazards.js';
 
 const ENEMIES = {
   talker: Talker,
@@ -24,6 +25,8 @@ const ENEMIES = {
   teamscall: TeamsCall,
   moocher: Moocher,
   chief: Chief,
+  sniffer: Sniffer,
+  pickpocket: Pickpocket,
   stalactite: Stalactite,
   cactus: Cactus,
   mirage: Mirage,
@@ -33,7 +36,8 @@ const ENEMIES = {
 
 const HAZARDS = {
   mailrain: MailRain,
-  teamsmeteor: TeamsMeteor
+  teamsmeteor: TeamsMeteor,
+  tripdrops: TripDrops
 };
 
 export const ENEMY_TYPES = Object.keys(ENEMIES);

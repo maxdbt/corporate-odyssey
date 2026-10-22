@@ -4,9 +4,9 @@ import { FLOOR, row, arc } from './helpers.js';
 const stalactites = [];
 for (let x = 420; x < 5300; x += 260) stalactites.push(['stalactite', x, 40]);
 
-// 4-2 La Riorganizzazione Aziendale (Ghiacciaio): zero-friction ice, deadline stalactites.
+// 4-8 Il Ghiacciaio (trip ground leg, still the old design): zero-friction ice, deadline stalactites.
 export default {
-  id: '4-2',
+  id: '4-8',
   theme: 'glacier',
   groundTex: TEX.T_ICE,
   blockTex: TEX.T_ICE,
@@ -42,7 +42,7 @@ export default {
     ...row('euro', 1210, 260, 3),
     ...row('ticket', 1390, 220, 2),
     ...arc('euro', 1460, 330, 5, 22, 60),
-    ['car', 2070, 210],
+    ['budget', 2070, 210],
     ...row('euro', 2410, 290, 5),
     ['vacation', 2700, 330],
     ...row('euro', 3010, 270, 3),

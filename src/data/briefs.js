@@ -40,26 +40,46 @@ export const BRIEFS = {
       'Schiaccia le icone di Teams prima che ti notifichino.'
     ]
   },
-  '4-1': {
-    where: 'Trasferta nel deserto. Il cliente è "a due passi dall\'aeroporto".',
-    goal: 'Avanza contro la tempesta di sabbia e trova l\'uscita.',
+  '4-3': {
+    where: 'Aeroporto, ore 6:00. Il volo per il cliente parte tra poco.',
+    goal: 'Attraversa il terminal e raggiungi il GATE d\'imbarco.',
     tips: [
-      'Il vento contrario ti spinge indietro: corri e salta.',
-      'I cactus-raccoglitore pungono.',
-      'Le oasi possono essere miraggi...'
+      'Dai tabelloni piovono SCIOPERI e RITARDI: schivali. MIGLIA, UPGRADE e BUDGET EXTRA: prendili!',
+      'Il DUTY FREE tenta: toccare la merce costa budget.',
+      'Il cane antidroga ti punta: se ti raggiunge, perquisizione!',
+      'Al controllo documenti serve il DOCUMENTO d\'identita\'.'
     ]
   },
-  '4-2': {
-    where: 'Ghiacciaio aziendale. È in corso una riorganizzazione.',
-    goal: 'Attraversa il ghiaccio senza scivolare nei burroni.',
+  '4-4': {
+    where: 'Stazione centrale, ore 6:30. Il treno per il cliente e\' in partenza.',
+    goal: 'Attraversa la stazione e sali sul TUO TRENO.',
     tips: [
-      'Sul ghiaccio non c\'è attrito: frena in anticipo.',
+      'Dai tabelloni piovono SCIOPERI e RITARDI: schivali. MIGLIA, UPGRADE e BUDGET EXTRA: prendili!',
+      'I BORSEGGIATORI ti corrono incontro per rubarti il budget.',
+      'Schiacciali per recuperare il portafoglio.'
+    ]
+  },
+  '4-7': {
+    where: 'Deserto. Il cliente e\' "a due passi dalla stazione".',
+    goal: 'Raggiungi l\'UFFICIO DEL CLIENTE controvento.',
+    tips: [
+      'Al NOLEGGIO scegli un mezzo: DROMEDARIO, MOTO o TAXI, ognuno con un prezzo.',
+      'Il dromedario senza DATTERI ogni tanto si impunta.',
+      'Il taxi ha il TASSAMETRO: consuma budget mentre corre.',
+      'Al SOLE A PICCO l\'ombrello fa da parasole.'
+    ]
+  },
+  '4-8': {
+    where: 'Ghiacciaio. Il cliente ha scelto una sede... fresca.',
+    goal: 'Attraversa il ghiaccio e trova l\'uscita verso il cliente.',
+    tips: [
+      'Sul ghiaccio non c\'e\' attrito: frena in anticipo.',
       'Le stalattiti-scadenza cadono quando ci passi sotto.',
       'Icone di Teams in agguato anche qui.'
     ]
   },
-  '4-3': {
-    where: 'Il Mare del Digital. Tutto è sommerso dalle notifiche.',
+  '4-9': {
+    where: 'Il Mare del Digital. Il cliente ha la sede in fondo al mare.',
     goal: 'Nuota fino all\'uscita evitando squali e mine.',
     tips: [
       'Sott\'acqua premi SALTA per nuotare verso l\'alto.',

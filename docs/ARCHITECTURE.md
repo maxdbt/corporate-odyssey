@@ -174,8 +174,8 @@ level flow. Creates BEFORE spawning anything:
 - `spawnEnemy(type, x, y, props)` wraps the factory. `applyEffects(effects)` (quiz). Hazards list updated each frame.
 - Update order: hazards.update → zones set `player.env` → `player.update(time, delta, input)` →
   `player.resetEnv()` → HUD `ui.updateHud(...)` → checks (hp <= 0 / timer 0 → Burnout, fall in pit, goal).
-- Burnout: `this.scene.start('GameOverScene', { levelIndex })`. Level complete → next level
-  `this.scene.restart({ levelIndex: i + 1 })` after `GameState.beginLevel`; after the last → `VictoryScene`.
+- Burnout: `this.scene.start('GameOverScene', { levelIndex })`. Level complete → `goNext(this, i)` (Trip.js: next level
+  or trip stage) after `GameState.beginLevel`; after the last → `VictoryScene`.
 - `init(data)`: `{ levelIndex, fromCheckpoint }`. If `fromCheckpoint` and `GameState.hasCheckpoint()` spawn at
   checkpoint (do NOT call beginLevel), else `GameState.beginLevel(levelIndex)`.
 
@@ -192,9 +192,30 @@ grants device 'laptop' if none), `promotion` (seconds).
 ## Menu / GameOver / Victory (PLAYER/UI)
 - MenuScene: title "CORPORATE ODYSSEY", character select (Jack / Wendy, big preview of the sprites, keyboard
   left/right + Enter/Space, or tap), controls help for PC and mobile, level selector (from `LEVEL_META`,
-  default 1-1). Start: `GameState.newGame(char); this.scene.start('GameScene', { levelIndex })`.
+  default 1-1; chips wrap on more rows). Start: `GameState.newGame(char); startLevel(this, levelIndex)`.
 - GameOverScene `{ levelIndex }`: "BURNOUT!". Options: "Usa 1 Giorno di Ferie" (only if
   `GameState.hasCheckpoint() && GameState.vacationDays > 0`: vacationDays--, `revive()`, start GameScene
   `{ levelIndex, fromCheckpoint: true }`), "Ricomincia il livello" (`revive()`, checkpoint = null, start
   GameScene `{ levelIndex }`), "Menu".
 - VictoryScene: ending ("Sei diventato il nuovo CEO... o forse è ora di andare in ferie?"), stats, back to menu.
+
+## Mondo 4: La Trasferta (GAME) — `src/systems/Trip.js`
+One trip in stages, with a BUDGET bar carried across them in `GameState.trip`
+(`{ items, transport, budget, maxBudget, stageIndex, stageBudget }`; `hasItem / budget / canAfford / spend / addBudget`).
+- Stages are `LEVEL_META` entries with `trip: true`; entries with `scene` are static scenes (PackingScene,
+  TransportScene, JourneyScene plane/train, NegotiationScene), the others are GameScene levels.
+- ALWAYS start a level with `startLevel(scene, index)` and advance with `goNext(scene, index)`: they route to the
+  static scene and pick the branch: 4-1 Valigia → 4-2 Mezzo → 4-3 Aeroporto | 4-4 Stazione → 4-5 Volo | 4-6 Treno →
+  random ground leg from `GROUND_LEGS` (now only 4-7 Deserto) → 4-10 Cliente → 5-1.
+- `beginStage(index)` stores the budget at stage start (a replay restores it); `ensureTrip(index)` builds a default
+  trip when a stage is started directly from the menu (debug, `TRIP_STAGES_IN_MENU`). `finishTrip()` converts the
+  leftover budget to euro (`BUDGET_TO_EURO`) and clears the trip.
+- Data (items, transports, prices): `src/data/trip.js`. Shared dialogs/HUD for static scenes: `src/ui/TripUI.js`.
+- In-level trip props live in `src/systems/TripLevel.js` (`scene.tripLevel`): falling drops from the departure
+  boards (`tripdrops` hazard), duty free shelves, document check, rental kiosk (opens `RentalScene` overlay →
+  `rent(type)` → `player.mountUp(type)`), taxi meter, sniffer search. Enemies Sniffer / Pickpocket in
+  `entities/enemies/TripEnemies.js`.
+- Mounts: `MOUNTS` in Player.js (camel / moto / taxi); while mounted no double jump, slide or ladders;
+  GameScene.playerVsEnemy asks `player.mountContact(enemy)` first (immune / ram / crash).
+- 4-8 Ghiacciaio and 4-9 Mare are still the old levels: to become ground legs they need their own mounts
+  (sled / snowmobile, submarine / boat / seahorse) and an entry in `GROUND_LEGS`.

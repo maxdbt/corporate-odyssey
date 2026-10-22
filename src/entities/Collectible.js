@@ -12,10 +12,17 @@ const KIND_TEX = {
   smartphone: TEX.SMARTPHONE,
   promotion: TEX.PROMOTION,
   raise: TEX.RAISE,
-  car: TEX.CAR
+  car: TEX.CAR,
+  // trip (Mondo 4)
+  budget: TEX.BUDGET,
+  miles: TEX.MILES,
+  upgrade: TEX.UPGRADE,
+  df_perfume: TEX.DF_PERFUME,
+  df_choco: TEX.DF_CHOCO,
+  df_watch: TEX.DF_WATCH
 };
 
-const POWERUPS = ['laptop', 'smartphone', 'promotion', 'raise', 'car', 'vacation'];
+const POWERUPS = ['laptop', 'smartphone', 'promotion', 'raise', 'car', 'vacation', 'budget', 'miles', 'upgrade'];
 
 export default class Collectible extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, kind) {

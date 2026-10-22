@@ -7,9 +7,9 @@ for (let x = 60; x < 5500; x += 140 + (x % 3) * 30) seaweed.push([TEX.SEAWEED, x
 const ring = (cx, cy, r = 40, n = 8) =>
   Array.from({ length: n }, (_, i) => ['euro', Math.round(cx + Math.cos((i / n) * Math.PI * 2) * r), Math.round(cy + Math.sin((i / n) * Math.PI * 2) * r)]);
 
-// 4-3 Il Mare del Digital: underwater (swim with jump), consultant sharks, notification mines.
+// 4-9 Il Mare del Digital (trip ground leg, still the old design): underwater (swim with jump), consultant sharks, notification mines.
 export default {
-  id: '4-3',
+  id: '4-9',
   theme: 'sea',
   groundTex: TEX.T_SEABED,
   blockTex: TEX.T_SEABED,
@@ -40,7 +40,7 @@ export default {
     ...ring(1200, 230, 40),
     ...row('ticket', 1610, 170, 2),
     ['coffee', 1800, 330],
-    ['car', 2300, 340],
+    ['budget', 2300, 340],
     ...arc('euro', 2490, 220, 6, 22, 40),
     ['vacation', 2800, 330],
     ...row('euro', 3310, 150, 2),

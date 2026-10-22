@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import {
-  DEPTH, EVENTS, FONT, GRAVITY, WEAPONS, WEAPON_LABEL, playerTex, playerAnim, RENDER_SCALE
+  DEPTH, EVENTS, FONT, GRAVITY, WEAPONS, WEAPON_LABEL, TEX, playerTex, playerAnim, RENDER_SCALE
 } from '../config/constants.js';
 import { GameState } from '../state/GameState.js';
 import { audio } from '../systems/Audio8bit.js';
@@ -31,6 +31,14 @@ const POSE_BODY = {
   crouch: 'crouch', slide: 'slide', sleep: 'sleep'
 };
 
+// Trip rentals (4-7 Deserto). lift = how high the rider sits; wind = 0 immune .. 1 full headwind.
+// immune: enemy kinds ignored on contact; crash: kinds that throw you off; ram: destroys what it hits.
+export const MOUNTS = {
+  camel: { tex: TEX.CAMEL, label: 'DROMEDARIO', body: [36, 40], lift: 16, speed: 180, run: 220, jump: -500, wind: 0, immune: ['cactus', 'mirage'] },
+  moto: { tex: TEX.MOTO, label: 'MOTO', body: [36, 34], lift: 8, speed: 300, run: 360, jump: -420, wind: 0.3, crash: ['cactus'] },
+  taxi: { tex: TEX.TAXI, label: 'TAXI', body: [44, 34], lift: 6, speed: 250, run: 290, jump: -400, wind: 0, ram: true }
+};
+
 const PRESSED_KEYS = ['jumpPressed', 'attackPressed', 'switchWeaponPressed', 'slidePressed'];
 const NEUTRAL_INPUT = {
   left: false, right: false, up: false, down: false, jump: false, run: false,
@@ -38,7 +46,7 @@ const NEUTRAL_INPUT = {
 };
 
 const defaultEnv = () => ({
-  speedMult: 1, windX: 0, ice: false, underwater: false, onLadder: false, ladderX: 0, heat: false
+  speedMult: 1, windX: 0, ice: false, underwater: false, onLadder: false, ladderX: 0, heat: false, parasol: false
 });
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
@@ -75,7 +83,56 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.wasPanicking = false;
 
     this.shieldGfx = scene.add.graphics().setDepth(DEPTH.PLAYER + 1);
+    this.mount = null;            // { type, cfg, sprite, nextBalk, balkUntil }
+    this.parasol = null;
     this._setPose('idle');
+  }
+
+  // ---------------------------------------------------------------- mounts (trip)
+
+  mountUp(type) {
+    const cfg = MOUNTS[type];
+    if (!cfg) return;
+    this.dismount(true);
+    this.isSliding = false;
+    this.isCrouching = false;
+    this._endClimb();
+    const sprite = this.scene.add.image(this.x, this.y, cfg.tex).setOrigin(0.5, 1).setDepth(DEPTH.PLAYER + 1);
+    this.mount = { type, cfg, sprite, nextBalk: this.clock + Phaser.Math.Between(5000, 8000), balkUntil: 0 };
+    this.bodyCategory = null;
+    this._setPose('idle');
+    if (this.body) this.y -= cfg.lift;
+    this._floatText(cfg.label + '!', '#ffd800');
+  }
+
+  // silent = no tumble animation (replaced by another mount or level end).
+  dismount(silent = false) {
+    const m = this.mount;
+    if (!m) return;
+    this.mount = null;
+    if (silent) m.sprite.destroy();
+    else {
+      this.scene.tweens.add({
+        targets: m.sprite, x: m.sprite.x - this.facing * 60, y: m.sprite.y - 30, angle: -this.facing * 200, alpha: 0,
+        duration: 700, onComplete: () => m.sprite.destroy()
+      });
+    }
+    this.bodyCategory = null;
+    this._applyBody(POSE_BODY[this.currentPose] || 'stand');
+  }
+
+  // How the mount reacts to touching an enemy: 'immune' | 'crash' | 'ram' | null.
+  mountContact(enemy) {
+    const m = this.mount;
+    if (!m || enemy.isBoss) return null;
+    if (m.cfg.ram) return 'ram';
+    if (m.cfg.immune?.includes(enemy.kind)) return 'immune';
+    if (m.cfg.crash?.includes(enemy.kind)) return 'crash';
+    return null;
+  }
+
+  hasShield() {
+    return this.statuses.has('shield') || this.statuses.has('upgrade');
   }
 
   get onGround() {
@@ -124,6 +181,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         break;
       case 'shield':
         this._floatText('AUTO AZIENDALE!', '#7fd4ff');
+        break;
+      case 'upgrade':
+        this._floatText('UPGRADE BUSINESS!', '#ffd800');
         break;
       default:
         break;
@@ -192,8 +252,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   takeDamage(hp, stress, sourceX) {
     if (this.hasStatus('promotion') || this.hasStatus('invuln')) return false;
-    if (this.hasStatus('shield')) {
-      this.clearStatus('shield');
+    if (this.hasShield()) {
+      this.clearStatus(this.hasStatus('shield') ? 'shield' : 'upgrade');
       this.applyStatus('invuln', 1000);
       audio.sfx('bossHit');
       this._floatText('SCUDO PERSO!', '#7fd4ff');
@@ -220,6 +280,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   respawn(x, y) {
+    if (this.mount) y -= this.mount.cfg.lift;
     this.setPosition(x, y);
     if (this.body) {
       this.body.reset(x, y);
@@ -265,6 +326,18 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     const disabled = this.hasStatus('frozen') || this.hasStatus('asleep') || this.hasStatus('stuck');
     if (disabled) input = { ...NEUTRAL_INPUT };
+    const m = this.mount;
+    if (m) {
+      // Camel without dates: balks every few seconds.
+      if (m.type === 'camel' && !GameState.hasItem('dates') && this.clock >= m.nextBalk) {
+        m.balkUntil = this.clock + 1600;
+        m.nextBalk = this.clock + Phaser.Math.Between(6000, 9000);
+        this._floatText('IL DROMEDARIO SI IMPUNTA!', '#ffb000');
+        audio.sfx('hurt');
+      }
+      if (this.clock < m.balkUntil) input = { ...input, left: false, right: false, jumpPressed: false, jump: false };
+      input = { ...input, down: false, slidePressed: false };
+    }
 
     const body = this.body;
     const env = this.env;
@@ -286,7 +359,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this._handleWeapons(input);
     if (this.hasStatus('stuck') || this.hasStatus('frozen')) body.setVelocityX(0);
 
-    if (this._updateClimb(input)) {
+    if (!m && this._updateClimb(input)) {
       this._updateVisuals(input);
       return;
     }
@@ -312,14 +385,16 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     // Speed & friction
     let speed = input.run ? RUN_SPEED : WALK_SPEED;
-    speed *= env.speedMult;
+    if (m) speed = (input.run ? m.cfg.run : m.cfg.speed) * (m.type === 'camel' && GameState.hasItem('dates') ? 1.15 : 1);
+    else speed *= env.speedMult;
     if (this.hasStatus('promotion')) speed *= 1.5;
     if (this.hasStatus('cold')) speed *= 1.4;
     if (env.underwater) speed *= 0.7;
-    if (env.windX !== 0 && dir !== 0 && Math.sign(dir) !== Math.sign(env.windX)) speed *= 0.5;
+    const windK = m ? m.cfg.wind : 1;
+    if (env.windX !== 0 && dir !== 0 && Math.sign(dir) !== Math.sign(env.windX)) speed *= 1 - 0.5 * windK;
 
     let target = dir * speed;
-    if (dir === 0 && env.windX !== 0) target = env.windX * 0.6;
+    if (dir === 0 && env.windX !== 0) target = env.windX * 0.6 * windK;
     if (this.isCrouching) target = 0;
 
     let k;
@@ -357,9 +432,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       const buffered = this.clock - this.jumpBufferedAt <= JUMP_BUFFER_MS;
       const canCoyote = this.clock - this.lastGroundedAt <= COYOTE_MS;
       if (buffered && canCoyote && !this.isCrouching) {
-        this._jump(JUMP_V);
+        this._jump(m ? m.cfg.jump : JUMP_V);
         audio.sfx('jump');
-      } else if (input.jumpPressed && !canCoyote && !this.doubleJumpUsed) {
+      } else if (input.jumpPressed && !canCoyote && !this.doubleJumpUsed && !m) {
         this.doubleJumpUsed = true;
         this._jump(DOUBLE_JUMP_V);
         audio.sfx('doublejump');
@@ -476,7 +551,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     const grounded = this.onGround;
     const moving = Math.abs(body.velocity.x) > 15;
 
-    if (this.hasStatus('asleep')) this._setPose('sleep');
+    if (this.mount) this._setPose(grounded ? 'idle' : 'jump');
+    else if (this.hasStatus('asleep')) this._setPose('sleep');
     else if (this.clock < this.hurtUntil) this._setPose('hurt');
     else if (this.isSliding) this._setPose('slide');
     else if (this.isCrouching) this._setPose('crouch');
@@ -529,9 +605,23 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       cam.setZoom(RENDER_SCALE * (1.02 + Math.sin(this.clock / 610) * 0.025));
     }
 
-    // Company-car shield ring
+    // Mount follows the rider (bobbing while moving).
+    if (this.mount) {
+      const ms = this.mount.sprite;
+      const bob = grounded && moving ? Math.round(Math.sin(this.clock / 70)) : 0;
+      ms.setPosition(this.x, body.bottom + bob).setFlipX(this.facing < 0);
+      ms.setTint(this.clock < this.mount.balkUntil ? 0xffb080 : 0xffffff);
+    }
+
+    // Umbrella as a parasol in the desert sun.
+    if (this.env.parasol) {
+      if (!this.parasol) this.parasol = this.scene.add.image(this.x, this.y, TEX.UMBRELLA_OPEN).setOrigin(0.5, 1).setDepth(DEPTH.PLAYER + 2);
+      this.parasol.setPosition(this.x, this.y - this.displayHeight + 2).setVisible(true);
+    } else if (this.parasol) this.parasol.setVisible(false);
+
+    // Company-car / upgrade shield ring
     this.shieldGfx.clear();
-    if (this.hasStatus('shield')) {
+    if (this.hasShield()) {
       const r = 22 + Math.sin(this.clock / 120) * 2;
       this.shieldGfx.lineStyle(2, 0x7fd4ff, 0.9);
       this.shieldGfx.strokeCircle(this.x, this.y - 15, r);
@@ -560,6 +650,15 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   _applyBody(category) {
+    if (this.mount && this.body) {
+      // Mounted: the body covers the vehicle, the rider is drawn `lift` px above the ground.
+      if (this.bodyCategory === 'mount') return;
+      this.bodyCategory = 'mount';
+      const [w, h] = this.mount.cfg.body;
+      this.body.setSize(w, h, false);
+      this.body.setOffset((this.frame.width - w) / 2, this.frame.height + this.mount.cfg.lift - h);
+      return;
+    }
     if (this.bodyCategory === category || !this.body) return;
     this.bodyCategory = category;
     const [w, h] = BODY[category];
@@ -594,6 +693,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   preDestroy() {
     if (this.shieldGfx) this.shieldGfx.destroy();
+    if (this.mount) this.mount.sprite.destroy();
+    if (this.parasol) this.parasol.destroy();
     try { this._resetCamera(); } catch (e) { /* camera already gone on shutdown */ }
     super.preDestroy();
   }

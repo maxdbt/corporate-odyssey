@@ -11,12 +11,13 @@ const STATUS_LABEL = {
   stuck: 'BLOCCATO',
   promotion: 'PROMOZIONE',
   raise: 'AUMENTO x2',
-  shield: 'AUTO AZIENDALE'
+  shield: 'AUTO AZIENDALE',
+  upgrade: 'UPGRADE BUSINESS'
 };
 
 const STATUS_COLOR = {
   drunk: '#ffe680', nausea: '#b8f070', frozen: '#9be7ff', cold: '#bfefff', asleep: '#c0a0ff', stuck: '#ff9f40',
-  promotion: '#ffd800', raise: '#7dff7d', shield: '#7fd4ff'
+  promotion: '#ffd800', raise: '#7dff7d', shield: '#7fd4ff', upgrade: '#ffd800'
 };
 
 const WEAPON_TEX = {
@@ -179,6 +180,34 @@ export default class HUD {
     this.statusText.setColor(first ? (STATUS_COLOR[first.name] || '#ffffff') : '#ffffff');
 
     this._updateTray(data.meal);
+    this._updateBudget(data.budget);
+  }
+
+  // Trip budget (top right, Mondo 4): bar + amount; flashes red when it changes downwards.
+  _updateBudget(b) {
+    if (!b) { this.budgetBox?.setVisible(false); return; }
+    const s = this.scene;
+    if (!this.budgetBox) {
+      this.budgetBox = s.add.container(GAME_WIDTH - 156, 50);
+      const bg = s.add.rectangle(0, 0, 150, 32, 0x103a20, 0.9).setOrigin(0).setStrokeStyle(2, 0x000000);
+      const icon = s.add.image(12, 16, TEX.BUDGET);
+      const label = s.add.text(24, 3, 'BUDGET TRASFERTA', textStyle(7, '#9dffb0'));
+      this.budgetGfx = s.add.graphics();
+      this.budgetText = s.add.text(144, 3, '', textStyle(8, '#ffffff')).setOrigin(1, 0);
+      this.budgetBox.add([bg, icon, label, this.budgetGfx, this.budgetText]);
+      this.root.add(this.budgetBox);
+      this.lastBudget = b.value;
+      this.budgetFlashUntil = 0;
+    }
+    if (b.value < this.lastBudget) this.budgetFlashUntil = this.time + 600;
+    this.lastBudget = b.value;
+    const flash = this.time < this.budgetFlashUntil && Math.floor(this.time / 100) % 2;
+    const ratio = b.max > 0 ? Phaser.Math.Clamp(b.value / b.max, 0, 1) : 0;
+    const col = flash ? 0xff3030 : ratio > 0.4 ? 0x3ce05a : ratio > 0.15 ? 0xffd800 : 0xff3030;
+    this.budgetGfx.clear().fillStyle(0x000000).fillRect(24, 16, 120, 10).fillStyle(0x222222).fillRect(25, 17, 118, 8)
+      .fillStyle(col).fillRect(25, 17, Math.round(118 * ratio), 8);
+    this.budgetText.setText(`${Math.round(b.value)} €`).setColor(flash ? '#ff6060' : '#ffffff');
+    this.budgetBox.setVisible(true);
   }
 
   // Canteen meal tray (top right): one slot per course, lit when collected.

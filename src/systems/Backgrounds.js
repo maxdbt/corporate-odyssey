@@ -11,7 +11,9 @@ const THEMES = {
   desert:  { top: 0xff9a3c, bottom: 0xffd98a, wall: 0xe0a85a, wallDark: 0xc4883d },
   glacier: { top: 0x7fb8e6, bottom: 0xe2f3ff, wall: 0xcfe9ff, wallDark: 0x9cc8ea },
   sea:     { top: 0x0d6cb5, bottom: 0x03203f, wall: 0x0a3d6b, wallDark: 0x072b4d },
-  exec:    { top: 0x3a0d12, bottom: 0x6b1a22, wall: 0xc9a227, wallDark: 0x9c7a12 }
+  exec:    { top: 0x3a0d12, bottom: 0x6b1a22, wall: 0xc9a227, wallDark: 0x9c7a12 },
+  airport: { top: 0x6fb8ff, bottom: 0xd8eeff, wall: 0xe8ecf2, wallDark: 0xb8c0cc },
+  station: { top: 0x8a96a8, bottom: 0xc8ccd4, wall: 0x9a8a78, wallDark: 0x6a5a4a }
 };
 
 const rnd = (seed) => {
@@ -143,6 +145,49 @@ export function drawBackground(scene, theme, worldW) {
       }
       far.fillStyle(0xfff2b0, 0.7);
       for (let x = 0; x < farW; x += 200) { far.fillCircle(x + 100, 24, 10); far.fillRect(x + 98, 0, 4, 16); }
+      break;
+    }
+    case 'airport': {
+      // Glass wall on the runway with planes taking off, steel frame, check-in signs.
+      far.fillStyle(0x9a9aa0, 1).fillRect(0, 300, farW, 20);
+      far.fillStyle(0xffffff, 1);
+      for (let x = 60; x < farW; x += 420) {
+        const y = 150 + r() * 80;
+        far.fillRect(x, y, 60, 8).fillTriangle(x + 20, y, x + 34, y - 18, x + 40, y).fillTriangle(x, y, x + 8, y - 10, x + 12, y);
+        far.fillStyle(0x2a6ad8, 1).fillRect(x + 6, y + 3, 50, 2);
+        far.fillStyle(0xffffff, 1);
+      }
+      mid.fillStyle(0x5a6270, 1);
+      for (let x = 0; x < midW; x += 160) mid.fillRect(x, 40, 6, 330);
+      mid.fillRect(0, 40, midW, 8).fillRect(0, 210, midW, 4);
+      mid.fillStyle(t.wallDark, 1).fillRect(0, 330, midW, 60);
+      for (let x = 80; x < midW; x += 640) {
+        mid.fillStyle(0x2a3a5a, 1).fillRect(x, 260, 200, 70);
+        mid.fillStyle(0xffd800, 1).fillRect(x + 10, 268, 180, 14);
+        mid.fillStyle(0x2a3a5a, 1).fillRect(x + 20, 271, 60, 8);
+        mid.fillStyle(0xd8dce2, 1).fillRect(x + 12, 292, 50, 30).fillRect(x + 74, 292, 50, 30).fillRect(x + 136, 292, 50, 30);
+      }
+      break;
+    }
+    case 'station': {
+      // Old station hall: brick wall, arched windows, a train waiting on the far track.
+      mid.fillStyle(t.wall, 1).fillRect(0, 40, midW, 360);
+      mid.fillStyle(t.wallDark, 1);
+      for (let y = 48; y < 330; y += 12) for (let x = (y / 12) % 2 ? 0 : 16; x < midW; x += 32) mid.fillRect(x, y, 30, 1);
+      for (let x = 60; x < midW; x += 300) {
+        mid.fillStyle(0x3a3028, 1).fillRect(x - 4, 76, 128, 150).fillCircle(x + 60, 80, 64);
+        mid.fillStyle(0xbfd8f0, 1).fillRect(x, 80, 120, 142).fillCircle(x + 60, 84, 60);
+        mid.fillStyle(0x3a3028, 1).fillRect(x + 58, 20, 4, 202).fillRect(x, 150, 120, 4);
+      }
+      mid.fillStyle(0x4a4a4a, 1).fillRect(0, 300, midW, 90);
+      for (let x = 0; x < midW; x += 900) {
+        mid.fillStyle(0x1f7a3a, 1).fillRect(x + 100, 296, 520, 54);
+        mid.fillStyle(0xffffff, 1).fillRect(x + 100, 330, 520, 4);
+        mid.fillStyle(0xbfe0ff, 1);
+        for (let wx = x + 120; wx < x + 600; wx += 50) mid.fillRect(wx, 304, 34, 18);
+      }
+      far.fillStyle(0xffffff, 0.5);
+      for (let x = 0; x < farW; x += 180) far.fillRect(x, 14, 90, 8);
       break;
     }
     default:

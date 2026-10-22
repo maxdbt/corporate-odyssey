@@ -13,6 +13,9 @@ import WeaponSystem from '../systems/WeaponSystem.js';
 import { drawBackground } from '../systems/Backgrounds.js';
 import { nextQuizId } from '../data/quizzes.js';
 import Canteen from '../systems/Canteen.js';
+import TripLevel from '../systems/TripLevel.js';
+import { beginStage, goNext, underwearPenalty, isGroundLeg } from '../systems/Trip.js';
+import { TRANSPORT } from '../data/trip.js';
 
 const PIT_DAMAGE = 20;
 const BURNOUT_DELAY = 1400;
@@ -35,6 +38,7 @@ export default class GameScene extends Phaser.Scene {
     this.fromCheckpoint = !!data.fromCheckpoint && GameState.checkpoint?.levelIndex === this.levelIndex;
     if (!this.fromCheckpoint) GameState.beginLevel(this.levelIndex);
     else GameState.levelIndex = this.levelIndex;
+    if (LEVELS[this.levelIndex].trip && !this.fromCheckpoint) beginStage(this.levelIndex);
   }
 
   create() {
@@ -81,6 +85,11 @@ export default class GameScene extends Phaser.Scene {
     this.weapons = new WeaponSystem(this);
     this.setupColliders();
     this.canteen = level.canteen ? new Canteen(this, this.fromCheckpoint ? GameState.checkpoint.meal : null) : null;
+    this.tripLevel = level.trip ? new TripLevel(this, level) : null;
+    // By plane you land earlier: extra time on the ground leg.
+    const planeBonus = level.trip && isGroundLeg(level.id) && GameState.trip?.transport === 'plane'
+      ? TRANSPORT.plane.timeBonus : 0;
+    this.timeLeft += planeBonus;
 
     // Enemies and hazards
     (level.enemies || []).forEach(([type, x, y, props]) => this.spawnEnemy(type, x, y, props));
@@ -126,6 +135,12 @@ export default class GameScene extends Phaser.Scene {
         ? 'RIPRENDI DAL GIORNO DI FERIE!'
         : `${level.id}  ${level.name.toUpperCase()}`;
       this.ui?.message?.(msg, '#ffd800', 2200);
+      if (level.trip && !this.fromCheckpoint && underwearPenalty()) {
+        this.time.delayedCall(2400, () => this.ui?.message?.('SENZA MUTANDE DI RICAMBIO...\nSTRESS +10%', '#ff8080', 1800));
+      }
+      if (planeBonus && !this.fromCheckpoint) {
+        this.time.delayedCall(4400, () => this.ui?.message?.(`IN AEREO SEI ARRIVATO PRIMA!\nTEMPO +${planeBonus}s`, '#7fd4ff', 1800));
+      }
       if (GameState.levelMods.enemySpeedMult > 1) {
         this.time.delayedCall(2400, () => this.ui?.message?.('NEMICI PIU\' VELOCI DEL 15%!', '#ff8080', 1500));
       }
@@ -288,7 +303,16 @@ export default class GameScene extends Phaser.Scene {
   playerVsEnemy(enemy) {
     const p = this.player;
     if (this.ended || !enemy.active || enemy.dead || !p.body) return;
-    if (!enemy.isBoss && (p.hasStatus('promotion') || p.hasStatus('shield'))) {
+    const mc = p.mountContact(enemy);
+    if (mc === 'immune') return;
+    if (mc === 'ram') { enemy.hit?.(99, 'ram'); audio.sfx('stomp'); return; }
+    if (mc === 'crash' && !p.hasStatus('invuln')) {
+      p.dismount();
+      p.takeDamage(10, 10, enemy.x);
+      this.ui?.message?.('CADUTO DALLA MOTO!\nPROSEGUI A PIEDI', '#ff8080', 1600);
+      return;
+    }
+    if (!enemy.isBoss && (p.hasStatus('promotion') || p.hasShield())) {
       enemy.hit?.(99, 'ram');
       audio.sfx('stomp');
       return;
@@ -317,6 +341,11 @@ export default class GameScene extends Phaser.Scene {
     const p = this.player;
     const mult = p.hasStatus('raise') ? 2 : 1;
     const ui = this.ui;
+    if (this.tripLevel) {
+      const r = this.tripLevel.collect(item);
+      if (r === 'keep') return;
+      if (r) { item.collect(); return; }
+    }
     switch (item.kind) {
       case 'euro':
       case 'ticket':
@@ -523,8 +552,7 @@ export default class GameScene extends Phaser.Scene {
     this.time.delayedCall(2400, () => {
       this.cameras.main.fadeOut(400, 0, 0, 0);
       this.cameras.main.once('camerafadeoutcomplete', () => {
-        if (this.levelIndex >= LEVELS.length - 1) this.scene.start('VictoryScene');
-        else this.scene.restart({ levelIndex: this.levelIndex + 1 });
+        goNext(this, this.levelIndex);
       });
     });
   }
@@ -600,6 +628,7 @@ export default class GameScene extends Phaser.Scene {
     if (input.jumpPressed || input.attackPressed) audio.unlock?.();
 
     this.hazards.forEach((h) => h.update?.(time, delta));
+    this.tripLevel?.update(time, delta);
     this.zones.update(time, delta, p);
     this.updateLadderDrop(input);
     if (this.autoscroll) this.updateAutoscroll(time, delta);
@@ -640,7 +669,8 @@ export default class GameScene extends Phaser.Scene {
       levelId: this.level.id,
       levelName: this.level.name,
       statuses: this.player?.statusList?.() ?? [],
-      meal: this.canteen ? this.canteen.slots : null
+      meal: this.canteen ? this.canteen.slots : null,
+      budget: this.level.trip && GameState.trip ? { value: GameState.trip.budget, max: GameState.trip.maxBudget } : null
     };
   }
 
@@ -652,6 +682,8 @@ export default class GameScene extends Phaser.Scene {
     this.hazards = [];
     try { this.canteen?.destroy(); } catch (e) { /* already gone */ }
     this.canteen = null;
+    try { this.tripLevel?.destroy(); } catch (e) { /* already gone */ }
+    this.tripLevel = null;
     this.inputCtl?.destroy?.();
     // The camera may already be destroyed during shutdown; create() resets it anyway.
     this.cameras?.main?.setRotation(0);
@@ -660,6 +692,7 @@ export default class GameScene extends Phaser.Scene {
     this.scene.stop('BriefScene');
     this.scene.stop('QuitScene');
     this.scene.stop('ToiletScene');
+    this.scene.stop('RentalScene');
     this.scene.stop('BeachScene');
   }
 }

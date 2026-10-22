@@ -20,13 +20,20 @@ import Collectible from '../entities/Collectible.js';
     decor:     [[tex, x, y]]                                   y = bottom
     tables:    [[x, y]]                                        canteen tables (one-way), x = center, y = floor
     counters:  [[x, y]]                                        canteen counters (one-way top), x = center, y = floor
-    goal:      { type: 'door'|'cassa', x, y }                  y = surface (cassa = canteen checkout)
+    benches:   [[x, y]]                                        waiting-room benches (one-way), x = center, y = floor
+    dutyFree / docCheck / rental                               trip props, built by systems/TripLevel.js
+    goal:      { type: 'door'|'cassa'|'gate'|'train'|'office', x, y }  y = surface
     boss:      { type, triggerX, x, y, arena }                 exit door appears after defeat (unless final)
     autoscroll: speed px/s (optional), final: bool
   }
 */
 
 const ICE_TEX = [TEX.T_ICE, TEX.ICE_PLATFORM];
+const TRIP_GOALS = {
+  gate: [TEX.GATE_DOOR, 'IMBARCO', '#7CFC00'],
+  train: [TEX.TRAIN_DOOR, 'IL TUO TRENO', '#7CFC00'],
+  office: [TEX.OFFICE, 'UFFICIO DEL CLIENTE', '#ffd800']
+};
 const POSTIT_TEX = { yellow: TEX.POSTIT_YELLOW, orange: TEX.POSTIT_ORANGE, green: TEX.POSTIT_GREEN };
 
 export default class LevelBuilder {
@@ -50,6 +57,7 @@ export default class LevelBuilder {
     (L.postits || []).forEach(([x, y, color]) => this.postit(x, y, color));
     (L.tables || []).forEach(([x, y]) => this.table(x, y));
     (L.counters || []).forEach(([x, y]) => this.counter(x, y));
+    (L.benches || []).forEach(([x, y]) => this.bench(x, y));
     (L.ladders || []).forEach(([x, top, bottom]) => this.ladder(x, top, bottom));
     (L.decor || []).forEach(([tex, x, y]) => this.scene.add.image(x, y, tex).setOrigin(0.5, 1).setDepth(DEPTH.DECOR));
     (L.items || []).forEach(([kind, x, y]) => new Collectible(this.scene, x, y, kind));
@@ -108,6 +116,12 @@ export default class LevelBuilder {
     this.oneWayBody(x - 48, y - 42, 96);
   }
 
+  // Waiting-room bench (airport, station): one-way seat.
+  bench(x, y) {
+    this.scene.add.image(x, y, TEX.BENCH).setOrigin(0.5, 1).setDepth(DEPTH.PLATFORMS);
+    this.oneWayBody(x - 32, y - 22, 64);
+  }
+
   ladder(x, top, bottom) {
     const h = bottom - top;
     this.scene.add.tileSprite(x, top, 20, h, TEX.LADDER).setOrigin(0.5, 0).setDepth(DEPTH.DECOR + 1);
@@ -133,6 +147,15 @@ export default class LevelBuilder {
       s.goal.label = s.add.text(x, y - 66, 'CASSA', {
         fontFamily: 'monospace', fontSize: '12px', fontStyle: 'bold', color: '#ff6060', stroke: '#000', strokeThickness: 3
       }).setOrigin(0.5).setDepth(DEPTH.DECOR + 2);
+    } else if (TRIP_GOALS[type]) {
+      // Trip exits: boarding gate, train carriage, client's office.
+      const [tex, label, color] = TRIP_GOALS[type];
+      s.goal = s.physics.add.staticImage(x, y, tex).setOrigin(0.5, 1).refreshBody().setDepth(DEPTH.DECOR + 2);
+      const top = y - s.goal.height - 12;
+      s.goal.label = s.add.text(x, top, label, {
+        fontFamily: 'monospace', fontSize: '12px', fontStyle: 'bold', color, stroke: '#000', strokeThickness: 3, align: 'center'
+      }).setOrigin(0.5, 1).setDepth(DEPTH.DECOR + 2);
+      s.tweens.add({ targets: s.goal.label, y: top - 5, duration: 500, yoyo: true, repeat: -1 });
     } else {
       s.goal = s.physics.add.staticImage(x, y, TEX.DOOR_EXIT).setOrigin(0.5, 1).refreshBody().setDepth(DEPTH.DECOR + 2);
       s.add.text(x, y - 60, 'USCITA', {

@@ -147,6 +147,27 @@ export const TEX = {
   // Canteen dishes 16x12 (thrown by the cooks)
   DISH_PRIMO: 'dish_primo', DISH_SECONDO: 'dish_secondo', DISH_CONTORNO: 'dish_contorno', DISH_DOLCE: 'dish_dolce',
 
+  // Trip (Mondo 4)
+  BUDGET: 'budget',           // 16x12 (envelope with the travel allowance)
+  MILES: 'miles',             // 14x14 (blue star)
+  UPGRADE: 'upgrade',         // 16x12 (golden boarding pass)
+  DROP_STRIKE: 'drop_strike', // 20x16 (SCIOPERO sign)
+  DROP_DELAY: 'drop_delay',   // 16x16 (red clock)
+  DF_PERFUME: 'df_perfume', DF_CHOCO: 'df_choco', DF_WATCH: 'df_watch', // 14x14 duty free goods
+  DOG1: 'dog1', DOG2: 'dog2',                 // 28x20 sniffer dog
+  THIEF1: 'thief1', THIEF2: 'thief2',         // 24x32 pickpocket
+  T_AIRPORT: 't_airport', T_STATION: 't_station', // 32x32 floors
+  BENCH: 'bench',             // 64x22 (waiting-room bench, top surface = top 6px)
+  SHELF: 'shelf',             // 96x48 (duty free shelf)
+  BOARD: 'board',             // 64x40 (departures board)
+  KIOSK: 'kiosk',             // 64x56 (desert rental kiosk)
+  GATE_DESK: 'gate_desk',     // 40x40 (document check desk)
+  TRAIN_DOOR: 'train_door',   // 64x60 (train carriage = station exit)
+  GATE_DOOR: 'gate_door',     // 40x56 (boarding gate = airport exit)
+  OFFICE: 'office',           // 96x96 (client office building = desert exit)
+  CAMEL: 'camel', MOTO: 'moto', TAXI: 'taxi', // mounts (see Player.mount)
+  UMBRELLA_OPEN: 'umbrella_open', // 24x12 parasol over the player
+
   // UI icons 12x12
   UI_BRAIN: 'ui_brain', UI_STRESS: 'ui_stress', UI_EURO: 'ui_euro', UI_TICKET: 'ui_ticket',
   UI_VACATION: 'ui_vacation', UI_CLOCK: 'ui_clock'
@@ -173,11 +194,22 @@ export const LEVEL_META = [
   { id: '1-2', world: 'Mondo 1: L\'Open Space', name: 'Estate d\'Inferno' },
   { id: '2-1', world: 'Mondo 2: La Mensa Aziendale', name: 'La Pausa Pranzo' },
   { id: '3-1', world: 'Mondo 3: La Sala Riunioni', name: 'Il Limbo dei Post-it' },
-  { id: '4-1', world: 'Mondo 4: La Trasferta', name: 'La Fuga di Cervelli (Deserto)' },
-  { id: '4-2', world: 'Mondo 4: La Trasferta', name: 'La Riorganizzazione (Ghiacciaio)' },
-  { id: '4-3', world: 'Mondo 4: La Trasferta', name: 'Il Mare del Digital' },
+  // Mondo 4 is one trip in stages (see systems/Trip.js): scene = static scene instead of a GameScene level.
+  { id: '4-1', world: 'Mondo 4: La Trasferta', name: 'La Valigia', scene: 'PackingScene', trip: true },
+  { id: '4-2', world: 'Mondo 4: La Trasferta', name: 'Il Mezzo', scene: 'TransportScene', trip: true },
+  { id: '4-3', world: 'Mondo 4: La Trasferta', name: 'L\'Aeroporto', trip: true },
+  { id: '4-4', world: 'Mondo 4: La Trasferta', name: 'La Stazione', trip: true },
+  { id: '4-5', world: 'Mondo 4: La Trasferta', name: 'Il Volo', scene: 'JourneyScene', trip: true },
+  { id: '4-6', world: 'Mondo 4: La Trasferta', name: 'Il Treno', scene: 'JourneyScene', trip: true },
+  { id: '4-7', world: 'Mondo 4: La Trasferta', name: 'Il Deserto', trip: true },
+  { id: '4-8', world: 'Mondo 4: La Trasferta', name: 'Il Ghiacciaio', trip: true },
+  { id: '4-9', world: 'Mondo 4: La Trasferta', name: 'Il Mare del Digital', trip: true },
+  { id: '4-10', world: 'Mondo 4: La Trasferta', name: 'Il Cliente', scene: 'NegotiationScene', trip: true },
   { id: '5-1', world: 'Mondo 5: Il Piano degli Executive', name: 'La Cima della Piramide' }
 ];
+
+// Debug: every trip stage is selectable from the menu. false = only "La Valigia" (the full trip).
+export const TRIP_STAGES_IN_MENU = true;
 
 export const WEAPONS = ['email', 'teams', 'coffee', 'clock', 'www'];
 export const WEAPON_LABEL = {

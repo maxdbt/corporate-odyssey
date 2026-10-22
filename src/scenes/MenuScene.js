@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { FONT, GAME_WIDTH, GAME_HEIGHT, CHARACTERS, LEVEL_META, playerTex, playerAnim } from '../config/constants.js';
+import { FONT, GAME_WIDTH, GAME_HEIGHT, CHARACTERS, LEVEL_META, TRIP_STAGES_IN_MENU, playerTex, playerAnim } from '../config/constants.js';
+import { startLevel } from '../systems/Trip.js';
 import { GameState } from '../state/GameState.js';
 import { audio } from '../systems/Audio8bit.js';
 import { setupStaticCamera } from '../utils/view.js';
@@ -53,14 +54,19 @@ export default class MenuScene extends Phaser.Scene {
     // World + scenario selector: each world groups its scenarios (levels) from LEVEL_META.
     this.worlds = [];
     LEVEL_META.forEach((m, i) => {
+      // Trip stages: only the start of the trip unless the debug flag lists them all.
+      if (m.trip && !TRIP_STAGES_IN_MENU && m.id !== '4-1') return;
       let w = this.worlds.find((x) => x.name === m.world);
       if (!w) this.worlds.push(w = { name: m.world, levels: [] });
       w.levels.push(i);
     });
     this.worldIndex = 0;
     const wy = 304;
-    this.worldText = this.add.text(GAME_WIDTH / 2, wy, '', style(13, '#ffffff')).setOrigin(0.5);
-    const mkArrow = (x, txt, d) => this.add.text(x, wy, txt, style(18, '#ffd800')).setOrigin(0.5)
+    // Clicking the world name also moves to the next world; arrows get a padded hit area.
+    this.worldText = this.add.text(GAME_WIDTH / 2, wy, '', style(13, '#ffffff')).setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { audio.unlock(); this._changeWorld(1); });
+    const mkArrow = (x, txt, d) => this.add.text(x, wy, txt, style(18, '#ffd800', { padding: { x: 16, y: 6 } })).setOrigin(0.5)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => { audio.unlock(); this._changeWorld(d); });
     mkArrow(GAME_WIDTH / 2 - 250, '<', -1);
@@ -69,7 +75,7 @@ export default class MenuScene extends Phaser.Scene {
     this.scenarioChips = [];
 
     // Start button
-    this.startBtn = this.add.text(GAME_WIDTH / 2, 374, '[ INIZIA ]', style(20, '#3ce05a'))
+    this.startBtn = this.add.text(GAME_WIDTH / 2, 380, '[ INIZIA ]', style(20, '#3ce05a'))
       .setOrigin(0.5).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => { audio.unlock(); this._start(); });
     this.tweens.add({ targets: this.startBtn, scale: 1.08, duration: 500, yoyo: true, repeat: -1 });
@@ -182,17 +188,29 @@ export default class MenuScene extends Phaser.Scene {
   _buildScenarioChips() {
     this.scenarioChips.forEach((c) => c.destroy());
     const levels = this.worlds[this.worldIndex].levels;
-    const gap = 12;
+    const gap = 8;
     const chips = levels.map((li, i) => {
       const label = `${levels.length > 1 ? `${i + 1}. ` : ''}${LEVEL_META[li].name}`;
-      return this.add.text(0, 342, label, style(11, '#ffffff', {
+      return this.add.text(0, 0, label, style(levels.length > 4 ? 10 : 11, '#ffffff', {
         backgroundColor: '#10204a', padding: { x: 6, y: 3 }, strokeThickness: 3
       })).setOrigin(0, 0.5).setInteractive({ useHandCursor: true })
         .on('pointerdown', () => { audio.unlock(); this._selectScenario(i); });
     });
-    const total = chips.reduce((sum, c) => sum + c.width, 0) + gap * (chips.length - 1);
-    let x = GAME_WIDTH / 2 - total / 2;
-    chips.forEach((c) => { c.x = x; x += c.width + gap; });
+    // Wrap the chips on more rows when they do not fit (the trip has many stages).
+    const rows = [[]];
+    let rowW = 0;
+    chips.forEach((c) => {
+      if (rowW + c.width > 740 && rows[rows.length - 1].length) { rows.push([]); rowW = 0; }
+      rows[rows.length - 1].push(c);
+      rowW += c.width + gap;
+    });
+    const y0 = 344 - (rows.length - 1) * 10;
+    rows.forEach((row, r) => {
+      const total = row.reduce((sum, c) => sum + c.width, 0) + gap * (row.length - 1);
+      let x = GAME_WIDTH / 2 - total / 2;
+      row.forEach((c) => { c.x = x; c.y = y0 + r * 20; x += c.width + gap; });
+    });
+    this.scenarioLabel.y = y0 - 16;
     this.scenarioChips = chips;
     this.scenarioLabel.setText(levels.length > 1 ? `SCENARIO (${levels.length} disponibili)` : 'SCENARIO');
   }
@@ -225,7 +243,7 @@ export default class MenuScene extends Phaser.Scene {
     GameState.newGame(CHARACTERS[this.selected]);
     this.cameras.main.fadeOut(400, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-      this.scene.start('GameScene', { levelIndex: this.levelIndex });
+      startLevel(this, this.levelIndex);
     });
   }
 }

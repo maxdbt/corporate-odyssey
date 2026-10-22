@@ -56,7 +56,7 @@ export default class Zones {
           speedY: { min: -60, max: -30 }, lifespan: 1400, frequency: 90,
           alpha: { start: 0.7, end: 0 }, scaleY: { start: 1, end: 2 }
         }).setDepth(DEPTH.ZONES);
-        s.add.text(x + w / 2, y + 40, 'CALDO TORRIDO\n(niente aria)', {
+        s.add.text(x + w / 2, y + 40, z.label || 'CALDO TORRIDO\n(niente aria)', {
           fontFamily: 'monospace', fontSize: '12px', color: '#ffb000', align: 'center', stroke: '#000', strokeThickness: 3
         }).setOrigin(0.5).setDepth(DEPTH.ZONES);
         break;
@@ -179,6 +179,12 @@ export default class Zones {
 
       switch (z.type) {
         case 'heat':
+          // Trip: an umbrella in the suitcase works as a parasol.
+          if (GameState.hasItem('umbrella')) {
+            env.parasol = true;
+            if (entered) this.scene.ui?.message?.('L\'OMBRELLO FA DA PARASOLE!', '#ffb000', 1200);
+            break;
+          }
           if (time > this.heatImmuneUntil) {
             env.heat = true;
             env.speedMult *= 0.6;
