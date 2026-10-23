@@ -15,7 +15,7 @@ const run2 = postitRun(2200, 3930, 115, 3);
 // Coins hovering above some post-its.
 const postitCoins = [...run1, ...run2].filter((_, i) => i % 2 === 0).map(([x, y]) => ['euro', x + 22, y - 28]);
 
-// 3-1 Il Limbo dei Post-it: vanishing post-its, falling Teams logos, boss "Il Cliente dall'Inferno".
+// 3-1 Il Limbo dei Post-it: vanishing post-its, e-mail rain, boss "Il Cliente dall'Inferno".
 export default {
   id: '3-1',
   theme: 'meeting',
@@ -34,7 +34,6 @@ export default {
     ['confcall', 3500, 150, { range: 220 }]
   ],
   hazards: [
-    ['teamsmeteor', { from: 400, to: 3950, interval: 2600 }],
     ['mailrain', { from: 2600, to: 3200, interval: 1400 }]
   ],
   items: [

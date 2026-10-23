@@ -207,7 +207,7 @@ export const LEVEL_META = [
   { id: '2-1', world: 'Mondo 2: La Mensa Aziendale', name: 'La Pausa Pranzo' },
   { id: '3-1', world: 'Mondo 3: La Sala Riunioni', name: 'Il Limbo dei Post-it' },
   // Mondo 4 is one trip in stages (see systems/Trip.js): scene = static scene instead of a GameScene level.
-  { id: '4-1', world: 'Mondo 4: La Trasferta', name: 'La Valigia', scene: 'PackingScene', trip: true },
+  { id: '4-1', world: 'Mondo 4: La Trasferta', name: 'Il Cliente Lontano', scene: 'DestinationScene', trip: true },
   { id: '4-2', world: 'Mondo 4: La Trasferta', name: 'Il Mezzo', scene: 'TransportScene', trip: true },
   { id: '4-3', world: 'Mondo 4: La Trasferta', name: 'L\'Aeroporto', trip: true },
   { id: '4-4', world: 'Mondo 4: La Trasferta', name: 'La Stazione', trip: true },
@@ -220,7 +220,7 @@ export const LEVEL_META = [
   { id: '5-1', world: 'Mondo 5: Il Piano degli Executive', name: 'La Cima della Piramide' }
 ];
 
-// Debug: every trip stage is selectable from the menu. false = only "La Valigia" (the full trip).
+// Debug: every trip stage is selectable from the menu. false = only "Il Cliente Lontano" (the full trip).
 export const TRIP_STAGES_IN_MENU = false;
 
 export const WEAPONS = ['email', 'teams', 'coffee', 'clock', 'www'];

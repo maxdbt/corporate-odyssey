@@ -8,7 +8,7 @@ import { ensurePartyTextures } from '../gfx/party.js';
 
 const SONG_S = 25;
 const BPM_START = 110;
-const BPM_END = 150;
+const BPM_END = 128;
 const FALL_S = 1.6;          // time an arrow takes from the top to the hit line
 const PERFECT_S = 0.07;
 const GOOD_S = 0.15;
@@ -85,14 +85,14 @@ export default class PartyScene extends Phaser.Scene {
     this.combo = 0;
     this.maxCombo = 0;
     this.leaving = false;
-    // Beat times with the accelerating tempo, then the chart: every 2 beats, every beat, then doubles.
+    // Beat times with the (mildly) accelerating tempo, then the chart: every 2 beats, every beat, then a few doubles.
     this.beats = [];
     for (let t = 0; t < SONG_S; t += 60 / bpmAt(t)) this.beats.push(t);
     const times = [];
     this.beats.forEach((t, i) => {
       const f = t / SONG_S;
       if (f < 0.3) { if (i % 2 === 0) times.push(t); } else times.push(t);
-      if (f >= 0.75 && i % 2 === 1 && i < this.beats.length - 1) times.push((t + this.beats[i + 1]) / 2);
+      if (f >= 0.8 && i % 4 === 1 && i < this.beats.length - 1) times.push((t + this.beats[i + 1]) / 2);
     });
     let last = -1;
     let prev = -1;
@@ -343,70 +343,116 @@ export default class PartyScene extends Phaser.Scene {
     this.result = Phaser.Utils.Array.GetRandom(OUTCOMES[good ? 'good' : 'bad']);
     this.prec = prec;
     audio.sfx(good ? 'cheer' : 'gameover');
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.55).setDepth(45);
-    this.skitLayer = this.add.container(0, 0).setDepth(50);
+    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.45).setDepth(45);
+    // Spotlight on the dance floor: the gag happens right where the player is dancing.
+    this.add.ellipse(PLAYER_X, PLAYER_Y - 6, 380, 60, 0xfff4b0, 0.18).setDepth(46);
+    this.tweens.killTweensOf(this.player);
+    this.player.setPosition(PLAYER_X, PLAYER_Y).setAngle(0).setFlipX(false).setTexture(playerTex(this.char, 'idle')).setDepth(55);
+    this.skitLayer = this.add.container(0, 0).setDepth(56);
     this.skit(this.result.id);
     this.time.delayedCall(2600, () => this.showResult());
   }
 
-  // Short gag for each outcome, drawn in the upper half (the result panel goes below).
+  // Short gag for each outcome, played on the dance floor around the player (the result panel goes above).
   skit(id) {
     const L = this.skitLayer;
-    const cx = GAME_WIDTH / 2;
+    const p = this.player;
+    const px = PLAYER_X;
+    const fy = PLAYER_Y;
+    const head = fy - p.displayHeight;
     const add = (o) => { L.add(o); return o; };
+    const hop = () => this.tweens.add({ targets: p, y: fy - 26, duration: 160, yoyo: true, repeat: 2, ease: 'Quad.Out' });
+    // The CEO walks onto the floor and stops next to the player.
+    const ceoIn = (x, dur = 600) => {
+      const ceo = add(this.add.image(560, fy, 'ceo_standing').setOrigin(0.5, 1).setScale(1.4));
+      this.tweens.add({ targets: ceo, x, duration: dur, ease: 'Quad.Out' });
+      return ceo;
+    };
     if (id === 'raise') {
-      add(this.add.rectangle(cx, 110, 150, 110, 0xfaf6e8).setStrokeStyle(3, 0x888888));
-      add(this.add.text(cx, 70, 'BUSTA PAGA', tstyle(10, '#333333', { strokeThickness: 0 })).setOrigin(0.5));
-      for (let i = 0; i < 3; i++) add(this.add.rectangle(cx - 10, 92 + i * 12, 100, 3, 0xbbbbbb));
-      const v = add(this.add.text(cx, 140, '+12 € LORDI', tstyle(16, '#2a9a3a', { strokeThickness: 3 })).setOrigin(0.5).setScale(0));
-      this.tweens.add({ targets: v, scale: 1, angle: -8, delay: 500, duration: 300, ease: 'Back.Out' });
-      audio.sfx('coin');
+      p.setTexture(playerTex(this.char, 'jump'));
+      const ceo = ceoIn(px + 90);
+      const slip = add(this.add.container(px + 15, head - 45).setScale(0));
+      slip.add(this.add.rectangle(0, 0, 110, 70, 0xfaf6e8).setStrokeStyle(3, 0x888888));
+      slip.add(this.add.text(0, -24, 'BUSTA PAGA', tstyle(8, '#333333', { strokeThickness: 0 })).setOrigin(0.5));
+      for (let i = 0; i < 2; i++) slip.add(this.add.rectangle(-6, -8 + i * 9, 76, 3, 0xbbbbbb));
+      slip.add(this.add.text(0, 20, '+12 € LORDI', tstyle(12, '#2a9a3a', { strokeThickness: 3 })).setOrigin(0.5).setAngle(-6));
+      this.tweens.add({ targets: slip, scale: 1, delay: 650, duration: 300, ease: 'Back.Out', onStart: () => audio.sfx('coin') });
+      this.time.delayedCall(700, hop);
+      const bravo = add(this.add.text(ceo.x, fy - 88 * 1.4 - 14, 'BRAVO!', tstyle(10, '#ffd800')).setOrigin(0.5).setAlpha(0));
+      this.tweens.add({ targets: bravo, alpha: 1, x: px + 95, delay: 900, duration: 200 });
     } else if (id === 'trip') {
-      const s = add(this.add.container(cx, -80));
-      s.add(this.add.rectangle(0, 0, 130, 86, 0x8a5a2a).setStrokeStyle(4, 0x4a2a12));
-      s.add(this.add.rectangle(0, -52, 40, 14, 0x000000, 0).setStrokeStyle(5, 0x4a2a12));
-      s.add(this.add.rectangle(0, 6, 116, 30, 0xfff4dc));
-      s.add(this.add.text(0, 6, 'COCCIA\nDI MORTO', tstyle(10, '#d02020', { strokeThickness: 0, align: 'center' })).setOrigin(0.5));
-      this.tweens.add({ targets: s, y: 120, duration: 600, ease: 'Bounce.Out' });
+      const s = add(this.add.container(px + 85, -80));
+      s.add(this.add.rectangle(0, 0, 90, 60, 0x8a5a2a).setStrokeStyle(4, 0x4a2a12));
+      s.add(this.add.rectangle(0, -37, 30, 10, 0x000000, 0).setStrokeStyle(4, 0x4a2a12));
+      s.add(this.add.rectangle(0, 4, 80, 24, 0xfff4dc));
+      s.add(this.add.text(0, 4, 'COCCIA\nDI MORTO', tstyle(8, '#d02020', { strokeThickness: 0, align: 'center' })).setOrigin(0.5));
+      this.tweens.add({ targets: s, y: fy - 32, duration: 700, ease: 'Bounce.Out', onComplete: () => {
+        p.setTexture(playerTex(this.char, 'jump'));
+        hop();
+      } });
     } else if (id === 'cotechino') {
+      p.setTexture(playerTex(this.char, 'jump'));
+      hop();
       for (let i = 0; i < 9; i++) {
-        const row = Math.floor(i / 3);
-        const c = add(this.add.image(cx - 70 + (i % 3) * 70, -30, 'cotechino').setScale(2));
-        this.tweens.add({ targets: c, y: 180 - row * 34, delay: i * 140, duration: 400, ease: 'Bounce.Out' });
+        const row = Math.floor(i / 2);
+        const side = i % 2 ? 1 : -1;
+        const x = px + side * 105 + (row % 2 ? 6 : -6);
+        const c = add(this.add.image(x, -30, 'cotechino').setScale(2));
+        this.tweens.add({ targets: c, y: fy - 16 - row * 30, delay: i * 140, duration: 400, ease: 'Bounce.Out' });
       }
     } else if (id === 'donkey') {
-      const p = add(this.add.image(cx, 170, playerTex(this.char, 'hurt')).setScale(3).setAngle(90));
-      for (let i = 0; i < 3; i++) {
-        const st = add(this.add.text(cx, 100, '*', tstyle(22, '#ffd800')).setOrigin(0.5));
-        this.tweens.addCounter({ from: 0, to: 360, duration: 1200, repeat: -1,
-          onUpdate: (tw) => { const a = Phaser.Math.DegToRad(tw.getValue() + i * 120); st.setPosition(cx - 20 + Math.cos(a) * 50, 110 + Math.sin(a) * 14); } });
-      }
-      add(this.add.text(cx + 90, 170, 'ZZZ...', tstyle(14, '#ffffff'))).setOrigin(0, 0.5);
-      this.tweens.add({ targets: p, scaleY: 3.15, duration: 500, yoyo: true, repeat: -1 });
-    } else if (id === 'wine') {
-      const ceo = add(this.add.image(cx + 80, 196, 'ceo_standing').setOrigin(0.5, 1).setScale(1.7));
-      add(this.add.text(cx + 80, 34, 'IL CEO', tstyle(10, '#ffd800')).setOrigin(0.5));
-      const glass = add(this.add.text(cx - 140, 150, 'Y', tstyle(26, '#ff4060')).setOrigin(0.5));
-      this.tweens.add({ targets: glass, x: cx + 70, y: 130, angle: 540, duration: 700, ease: 'Quad.In', onComplete: () => {
-        glass.destroy();
-        this.tweens.add({ targets: ceo, x: ceo.x + 4, duration: 50, yoyo: true, repeat: 5 });
+      // The player faints right on the floor: rotate around the feet and lie down.
+      p.setTexture(playerTex(this.char, 'hurt'));
+      this.tweens.add({ targets: p, angle: 90, duration: 500, ease: 'Bounce.Out', onComplete: () => {
         audio.sfx('hurt');
-        for (let i = 0; i < 7; i++) {
-          add(this.add.circle(cx + 80 + Phaser.Math.Between(-30, 30), 135 + Phaser.Math.Between(-22, 22), Phaser.Math.Between(6, 16), 0x9a0a2a));
-        }
-        add(this.add.text(cx + 80, 206, 'NOOO!', tstyle(14, '#ffffff'))).setOrigin(0.5);
+        this.cameras.main.shake(120, 0.006);
+      } });
+      const sx = px + p.displayHeight * 0.75;
+      const sy = fy - p.displayWidth * 0.5 - 18;
+      for (let i = 0; i < 3; i++) {
+        const st = add(this.add.text(sx, sy, '*', tstyle(20, '#ffd800')).setOrigin(0.5).setAlpha(0));
+        this.tweens.add({ targets: st, alpha: 1, delay: 500, duration: 100 });
+        this.tweens.addCounter({ from: 0, to: 360, duration: 1200, repeat: -1,
+          onUpdate: (tw) => { const a = Phaser.Math.DegToRad(tw.getValue() + i * 120); st.setPosition(sx + Math.cos(a) * 30, sy + Math.sin(a) * 9); } });
+      }
+      const z = add(this.add.text(px + 40, fy - 70, 'ZZZ...', tstyle(14, '#ffffff')).setOrigin(0.5).setAlpha(0));
+      this.tweens.add({ targets: z, alpha: 1, y: fy - 90, delay: 900, duration: 600 });
+    } else if (id === 'wine') {
+      // The CEO is on the floor with a glass; the player dances clumsily into him and spills the wine.
+      const ceoX = px + 95;
+      const ceo = ceoIn(ceoX, 500);
+      const glass = add(this.add.text(560 - 30, fy - 70, 'Y', tstyle(20, '#ff4060')).setOrigin(0.5));
+      this.tweens.add({ targets: glass, x: ceoX - 30, duration: 500, ease: 'Quad.Out' });
+      p.setTexture(playerTex(this.char, 'walk1'));
+      this.tweens.add({ targets: p, x: px + 40, angle: 15, delay: 650, duration: 220, ease: 'Quad.In', onComplete: () => {
+        audio.sfx('hurt');
+        this.cameras.main.shake(120, 0.008);
+        p.setTexture(playerTex(this.char, 'hurt'));
+        this.tweens.add({ targets: p, x: px, angle: 0, duration: 250 });
+        this.tweens.add({ targets: ceo, x: ceoX + 6, duration: 50, yoyo: true, repeat: 5 });
+        // Glass flips onto the suit: stains on the jacket.
+        this.tweens.add({ targets: glass, x: ceoX, y: fy - 80, angle: 200, duration: 220, onComplete: () => {
+          glass.destroy();
+          const suitY = fy - 88 * 1.4 + 52 * 1.4;
+          for (let i = 0; i < 7; i++) {
+            add(this.add.circle(ceoX + Phaser.Math.Between(-18, 18), suitY + Phaser.Math.Between(-16, 16), Phaser.Math.Between(4, 10), 0x9a0a2a));
+          }
+          add(this.add.text(ceoX, fy - 88 * 1.4 - 16, 'NOOO!', tstyle(14, '#ffffff'))).setOrigin(0.5);
+        } });
       } });
     } else {
-      add(this.add.image(cx - 60, 190, playerTex(this.char, 'idle')).setOrigin(0.5, 1).setScale(3));
-      add(this.add.rectangle(cx - 30, 120, 6, 40, 0x333333));
-      add(this.add.circle(cx - 30, 98, 9, 0x666666));
+      // Singing Jingle Bells on the floor, out of tune, in front of the board.
+      const mx = px + 55;
+      add(this.add.rectangle(mx, fy - 32, 5, 64, 0x333333));
+      add(this.add.rectangle(mx, fy - 2, 26, 4, 0x333333));
+      add(this.add.circle(mx, head + 40, 8, 0x666666));
       const notes = ['E5', 'D#5', 'F5', 'C#5', 'E5', 'A#4', 'G5', 'C5'];
       notes.forEach((n, i) => this.time.delayedCall(i * 260, () => {
         audio.note(n, 0.22, 'square', 0.4);
-        const m = add(this.add.image(cx, 120, 'music_note').setScale(2).setTint(0xff6060).setAngle(Phaser.Math.Between(-40, 40)));
-        this.tweens.add({ targets: m, x: cx + 60 + i * 20, y: 50 + Phaser.Math.Between(-20, 30), angle: m.angle * 2, alpha: 0.4, duration: 900 });
+        const m = add(this.add.image(mx, head + 30, 'music_note').setScale(2).setTint(0xff6060).setAngle(Phaser.Math.Between(-40, 40)));
+        this.tweens.add({ targets: m, x: mx + 20 + i * 14, y: head - 20 + Phaser.Math.Between(-20, 20), angle: m.angle * 2, alpha: 0.3, duration: 900 });
       }));
-      add(this.add.text(cx + 120, 190, 'IL CONSIGLIO\nNON APPLAUDE', tstyle(9, '#cccccc', { align: 'center' })).setOrigin(0.5, 1));
+      add(this.add.text(px - 130, fy - 50, 'IL CONSIGLIO\nNON APPLAUDE', tstyle(9, '#cccccc', { align: 'center' })).setOrigin(0.5));
     }
   }
 
@@ -417,7 +463,7 @@ export default class PartyScene extends Phaser.Scene {
     if (o.euro) lines.push(`BONUS +${o.euro} €`);
     if (o.time) lines.push(`TEMPO ${o.time}s`);
     lines.push(`Precisione ${Math.round(this.prec * 100)}%  -  combo max ${this.maxCombo}`);
-    resultPanel(this, { title: o.title, color: o.color, lines, y: 320, onClose: () => this.finish() });
+    resultPanel(this, { title: o.title, color: o.color, lines, y: 140, onClose: () => this.finish() });
   }
 
   finish() {

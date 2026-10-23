@@ -11,6 +11,7 @@ import QuitScene from './scenes/QuitScene.js';
 import ToiletScene from './scenes/ToiletScene.js';
 import BeachScene from './scenes/BeachScene.js';
 import PackingScene from './scenes/PackingScene.js';
+import DestinationScene from './scenes/DestinationScene.js';
 import TransportScene from './scenes/TransportScene.js';
 import JourneyScene from './scenes/JourneyScene.js';
 import RentalScene from './scenes/RentalScene.js';
@@ -43,7 +44,7 @@ const config = {
     autoCenter: Phaser.Scale.CENTER_BOTH
   },
   input: { activePointers: 4 },
-  scene: [BootScene, MenuScene, GameScene, UIScene, QuizScene, BriefScene, PauseScene, QuitScene, BeachScene, ToiletScene, RentalScene, FoodScene, PackingScene, TransportScene, JourneyScene, NegotiationScene, PartyScene, GameOverScene, VictoryScene]
+  scene: [BootScene, MenuScene, GameScene, UIScene, QuizScene, BriefScene, PauseScene, QuitScene, BeachScene, ToiletScene, RentalScene, FoodScene, DestinationScene, PackingScene, TransportScene, JourneyScene, NegotiationScene, PartyScene, GameOverScene, VictoryScene]
 };
 
 window.__game = new Phaser.Game(config);

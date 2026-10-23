@@ -195,12 +195,14 @@ grants device 'laptop' if none), `promotion` (seconds).
 double door with neon sign and an elf bouncer; UP next to it (edge of `input.up`, updated after the input in
 GameScene.update) opens the `PartyScene` overlay. Once per level attempt (rebuilt on restart): afterwards the sign
 reads "FESTA FINITA" and the elf answers "SEI GIA' ENTRATO!". PartyScene: 25 s "just dance" on Jingle Bells
-(sequenced per beat with `audio.note`, 110 → 150 BPM); the chart is precomputed from the beat times (every 2 beats,
-every beat, then extra off-beats in the last quarter), arrows ← ↓ ↑ → fall in 4 lanes (arrows / WASD, 4 buttons only
+(sequenced per beat with `audio.note`, 110 → 128 BPM); the chart is precomputed from the beat times (every 2 beats,
+every beat, then a few extra off-beats in the last 20%), arrows ← ↓ ↑ → fall in 4 lanes (arrows / WASD, 4 buttons only
 on touch devices). Judgement ≤0.07 s PERFETTO (100), ≤0.15 s BENE (50), else SBAGLIATO (passed arrows and stray
 presses too); combo multiplier x2/x3/x4 at 10/20/30. Precision = (perfect + 0.6·bene) / (arrows + stray): ≥ 60% →
 random prize (aumento 12 € lordi, viaggio a Coccia di Morto, cotechino a vita), else random disaster (ciuco di
-Alicudi -20 s, vino sul CEO, Jingle Bells al CdA). Rivals' scores on the board are flavour only. Effects are applied
+Alicudi -20 s, vino sul CEO, Jingle Bells al CdA). Rivals' scores on the board are flavour only. The outcome
+gag is played on the dance floor around the player (spotlit; the CEO walks onto the floor for aumento/vino), the
+result panel sits above it. Effects are applied
 on close, then GameScene resumes with the player at the door and level music.
 
 ## Menu / GameOver / Victory (PLAYER/UI)
@@ -216,13 +218,14 @@ on close, then GameScene resumes with the player at the door and level music.
 ## Mondo 4: La Trasferta (GAME) — `src/systems/Trip.js`
 One trip in stages, with a BUDGET bar carried across them in `GameState.trip`
 (`{ items, transport, budget, maxBudget, stageIndex, stageBudget }`; `hasItem / budget / canAfford / spend / addBudget`).
-- Stages are `LEVEL_META` entries with `trip: true`; entries with `scene` are static scenes (PackingScene,
+- Stages are `LEVEL_META` entries with `trip: true`; entries with `scene` are static scenes (DestinationScene, PackingScene,
   TransportScene, JourneyScene plane/train, NegotiationScene), the others are GameScene levels.
 - The suitcase holds `SUITCASE_SIZE` (10) items; `itemTex(id, character)` gives per-character icons for
   underwear, suit and swimsuit.
 - ALWAYS start a level with `startLevel(scene, index)` and advance with `goNext(scene, index)`: they route to the
-  static scene and pick the branch: 4-1 Valigia → 4-2 Mezzo → 4-3 Aeroporto | 4-4 Stazione → 4-5 Volo | 4-6 Treno →
-  random ground leg from `GROUND_LEGS` (4-7 Deserto, 4-8 Ghiacciaio, 4-9 Mare) → 4-10 Cliente → 5-1.
+  static scene and pick the branch: 4-1 Il Cliente Lontano (DestinationScene: choose the client's site
+  pyramid / mountain / sea → `trip.leg`, then PackingScene) → 4-2 Mezzo → 4-3 Aeroporto | 4-4 Stazione → 4-5 Volo | 4-6 Treno →
+  the chosen ground leg via `LEG_LEVEL` (4-7 Deserto, 4-8 Ghiacciaio, 4-9 Mare; random from `GROUND_LEGS` if unset) → 4-10 Cliente → 5-1.
 - `beginStage(index)` stores the budget at stage start (a replay restores it); `ensureTrip(index)` builds a default
   trip when a stage is started directly from the menu (debug, `TRIP_STAGES_IN_MENU`). `finishTrip()` converts the
   leftover budget to euro (`BUDGET_TO_EURO`) and clears the trip.

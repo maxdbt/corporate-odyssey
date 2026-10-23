@@ -1,5 +1,5 @@
 // Mondo 4 "La Trasferta": stage routing and trip state helpers.
-// Stages: Valigia -> Mezzo -> Aeroporto|Stazione -> Volo|Treno -> random ground leg -> Cliente -> Mondo 5.
+// Stages: Sede (destination choice) -> Valigia -> Mezzo -> Aeroporto|Stazione -> Volo|Treno -> random ground leg (the chosen one) -> Cliente -> Mondo 5.
 import Phaser from 'phaser';
 import { GameState } from '../state/GameState.js';
 import { LEVELS } from '../levels/index.js';
@@ -7,8 +7,9 @@ import { TRANSPORT, DEFAULT_SUITCASE, BUDGET_TO_EURO } from '../data/trip.js';
 
 const indexOf = (id) => LEVELS.findIndex((l) => l.id === id);
 
-// Ground legs already redesigned for the trip: one is drawn at random on arrival.
+// Ground legs, one per client site chosen at the start (DestinationScene); random if none was chosen (debug).
 export const GROUND_LEGS = ['4-7', '4-8', '4-9'];
+export const LEG_LEVEL = { desert: '4-7', glacier: '4-8', sea: '4-9' };
 // Every ground leg (including the ones still to redesign, selectable from the menu).
 export const isGroundLeg = (id) => ['4-7', '4-8', '4-9'].includes(id);
 
@@ -29,7 +30,7 @@ export function nextIndex(index) {
     case '4-3': return indexOf('4-5');
     case '4-4': return indexOf('4-6');
     case '4-5':
-    case '4-6': return indexOf(Phaser.Utils.Array.GetRandom(GROUND_LEGS));
+    case '4-6': return indexOf(LEG_LEVEL[GameState.trip?.leg] || Phaser.Utils.Array.GetRandom(GROUND_LEGS));
     case '4-7':
     case '4-8':
     case '4-9': return indexOf('4-10');

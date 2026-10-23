@@ -37,7 +37,6 @@ export const BRIEFS = {
     goal: 'Salta sui post-it fino all\'arena e sconfiggi Il Cliente dall\'Inferno.',
     tips: [
       'I post-it scompaiono poco dopo che ci sali sopra.',
-      'Dal cielo piovono loghi di Teams: ti addormentano.',
       'Schiaccia le icone di Teams prima che ti notifichino.'
     ]
   },

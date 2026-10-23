@@ -317,7 +317,7 @@ export default class BossCEO extends Enemy {
     scene.events.emit(EVENTS.BOSS_HEALTH, { name: NAME, ratio: null });
     for (const o of this.obstacles) if (o.active) o.crumble();
     this.obstacles = [];
-    bigText(scene, 'IL CEO SI E\' DIMESSO!', '#ffd700', 2000, 0.3);
+    bigText(scene, 'SEI IL NUOVO CEO!', '#ffd700', 2000, 0.3);
     for (let i = 0; i < 10; i++) {
       scene.time.delayedCall(i * 150, () => {
         popFx(scene, this.x + Math.random() * 90 - 45, this.y - Math.random() * 80, 1.3);

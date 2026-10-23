@@ -14,6 +14,7 @@ const CELL_H = 44;
 const GAP = 5;
 const GRID_X = (GAME_WIDTH - (COLS * CELL_W + (COLS - 1) * GAP)) / 2;
 const GRID_Y = 84;
+const DEST = { desert: ' nel deserto', glacier: ' sul ghiacciaio', sea: ' in fondo al mare' };
 
 // Trip stage 1: pick SUITCASE_SIZE items out of TRIP_ITEMS. The last grid cell is the "PARTI" button.
 export default class PackingScene extends Phaser.Scene {
@@ -23,6 +24,7 @@ export default class PackingScene extends Phaser.Scene {
 
   init(data) {
     this.levelIndex = data?.levelIndex ?? 0;
+    this.leg = data?.leg || null;
     this.chosen = [];
     this.cursor = 0;
     this.done = false;
@@ -31,13 +33,14 @@ export default class PackingScene extends Phaser.Scene {
   create() {
     setupStaticCamera(this);
     GameState.beginLevel(this.levelIndex);
-    ensureTrip(this.levelIndex);
+    const trip = ensureTrip(this.levelIndex);
+    trip.leg = this.leg;
     audio.music('menu');
     this.character = GameState.character || 'man';
     this.drawRoom();
 
     this.add.text(GAME_WIDTH / 2, 22, 'LA TRASFERTA  -  FAI LA VALIGIA', tstyle(18, '#ffd800', { strokeThickness: 5 })).setOrigin(0.5);
-    this.add.text(GAME_WIDTH / 2, 50, `Domani parti per incontrare un cliente. In valigia entrano solo ${SUITCASE_SIZE} oggetti: scegli bene!`,
+    this.add.text(GAME_WIDTH / 2, 50, `Domani parti per incontrare il cliente${DEST[this.leg] || ''}. In valigia entrano solo ${SUITCASE_SIZE} oggetti: scegli bene!`,
       tstyle(10, '#ffffff')).setOrigin(0.5);
 
     this.cells = [...TRIP_ITEMS.map((it) => ({ item: it })), { go: true }].map((cell, i) => {
