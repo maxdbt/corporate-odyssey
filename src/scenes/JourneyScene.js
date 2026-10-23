@@ -178,60 +178,30 @@ export default class JourneyScene extends Phaser.Scene {
     this.time.delayedCall(1400, () => this.runEvent());
   }
 
+  // Cabin seen from the front (plane and train share the layout): window wall on the left, our pair of seats
+  // (you + the neighbour), the aisle, another pair of passengers on the right.
   drawCabin(plane) {
-    if (plane) { this.drawPlaneCabin(); return; }
-    const W = GAME_WIDTH;
-    // Landscape behind the windows, scrolling left.
-    const land = this.add.graphics();
-    land.fillStyle(0x9fd8ff).fillRect(0, 0, W * 2, 300);
-    land.fillStyle(0x5aa040);
-    for (let x = 0; x < W * 2; x += 200) land.fillEllipse(x + 100, 190, 260, 90);
-    land.fillStyle(0x3a7a2a).fillRect(0, 170, W * 2, 130);
-    land.fillStyle(0x5a4a3a);
-    for (let x = 0; x < W * 2; x += 90) land.fillRect(x, 110, 4, 70);
-    this.tweens.add({ targets: land, x: -W, duration: 3000, repeat: -1 });
-
-    // Carriage wall with window holes
-    const g = this.add.graphics();
-    const winY = 90, winH = 80, winW = 150, step = 200;
-    g.fillStyle(0x8a6a4a).fillRect(0, 30, W, winY - 30).fillRect(0, winY + winH, W, GAME_HEIGHT - winY - winH);
-    let x = 0;
-    for (let wx = 50; wx < W; wx += step) {
-      g.fillRect(x, winY, wx - x, winH);
-      g.lineStyle(4, 0x4a3a2a).strokeRoundedRect(wx, winY, winW, winH, 4);
-      x = wx + winW;
-    }
-    g.fillRect(x, winY, W - x, winH);
-    g.fillStyle(0x6a4a2a).fillRect(0, 180, W, 8);
-
-    // Seats: player and neighbour seated, front row in the foreground.
-    const seat = 0x8a2a2a;
-    const seatX = [240, 360, 480, 600];
-    seatX.forEach((sx) => g.fillStyle(seat).fillRoundedRect(sx - 44, 220, 88, 150, 10));
-    const c = GameState.character || 'man';
-    this.player = this.add.image(360, 352, playerTex(c, 'idle')).setOrigin(0.5, 1).setScale(3);
-    this.neighbour = this.add.image(480, 352, TEX.TALKER1).setOrigin(0.5, 1).setScale(3).setFlipX(true);
-    const front = this.add.graphics();
-    seatX.forEach((sx) => front.fillStyle(seat).fillRoundedRect(sx - 50, 330, 100, 120, 10).fillStyle(0x000000, 0.2).fillRect(sx - 50, 330, 100, 6));
-    this.tweens.add({ targets: [this.player, this.neighbour], y: 350, duration: 300, yoyo: true, repeat: -1 });
-    this.bubbleAt = { x: 520, y: 200 };
-  }
-
-  // Plane cabin seen from the front: window wall, our pair of seats (you + the chatty neighbour),
-  // the aisle with the trolley, another pair of passengers.
-  drawPlaneCabin() {
     const W = GAME_WIDTH;
     const g = this.add.graphics();
     const AISLE_L = 352, AISLE_R = 512, VX = 432;
-    // Walls, ceiling, back wall with the lavatory at the end of the aisle
-    g.fillStyle(0xe8e4dc).fillRect(0, 30, W, GAME_HEIGHT - 30);
-    g.fillStyle(0xd0ccc4).fillRect(0, 30, W, 26);
-    g.fillStyle(0xdcd8d0).fillRect(VX - 40, 56, 80, 70);
-    g.fillStyle(0xb8b4ac).fillRect(VX - 22, 66, 44, 60).fillStyle(0x2a6ad8).fillRect(VX - 10, 72, 20, 10);
-    this.add.text(VX, 77, 'WC', tstyle(7, '#ffffff', { strokeThickness: 0 })).setOrigin(0.5);
-    // Aisle carpet in perspective
-    g.fillStyle(0x34406a).fillPoints([{ x: VX - 26, y: 126 }, { x: VX + 26, y: 126 }, { x: AISLE_R + 18, y: GAME_HEIGHT }, { x: AISLE_L - 18, y: GAME_HEIGHT }], true);
-    g.fillStyle(0x4a5a8a);
+    const C = plane
+      ? { wall: 0xe8e4dc, ceil: 0xd0ccc4, carpet: 0x34406a, stripe: 0x4a5a8a, floor: 0x9a968e, seat: 0x2a4a8a, seatHi: 0x3a5aa0, seatFg: 0x24407a, seatDk: 0x1a3060, cushion: 0x1f3a70 }
+      : { wall: 0xd4dcd4, ceil: 0xbcc6bc, carpet: 0x5a5e66, stripe: 0x6e727a, floor: 0x8a8e86, seat: 0x8a2a2a, seatHi: 0xa83a3a, seatFg: 0x7a2424, seatDk: 0x5a1a1a, cushion: 0x6a2020 };
+    // Walls, ceiling, back wall: lavatory (plane) or the sliding door to the next carriage (train)
+    g.fillStyle(C.wall).fillRect(0, 30, W, GAME_HEIGHT - 30);
+    g.fillStyle(C.ceil).fillRect(0, 30, W, 26);
+    if (plane) {
+      g.fillStyle(0xdcd8d0).fillRect(VX - 40, 56, 80, 70);
+      g.fillStyle(0xb8b4ac).fillRect(VX - 22, 66, 44, 60).fillStyle(0x2a6ad8).fillRect(VX - 10, 72, 20, 10);
+      this.add.text(VX, 77, 'WC', tstyle(7, '#ffffff', { strokeThickness: 0 })).setOrigin(0.5);
+    } else {
+      g.fillStyle(0xa8b0a8).fillRect(VX - 40, 56, 80, 70);
+      g.fillStyle(0x8a928a).fillRect(VX - 24, 70, 48, 56).fillStyle(0x9fd0e8, 0.8).fillRect(VX - 18, 76, 36, 26);
+      g.fillStyle(0x6a726a).fillRect(VX - 1, 70, 2, 56);
+    }
+    // Aisle floor in perspective
+    g.fillStyle(C.carpet).fillPoints([{ x: VX - 26, y: 126 }, { x: VX + 26, y: 126 }, { x: AISLE_R + 18, y: GAME_HEIGHT }, { x: AISLE_L - 18, y: GAME_HEIGHT }], true);
+    g.fillStyle(C.stripe);
     for (let i = 0; i < 9; i++) {
       const t = i / 9;
       const y = 126 + (GAME_HEIGHT - 126) * t * t;
@@ -239,59 +209,77 @@ export default class JourneyScene extends Phaser.Scene {
       g.fillRect(VX - half, y, half * 2, 2 + t * 4);
     }
     // Floor under the seats
-    g.fillStyle(0x9a968e).fillRect(0, 226, AISLE_L - 10, GAME_HEIGHT - 226).fillRect(AISLE_R + 10, 226, W - AISLE_R - 10, GAME_HEIGHT - 226);
-    // Overhead bins
+    g.fillStyle(C.floor).fillRect(0, 226, AISLE_L - 10, GAME_HEIGHT - 226).fillRect(AISLE_R + 10, 226, W - AISLE_R - 10, GAME_HEIGHT - 226);
+    // Overhead bins (plane) or luggage racks with suitcases (train)
     const bins = (x, w) => {
-      g.fillStyle(0xf4f2ee).fillRoundedRect(x, 36, w, 48, 8);
-      g.fillStyle(0xc8c4bc).fillRect(x + 4, 76, w - 8, 3);
-      for (let bx = x + 20; bx < x + w - 20; bx += 90) g.fillStyle(0x8a8680).fillRect(bx, 66, 26, 4);
+      if (plane) {
+        g.fillStyle(0xf4f2ee).fillRoundedRect(x, 36, w, 48, 8);
+        g.fillStyle(0xc8c4bc).fillRect(x + 4, 76, w - 8, 3);
+        for (let bx = x + 20; bx < x + w - 20; bx += 90) g.fillStyle(0x8a8680).fillRect(bx, 66, 26, 4);
+        return;
+      }
+      const bags = [0x3a3a4a, 0xc0392b, 0x2a6ad8, 0x6a4a2a, 0x16a085];
+      for (let bx = x + 14, k = 0; bx < x + w - 50; bx += 70 + (k % 2) * 16, k++) {
+        const bw = 40 + (k % 3) * 8, bh = 22 + (k % 2) * 8;
+        g.fillStyle(bags[(k + x) % bags.length]).fillRoundedRect(bx, 72 - bh, bw, bh, 4);
+        g.fillStyle(0x000000, 0.25).fillRect(bx + bw / 2 - 6, 72 - bh - 3, 12, 3);
+      }
+      g.fillStyle(0xb0b4b8).fillRect(x, 72, w, 4).fillRect(x, 82, w, 3);
+      for (let bx = x + 6; bx < x + w; bx += 60) g.fillStyle(0x8a8e92).fillRect(bx, 72, 3, 13);
     };
     bins(0, AISLE_L - 6);
     bins(AISLE_R + 6, W - AISLE_R - 6);
-    // Seat-belt sign and reading lights on the ceiling of the aisle
-    this.beltSign = this.add.rectangle(VX, 44, 34, 12, 0x333333).setStrokeStyle(1, 0x888888);
-    this.beltIcon = this.add.text(VX, 44, 'CINTURE', tstyle(6, '#666666', { strokeThickness: 0 })).setOrigin(0.5);
-    // Window wall on the left, with two portholes and clouds passing by
-    g.fillStyle(0xd8d4cc).fillPoints([{ x: 0, y: 84 }, { x: 96, y: 96 }, { x: 96, y: 300 }, { x: 0, y: 330 }], true);
-    this.portholes = [[28, 150, 34, 56], [72, 160, 26, 46]];
+    // Ceiling sign: seat belts (plane) or the speed display (train)
+    if (plane) {
+      this.beltSign = this.add.rectangle(VX, 44, 34, 12, 0x333333).setStrokeStyle(1, 0x888888);
+      this.beltIcon = this.add.text(VX, 44, 'CINTURE', tstyle(6, '#666666', { strokeThickness: 0 })).setOrigin(0.5);
+    } else {
+      this.add.rectangle(VX, 44, 84, 14, 0x111111).setStrokeStyle(1, 0x888888);
+      const speed = this.add.text(VX, 44, '298 km/h', tstyle(6, '#ff9a20', { strokeThickness: 0 })).setOrigin(0.5);
+      this.time.addEvent({ delay: 900, loop: true, callback: () => speed.setText(`${Phaser.Math.Between(287, 300)} km/h`) });
+    }
+    // Window wall on the left: two portholes with clouds (plane) or two wide windows with the landscape (train)
+    g.fillStyle(plane ? 0xd8d4cc : 0xc4ccc4).fillPoints([{ x: 0, y: 84 }, { x: 96, y: 96 }, { x: 96, y: 300 }, { x: 0, y: 330 }], true);
+    this.portholes = plane ? [[28, 150, 34, 56], [72, 160, 26, 46]] : [[26, 160, 44, 96], [72, 166, 34, 76]];
     this.sky = this.add.graphics();
-    this.portholes.forEach(([x, y, w, h]) => g.lineStyle(4, 0xb8b4ac).strokeRoundedRect(x - w / 2 - 2, y - h / 2 - 2, w + 4, h + 4, 10));
+    this.portholes.forEach(([x, y, w, h]) => g.lineStyle(4, plane ? 0xb8b4ac : 0x8a928a).strokeRoundedRect(x - w / 2 - 2, y - h / 2 - 2, w + 4, h + 4, plane ? 10 : 3));
     this.skyX = 0;
 
     // Our row: four seats (2 + aisle + 2) with the passengers sitting in them
     const SEATS = [168, 288, 576, 696];
     const seatBack = this.add.graphics();
     SEATS.forEach((sx) => {
-      seatBack.fillStyle(0x2a4a8a).fillRoundedRect(sx - 46, 112, 92, 104, 12);
-      seatBack.fillStyle(0x3a5aa0).fillRoundedRect(sx - 40, 118, 80, 20, 8);
+      seatBack.fillStyle(C.seat).fillRoundedRect(sx - 46, 112, 92, 104, 12);
+      seatBack.fillStyle(C.seatHi).fillRoundedRect(sx - 40, 118, 80, 20, 8);
       seatBack.fillStyle(0xffffff).fillRect(sx - 30, 96, 60, 16).fillStyle(0xe0e0e0).fillRect(sx - 30, 108, 60, 4);
-      seatBack.fillStyle(0x2a4a8a).fillRoundedRect(sx - 34, 92, 68, 8, 4);
+      seatBack.fillStyle(C.seat).fillRoundedRect(sx - 34, 92, 68, 8, 4);
     });
     const c = GameState.character || 'man';
     this.player = this.add.image(SEATS[0], 210, c === 'woman' ? 'pax_woman' : 'pax_man').setOrigin(0.5, 1).setScale(2);
     this.neighbour = this.add.image(SEATS[1], 210, 'pax_chatty1').setOrigin(0.5, 1).setScale(2);
     const others = [this.add.image(SEATS[2], 210, 'pax_reader').setOrigin(0.5, 1).setScale(2),
-      this.add.image(SEATS[3], 210, 'pax_music').setOrigin(0.5, 1).setScale(2)];
+      this.add.image(SEATS[3], 210, plane ? 'pax_music' : 'pax_sleeper').setOrigin(0.5, 1).setScale(2)];
     // Cushions and armrests in front of the passengers' legs
     const fg = this.add.graphics();
     SEATS.forEach((sx) => {
-      fg.fillStyle(0x1f3a70).fillRect(sx - 50, 210, 100, 14);
+      fg.fillStyle(C.cushion).fillRect(sx - 50, 210, 100, 14);
       fg.fillStyle(0x6a6e76).fillRect(sx - 52, 176, 8, 36).fillRect(sx + 44, 176, 8, 36);
       fg.fillStyle(0x8a8e96).fillRect(sx - 54, 172, 12, 6).fillRect(sx + 42, 172, 12, 6);
       fg.fillStyle(0x4a4e56).fillRect(sx - 40, 224, 6, 14).fillRect(sx + 34, 224, 6, 14);
     });
     // Foreground: backs of the row in front, with tray tables and seat pockets
     SEATS.forEach((sx) => {
-      fg.fillStyle(0x24407a).fillRoundedRect(sx - 54, 318, 108, 150, 14);
-      fg.fillStyle(0x1a3060).fillRect(sx - 40, 340, 80, 40).fillStyle(0x8a8e96).fillRect(sx - 6, 336, 12, 4);
-      fg.fillStyle(0x1a3060).fillRect(sx - 40, 392, 80, 30).fillStyle(0xd02020).fillRect(sx - 30, 386, 14, 10);
+      fg.fillStyle(C.seatFg).fillRoundedRect(sx - 54, 318, 108, 150, 14);
+      fg.fillStyle(C.seatDk).fillRect(sx - 40, 340, 80, 40).fillStyle(0x8a8e96).fillRect(sx - 6, 336, 12, 4);
+      fg.fillStyle(C.seatDk).fillRect(sx - 40, 392, 80, 30).fillStyle(plane ? 0xd02020 : 0xf4f4f4).fillRect(sx - 30, 386, 14, 10);
     });
-    // The music fan nods to the beat, the reader turns pages
-    this.tweens.add({ targets: others[1], angle: 2, duration: 260, yoyo: true, repeat: -1 });
-    this.tweens.add({ targets: [this.player, this.neighbour, others[0]], y: 209, duration: 1300, yoyo: true, repeat: -1 });
+    // Plane: the music fan nods to the beat; train: the sleeper breathes slowly. Everyone sways a little.
+    if (plane) this.tweens.add({ targets: others[1], angle: 2, duration: 260, yoyo: true, repeat: -1 });
+    else this.tweens.add({ targets: others[1], scaleY: 2.04, duration: 1100, yoyo: true, repeat: -1 });
+    this.tweens.add({ targets: [this.player, this.neighbour, others[0]], y: 209, duration: plane ? 1300 : 420, yoyo: true, repeat: -1 });
     this.bubbleAt = { x: 330, y: 92 };
 
-    // Flight attendant with the trolley, pushed down the aisle when food is served
+    // Flight attendant / bar trolley, pushed down the aisle when food is served
     this.hostess = this.add.container(VX, 150).setScale(0.6).setVisible(false);
     this.hostess.add([this.add.image(0, 0, 'hostess').setOrigin(0.5, 1).setScale(2), this.add.image(0, 8, 'trolley').setOrigin(0.5, 1).setScale(2)]);
   }
@@ -318,8 +306,9 @@ export default class JourneyScene extends Phaser.Scene {
   update(time, delta) {
     // Clouds drifting past the portholes; the chatty neighbour moves his mouth while he talks.
     if (this.sky) {
-      this.skyX = (this.skyX + delta * 0.03) % 90;
       const g = this.sky.clear();
+      if (this.mode !== 'plane') { this.drawLandscape(g, delta); this.animateNeighbour(time); return; }
+      this.skyX = (this.skyX + delta * 0.03) % 90;
       this.portholes.forEach(([x, y, w, h], k) => {
         g.fillStyle(0x6fb8ff).fillRoundedRect(x - w / 2, y - h / 2, w, h, 9);
         // Clouds clipped to the porthole rectangle
@@ -333,13 +322,31 @@ export default class JourneyScene extends Phaser.Scene {
         }
       });
     }
+    this.animateNeighbour(time);
+  }
+
+  animateNeighbour(time) {
     if (this.neighbour && this.talking) this.neighbour.setTexture(Math.floor(time / 140) % 2 ? 'pax_chatty2' : 'pax_chatty1');
+  }
+
+  // Train windows: sky, hills and fields, with poles rushing past.
+  drawLandscape(g, delta) {
+    this.skyX = (this.skyX + delta * 0.25) % 120;
+    this.portholes.forEach(([x, y, w, h], k) => {
+      const l = x - w / 2, t = y - h / 2;
+      g.fillStyle(0x9fd8ff).fillRect(l, t, w, h);
+      g.fillStyle(0x6aa850).fillRect(l, t + h * 0.45, w, h * 0.2);
+      g.fillStyle(0x3a7a2a).fillRect(l, t + h * 0.62, w, h * 0.38);
+      g.fillStyle(0xffffff, 0.9).fillRect(l + ((this.skyX * 0.2 + k * 13) % (w - 14)), t + 8, 14, 5);
+      const px = l + ((this.skyX + k * 40) % 120) / 120 * (w + 20) - 10;
+      if (px > l && px + 4 < l + w) g.fillStyle(0x4a3a2a).fillRect(px, t + 4, 4, h - 8);
+    });
   }
 
   bubble(text) {
     this.bubbleObj?.destroy();
-    this.talking = !!text && this.mode === 'plane';
-    if (this.neighbour && this.mode === 'plane' && !text) this.neighbour.setTexture('pax_chatty1');
+    this.talking = !!text;
+    if (this.neighbour && !text) this.neighbour.setTexture('pax_chatty1');
     if (!text) return;
     const at = this.bubbleAt;
     const t = this.add.text(at.x, at.y, text, tstyle(10, '#000000', {
@@ -359,7 +366,7 @@ export default class JourneyScene extends Phaser.Scene {
     if (ev.hostess) this.showHostess(true);
     if (ev.auto) { this.time.delayedCall(ev.fx ? 900 : 300, () => this.showOutcome(ev.auto)); return; }
     this.time.delayedCall(500, () => choiceDialog(this, {
-      title: ev.title, text: ev.text, options: ev.options, y: this.mode === 'plane' ? 335 : 170,
+      title: ev.title, text: ev.text, options: ev.options, y: 335,
       onPick: (i) => this.showOutcome(ev.options[i].run())
     }));
   }
@@ -372,7 +379,7 @@ export default class JourneyScene extends Phaser.Scene {
     this.seatbelt(false);
     audio.sfx(o.color === GOOD ? 'coin' : 'hurt');
     resultPanel(this, {
-      title: o.title, color: o.color, lines: [...(o.lines || []), ...effectLines(o.effects || {})], y: this.mode === 'plane' ? 360 : 170,
+      title: o.title, color: o.color, lines: [...(o.lines || []), ...effectLines(o.effects || {})], y: 360,
       onClose: () => this.runEvent()
     });
   }

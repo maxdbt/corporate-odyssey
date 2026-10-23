@@ -1,12 +1,14 @@
 // Trip (Mondo 4) additions to a GameScene level: falling departure-board events, duty free, document
-// check, petition stands, desert rental kiosk with the taxi meter, food stand, budget pickups.
+// check, petition stands, rental kiosk with the taxi / fuel meter, food stand, budget pickups,
+// glacier crevasses and the cold without the down jacket, the sea without the swimsuit.
 import Phaser from 'phaser';
 import { TEX, DEPTH, FONT } from '../config/constants.js';
 import { GameState } from '../state/GameState.js';
 import { audio } from './Audio8bit.js';
 import Collectible from '../entities/Collectible.js';
 import { floatText } from '../entities/enemies/fx.js';
-import { PRICES, TAXI_METER } from '../data/trip.js';
+import { PRICES, RENTALS, FOOD_MENUS } from '../data/trip.js';
+import { MOUNTS } from '../entities/Player.js';
 
 // Weighted random key of { key: weight }.
 export function pickWeighted(weights) {
@@ -52,6 +54,18 @@ export default class TripLevel {
     if (level.rental) this.kiosk(...level.rental);
     (level.petition || []).forEach((x) => this.petitionStand(x));
     if (level.food) this.foodStand(...level.food);
+    (level.crevasses || []).forEach(([x, w]) => this.crevasse(x, w));
+    // Glacier: with the down jacket you are fine, without it the cold gets you now and then.
+    if (level.chill && GameState.hasItem('jacket')) {
+      scene.time.delayedCall(1200, () => scene.ui?.message?.('IL PIUMINO TI TIENE AL CALDO!', '#7CFC00', 1500));
+    }
+    // Sea: without the swimsuit you swim in jacket and tie, slower.
+    if (level.swim) {
+      const heavy = !GameState.hasItem('swimsuit');
+      scene.player.heavySuit = heavy;
+      const msg = heavy ? 'SENZA COSTUME: NUOTI IN GIACCA E CRAVATTA!\nPIU\' LENTO' : 'COL COSTUME NUOTI MEGLIO!';
+      scene.time.delayedCall(1200, () => scene.ui?.message?.(msg, heavy ? '#ff8080' : '#7CFC00', 1600));
+    }
   }
 
   // ---------------------------------------------------------------- drops
@@ -218,9 +232,11 @@ export default class TripLevel {
   // Food stand: forced stop (full-height trigger, even for a flying camel), opens FoodScene.
   foodStand(x, y) {
     const s = this.scene;
-    s.add.image(x, y, TEX.FOOD_STAND).setOrigin(0.5, 1).setDepth(DEPTH.DECOR + 1);
-    const label = s.add.text(x, y - 70, 'CHIOSCO DEL CIBO\nSOSTA OBBLIGATA', style(9, '#ffb000')).setOrigin(0.5, 1).setDepth(DEPTH.DECOR + 2);
-    s.tweens.add({ targets: label, y: y - 75, duration: 500, yoyo: true, repeat: -1 });
+    const menu = FOOD_MENUS[this.level.theme] || {};
+    const img = s.add.image(x, y, menu.standTex || TEX.FOOD_STAND).setOrigin(0.5, 1).setDepth(DEPTH.DECOR + 1);
+    const top = y - img.height - 6;
+    const label = s.add.text(x, top, menu.sign || 'CHIOSCO DEL CIBO\nSOSTA OBBLIGATA', style(9, '#ffb000')).setOrigin(0.5, 1).setDepth(DEPTH.DECOR + 2);
+    s.tweens.add({ targets: label, y: top - 5, duration: 500, yoyo: true, repeat: -1 });
     const z = s.add.zone(x, 225, 24, 450);
     s.physics.add.existing(z, true);
     this.foodDone = false;
@@ -233,7 +249,17 @@ export default class TripLevel {
     });
   }
 
-  // Desert rental kiosk: opens the RentalScene choice.
+  // Crevasse: a dark gap in the ice with a warning above it.
+  crevasse(x, w) {
+    const s = this.scene;
+    const floor = this.level.start[1];
+    s.add.rectangle(x, floor, w, 450 - floor, 0x0a2a5a).setOrigin(0).setDepth(DEPTH.PLATFORMS - 1);
+    s.add.rectangle(x, floor, w, 8, 0x4a8ad0).setOrigin(0).setDepth(DEPTH.PLATFORMS - 1);
+    const t = s.add.text(x + w / 2, floor - 70, 'CREPACCIO!', style(9, '#9be7ff')).setOrigin(0.5, 1).setDepth(DEPTH.DECOR + 2);
+    s.tweens.add({ targets: t, y: floor - 76, duration: 450, yoyo: true, repeat: -1 });
+  }
+
+  // Rental kiosk of the ground leg (RENTALS[theme]): opens the RentalScene choice.
   kiosk(x, y) {
     const s = this.scene;
     s.add.image(x, y, TEX.KIOSK).setOrigin(0.5, 1).setDepth(DEPTH.DECOR + 1);
@@ -241,10 +267,12 @@ export default class TripLevel {
     s.tweens.add({ targets: label, y: y - 69, duration: 500, yoyo: true, repeat: -1 });
     // Parked mounts: the rented one leaves the kiosk.
     this.parked = {};
-    [['camel', TEX.CAMEL, -90], ['moto', TEX.MOTO, 70], ['taxi', TEX.TAXI, 130]].forEach(([type, tex, dx]) => {
-      this.parked[type] = s.add.image(x + dx, y, tex).setOrigin(0.5, 1).setDepth(DEPTH.DECOR).setAlpha(0.9);
+    this.rental = RENTALS[this.level.theme] || RENTALS.desert;
+    this.rental.options.forEach(({ type, dx }) => {
+      this.parked[type] = s.add.image(x + dx, y, MOUNTS[type].tex).setOrigin(0.5, 1).setDepth(DEPTH.DECOR).setAlpha(0.9);
     });
-    const z = s.add.zone(x, y - 40, 40, 80);
+    // Underwater you may swim over it: the whole column counts.
+    const z = this.level.swim ? s.add.zone(x, 225, 40, 450) : s.add.zone(x, y - 40, 40, 80);
     s.physics.add.existing(z, true);
     this.kioskZone = z;
     this.kioskArmed = true;
@@ -256,11 +284,11 @@ export default class TripLevel {
     });
   }
 
-  // Called by RentalScene. type = camel | moto | taxi | null (on foot).
+  // Called by RentalScene. type = a RENTALS option type, null = on foot.
   rent(type) {
     const s = this.scene;
     if (!type) {
-      s.ui?.message?.('PROSEGUI A PIEDI...', '#ffb000', 1400);
+      s.ui?.message?.(this.rental?.footMsg || 'PROSEGUI A PIEDI...', '#ffb000', 1400);
       return;
     }
     if (!GameState.spend(PRICES[type])) return;
@@ -268,7 +296,9 @@ export default class TripLevel {
     s.player.mountUp(type);
     this.parked?.[type]?.setVisible(false);
     audio.sfx('powerup');
-    const extra = type === 'taxi' ? `\nTASSAMETRO: ${TAXI_METER} €/s` : type === 'camel' ? (GameState.hasItem('dates') ? '\nDATTERI: TURBO! SALTA IN ARIA PER VOLARE' : '\nSENZA DATTERI SI IMPUNTA!') : '';
+    const opt = this.rental?.options.find((o) => o.type === type);
+    let extra = opt?.msg ? `\n${opt.msg}` : '';
+    if (type === 'camel') extra = GameState.hasItem('dates') ? '\nDATTERI: TURBO! SALTA IN ARIA PER VOLARE' : '\nSENZA DATTERI SI IMPUNTA!';
     s.ui?.message?.(`NOLEGGIATO! -${PRICES[type]} €${extra}`, '#ffd800', 1800);
   }
 
@@ -291,16 +321,28 @@ export default class TripLevel {
     const p = s.player;
     // Re-arm the kiosk once the player walks away from it.
     if (this.kioskZone && !this.kioskArmed && Math.abs(p.x - this.kioskZone.x) > 80) this.kioskArmed = true;
-    // Taxi meter while the taxi moves.
-    if (p.mount?.type === 'taxi' && Math.abs(p.body.velocity.x) > 20) {
+    // Taxi meter / snowmobile fuel while the mount moves.
+    const cfg = p.mount?.cfg;
+    if (cfg?.meter && Math.abs(p.body.velocity.x) > 20) {
       this.meter += delta / 1000;
       while (this.meter >= 1) {
         this.meter -= 1;
-        if (!GameState.spend(TAXI_METER)) {
+        if (!GameState.spend(cfg.meter)) {
           p.dismount();
-          s.ui?.message?.('BUDGET FINITO!\nIL TASSISTA TI FA SCENDERE', '#ff8080', 1800);
+          s.ui?.message?.(cfg.meterOut, '#ff8080', 1800);
           break;
         }
+      }
+    }
+    // Glacier without the down jacket: a cold spell every 11-15 s (sneezes, slippery steps, stress).
+    if (this.level.chill && !GameState.hasItem('jacket') && !s.ended) {
+      if (!this.nextChill) this.nextChill = time + 8000;
+      else if (time >= this.nextChill) {
+        this.nextChill = time + Phaser.Math.Between(11000, 15000);
+        p.applyStatus('cold', 3000);
+        GameState.addStress(5);
+        audio.sfx('freeze');
+        s.ui?.message?.('BRRR! SENZA PIUMINO SI GELA!\nSTRESS +5%', '#aee8ff', 1400);
       }
     }
   }

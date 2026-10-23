@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { TEX, DEPTH } from '../config/constants.js';
+import { TEX, DEPTH, GAME_WIDTH, GAME_HEIGHT } from '../config/constants.js';
 import { pinToView } from '../utils/view.js';
 import { GameState } from '../state/GameState.js';
 import { audio } from './Audio8bit.js';
@@ -83,10 +83,26 @@ export default class Zones {
         const p = s.add.particles(0, 0, TEX.FX_WIND, {
           x: { min: 0, max: 900 }, y: { min: 0, max: 450 },
           speedX: { min: -520, max: -320 }, lifespan: 1600, frequency: 25,
-          alpha: { start: 0.8, end: 0 }, tint: 0xffe2a0, scaleX: { min: 1, max: 3 }
+          alpha: { start: 0.8, end: 0 }, tint: z.current ? 0xbfe8ff : z.storm ? 0xffffff : 0xffe2a0, scaleX: { min: 1, max: 3 }
         }).setDepth(DEPTH.FX);
         pinToView(p, 0, 0, 0);
         z.emitter = p;
+        if (z.storm || z.current) {
+          // Blizzard (glacier) / current (sea): only while you are inside it; thick snow or bubbles and a veil.
+          const snow = s.add.particles(0, 0, z.current ? TEX.FX_BUBBLE : TEX.FX_SNOW, {
+            x: { min: 0, max: 1000 }, y: { min: -20, max: 450 }, speedX: { min: -420, max: -260 },
+            speedY: z.current ? { min: -40, max: 10 } : { min: 40, max: 120 },
+            lifespan: 1800, frequency: 12, scale: { min: 1, max: 2.2 }, alpha: { start: 1, end: 0.4 }
+          }).setDepth(DEPTH.FX);
+          pinToView(snow, 0, 0, 0);
+          const veil = z.current ? [0x0a3a7a, 0.25] : [0x5a7090, 0.4];
+          z.veil = pinToView(s.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, veil[0], veil[1]).setOrigin(0).setDepth(DEPTH.FX - 1), 0, 0, 0).setVisible(false);
+          z.emitters = [p, snow];
+          z.emitters.forEach((e) => e.stop());
+          s.add.text(x + 60, 300, z.label || 'BUFERA', {
+            fontFamily: 'monospace', fontSize: '12px', fontStyle: 'bold', color: '#ffffff', align: 'center', stroke: '#2a4a8a', strokeThickness: 3
+          }).setOrigin(0.5).setDepth(DEPTH.ZONES);
+        }
         break;
       }
       case 'water': {
@@ -174,6 +190,11 @@ export default class Zones {
       else if (z.type === 'ice' || z.type === 'puddle' || z.type === 'wet') inside = z.rect.contains(px, feet - 1);
       else inside = z.rect.contains(px, py);
       const entered = inside && !z.inside;
+      if ((z.storm || z.current) && inside !== z.inside) {
+        z.emitters.forEach((e) => (inside ? e.start() : e.stop()));
+        z.veil.setVisible(inside);
+        if (inside) this.scene.ui?.message?.(z.label || 'BUFERA!', '#ffffff', 1000);
+      }
       z.inside = inside;
       if (!inside) continue;
 

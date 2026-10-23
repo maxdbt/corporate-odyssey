@@ -171,6 +171,13 @@ export const TEX = {
   OFFICE: 'office',           // 96x96 (client office building = desert exit)
   CAMEL: 'camel', MOTO: 'moto', TAXI: 'taxi', // mounts (see Player.mount)
   CAMEL_WING: 'camel_wing',   // 28x14 wing of the flying camel (with the dates)
+  HUSKY_SLED: 'husky_sled', SNOWMOBILE: 'snowmobile', SKIS: 'skis', // glacier mounts
+  PENGUIN1: 'penguin1', PENGUIN2: 'penguin2', PENGUIN_SLIDE: 'penguin_slide', // 24x24 manager penguin
+  SNOWMAN: 'snowman',         // 24x36 snowman with a tie
+  HUT: 'hut',                 // 96x72 mountain hut (glacier food stop)
+  SUBMARINE: 'submarine', FINS: 'fins', MASK: 'mask', SEAHORSE: 'seahorse', // sea mounts (mask = head overlay of the fins)
+  JELLY1: 'jelly1', JELLY2: 'jelly2', // 20x24 jellyfish
+  REEF_BAR: 'reef_bar',       // 96x72 underwater sushi bar (sea food stop)
   UMBRELLA_OPEN: 'umbrella_open', // 24x12 parasol over the player
 
   // UI icons 12x12
@@ -208,7 +215,7 @@ export const LEVEL_META = [
   { id: '4-6', world: 'Mondo 4: La Trasferta', name: 'Il Treno', scene: 'JourneyScene', trip: true },
   { id: '4-7', world: 'Mondo 4: La Trasferta', name: 'Il Deserto', trip: true },
   { id: '4-8', world: 'Mondo 4: La Trasferta', name: 'Il Ghiacciaio', trip: true },
-  { id: '4-9', world: 'Mondo 4: La Trasferta', name: 'Il Mare del Digital', trip: true },
+  { id: '4-9', world: 'Mondo 4: La Trasferta', name: 'Il Mare', trip: true },
   { id: '4-10', world: 'Mondo 4: La Trasferta', name: 'Il Cliente', scene: 'NegotiationScene', trip: true },
   { id: '5-1', world: 'Mondo 5: Il Piano degli Executive', name: 'La Cima della Piramide' }
 ];

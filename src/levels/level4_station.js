@@ -1,7 +1,7 @@
 import { TEX } from '../config/constants.js';
 import { FLOOR, row, arc } from './helpers.js';
 
-const DROPS = { strike: 3, delay: 3, miles: 2, upgrade: 1, budget: 1 };
+const DROPS = { strike: 4, delay: 4, miles: 1, upgrade: 1 };
 
 // 4-4 La Stazione (trip, by train): strikes and delays rain from the departure boards and
 // pickpockets run at you to steal your wallet (stomp them to get it back). Catch the train.
@@ -30,18 +30,18 @@ export default {
     ['pickpocket', 3350, FLOOR],
     ['pickpocket', 3950, FLOOR]
   ],
-  hazards: [['tripdrops', { from: 250, to: 4150, interval: 1600, mix: DROPS }]],
+  hazards: [['tripdrops', { from: 250, to: 4150, interval: 2000, mix: DROPS }]],
   items: [
     ...row('euro', 200, 340, 5),
     ...row('euro', 770, 270, 3),
     ['budget', 952, 220],
-    ...arc('euro', 1330, 330, 5, 22, 50),
+    ...arc('euro', 1330, 330, 3, 22, 50),
     ['coffee', 1650, 340],
     ...row('euro', 2010, 260, 3),
     ['vacation', 2192, 210],
     ['miles', 2982, 260],
-    ...arc('euro', 3480, 330, 5, 22, 50),
-    ...row('euro', 3900, 340, 6)
+    ...arc('euro', 3480, 330, 3, 22, 50),
+    ...row('euro', 3900, 340, 3)
   ],
   goal: { type: 'train', x: 4250, y: FLOOR }
 };

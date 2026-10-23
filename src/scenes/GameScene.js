@@ -90,6 +90,8 @@ export default class GameScene extends Phaser.Scene {
     const planeBonus = level.trip && isGroundLeg(level.id) && GameState.trip?.transport === 'plane'
       ? TRANSPORT.plane.timeBonus : 0;
     this.timeLeft += planeBonus;
+    // The client at the end of the trip depends on the ground leg crossed.
+    if (level.trip && isGroundLeg(level.id) && GameState.trip) GameState.trip.leg = level.theme;
 
     // Enemies and hazards
     (level.enemies || []).forEach(([type, x, y, props]) => this.spawnEnemy(type, x, y, props));
@@ -307,9 +309,10 @@ export default class GameScene extends Phaser.Scene {
     if (mc === 'immune') return;
     if (mc === 'ram') { enemy.hit?.(99, 'ram'); audio.sfx('stomp'); return; }
     if (mc === 'crash' && !p.hasStatus('invuln')) {
+      const msg = p.mount.cfg.crashMsg || 'CADUTO!';
       p.dismount();
       p.takeDamage(10, 10, enemy.x);
-      this.ui?.message?.('CADUTO DALLA MOTO!\nPROSEGUI A PIEDI', '#ff8080', 1600);
+      this.ui?.message?.(`${msg}\n${this.level.swim ? 'PROSEGUI A NUOTO' : 'PROSEGUI A PIEDI'}`, '#ff8080', 1600);
       return;
     }
     if (!enemy.isBoss && (p.hasStatus('promotion') || p.hasShield())) {

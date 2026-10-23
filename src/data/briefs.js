@@ -74,20 +74,25 @@ export const BRIEFS = {
   },
   '4-8': {
     where: 'Ghiacciaio. Il cliente ha scelto una sede... fresca.',
-    goal: 'Attraversa il ghiaccio e trova l\'uscita verso il cliente.',
+    goal: 'Raggiungi l\'UFFICIO DEL CLIENTE tra ghiaccio e bufere.',
     tips: [
-      'Sul ghiaccio non c\'e\' attrito: frena in anticipo.',
-      'Le stalattiti-scadenza cadono quando ci passi sotto.',
-      'Icone di Teams in agguato anche qui.'
+      'Al NOLEGGIO scegli: SLITTA CON HUSKY, MOTOSLITTA o SCI, ognuno con un prezzo.',
+      'Gli husky non scivolano ma ogni tanto partono da soli. La motoslitta consuma CARBURANTE. Gli sci non hanno freni!',
+      'Senza PIUMINO in valigia ogni tanto ti prende il freddo.',
+      'Nella BUFERA il vento ti spinge indietro. Occhio ai CREPACCI e alle stalattiti-scadenza!',
+      'Alla BAITA ti fermi per forza: solo un piatto su tre e\' buono...'
     ]
   },
   '4-9': {
-    where: 'Il Mare del Digital. Il cliente ha la sede in fondo al mare.',
-    goal: 'Nuota fino all\'uscita evitando squali e mine.',
+    where: 'Il Mare. Il cliente ha la sede... sul fondale.',
+    goal: 'Raggiungi l\'UFFICIO DEL CLIENTE in fondo al mare.',
     tips: [
       'Sott\'acqua premi SALTA per nuotare verso l\'alto.',
-      'Gli squali-consulente girano in tondo.',
-      'Le mine-notifica esplodono al contatto.'
+      'Al NOLEGGIO scegli: SOTTOMARINO, PINNE E MASCHERA o CAVALLUCCIO MARINO, ognuno con un prezzo.',
+      'Il sottomarino sale e scende con SU/GIU\' e consuma BATTERIA. Le pinne sono veloci. Il cavalluccio ogni tanto torna indietro!',
+      'Senza COSTUME in valigia nuoti in giacca e cravatta: piu\' lento.',
+      'Le CORRENTI ti spingono indietro. Occhio a meduse, squali-consulente e mine-notifica!',
+      'Al SUSHI BAR ti fermi per forza: solo un piatto su tre e\' buono...'
     ]
   },
   '5-1': {

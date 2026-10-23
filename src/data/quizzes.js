@@ -447,6 +447,140 @@ export const QUIZZES = {
         outcome: 'Ti segue per due chilometri: "prezzo speciale!"\nSTRESS +5%'
       }
     ]
+  },
+  // ---- Trasferta: glacier (level4_glacier quizSetting)
+  22: {
+    setting: 'glacier',
+    title: 'LO YETI',
+    question: 'Uno yeti ti blocca il sentiero\ne ti chiede di compilare un modulo.',
+    choices: [
+      {
+        label: 'Compili il modulo in triplice copia.',
+        effects: { hp: 10, timer: -15 },
+        outcome: 'Lo yeti approva. La burocrazia funziona anche qui.\nSALUTE MENTALE +10%   -15 SECONDI SUL TIMER'
+      },
+      {
+        label: 'Gli proponi una call la settimana prossima.',
+        effects: { stress: -10 },
+        outcome: 'Lo yeti accetta e sparisce nella nebbia.\nSTRESS -10%'
+      },
+      {
+        label: 'Scappi scivolando sul ghiaccio.',
+        effects: { stress: 15, timer: 10 },
+        outcome: 'Fuga a tutta velocita\'. Il cuore un po\' meno.\nSTRESS +15%   +10 SECONDI SUL TIMER'
+      }
+    ]
+  },
+  23: {
+    setting: 'glacier',
+    title: 'LA SEGGIOVIA FERMA',
+    question: 'La seggiovia si blocca a trenta metri d\'altezza.\nIl telefono, purtroppo, ha campo.',
+    choices: [
+      {
+        label: 'Ne approfitti per svuotare la casella email.',
+        effects: { stress: 10, euro: 20 },
+        outcome: 'Inbox zero a trenta metri d\'altezza.\nSTRESS +10%   BONUS +20 EUR'
+      },
+      {
+        label: 'Ti godi il panorama.',
+        effects: { hp: 15, timer: -10 },
+        outcome: 'Silenzio, montagne, nessuna notifica.\nSALUTE MENTALE +15%   -10 SECONDI SUL TIMER'
+      },
+      {
+        label: 'Chiami il capo per sfogarti.',
+        effects: { stress: 15, nextLevelEnemySpeed: 1.1 },
+        outcome: '"Visto che hai tempo, ti giro tre task."\nSTRESS +15%\nNEMICI DEL PROSSIMO LIVELLO +10% VELOCI'
+      }
+    ]
+  },
+  24: {
+    setting: 'glacier',
+    title: 'IL SAN BERNARDO',
+    question: 'Un San Bernardo ti porta la botticella.\nDentro c\'e\' una chiavetta USB.',
+    choices: [
+      {
+        label: 'La infili subito nel portatile.',
+        effects: { stress: 20, timer: -10 },
+        outcome: 'Era il report del cliente. Da rifare.\nSTRESS +20%   -10 SECONDI SUL TIMER'
+      },
+      {
+        label: 'Accarezzi il cane e basta.',
+        effects: { hp: 15 },
+        outcome: 'Il San Bernardo scodinzola. Ti senti meglio.\nSALUTE MENTALE +15%'
+      },
+      {
+        label: 'La giri all\'IT con un ticket.',
+        effects: { stress: -5, timer: -5 },
+        outcome: 'Ticket aperto. Risposta prevista: primavera.\nSTRESS -5%   -5 SECONDI SUL TIMER'
+      }
+    ]
+  },
+  // ---- Trasferta: sea (level4_sea quizSetting)
+  25: {
+    setting: 'sea',
+    title: 'IL PALOMBARO',
+    question: 'Un palombaro ti consegna un contratto fradicio.\nL\'inchiostro sta colando.',
+    choices: [
+      {
+        label: 'Firmi lo stesso, a occhio.',
+        effects: { stress: 10, euro: 20 },
+        outcome: 'Hai firmato qualcosa. Forse un bonus.\nSTRESS +10%   BONUS +20 EUR'
+      },
+      {
+        label: 'Chiedi una copia digitale.',
+        effects: { timer: -15, hp: 10 },
+        outcome: 'Arriva in PDF... impermeabile.\nSALUTE MENTALE +10%   -15 SECONDI SUL TIMER'
+      },
+      {
+        label: 'Lo usi come aereoplanino subacqueo.',
+        effects: { stress: -10, colleaguesHostile: true },
+        outcome: 'Divertente. L\'ufficio legale non la pensa cosi\'.\nSTRESS -10%   COLLEGHI OSTILI'
+      }
+    ]
+  },
+  26: {
+    setting: 'sea',
+    title: 'LA CALL SUBACQUEA',
+    question: 'Il capo ti chiama in video.\nSei a venti metri di profondita\'.',
+    choices: [
+      {
+        label: 'Rispondi: "Si sente? Blub."',
+        effects: { stress: 15, timer: 10 },
+        outcome: '"Sei in acquario? Va bene, facciamo veloce."\nSTRESS +15%   +10 SECONDI SUL TIMER'
+      },
+      {
+        label: 'Metti lo sfondo virtuale dell\'ufficio.',
+        effects: { stress: -5, timer: -10 },
+        outcome: 'Un pesce palla attraversa lo sfondo. Nessuno commenta.\nSTRESS -5%   -10 SECONDI SUL TIMER'
+      },
+      {
+        label: 'Non rispondi: qui sotto non c\'e\' campo.',
+        effects: { hp: 15, nextLevelEnemySpeed: 1.1 },
+        outcome: 'Pace assoluta. Il capo prende nota.\nSALUTE MENTALE +15%\nNEMICI DEL PROSSIMO LIVELLO +10% VELOCI'
+      }
+    ]
+  },
+  27: {
+    setting: 'sea',
+    title: 'IL BANCO DI SARDINE',
+    question: 'Un banco di sardine si muove compatto.\nSembra il reparto marketing.',
+    choices: [
+      {
+        label: 'Ti unisci al banco.',
+        effects: { timer: 15, stress: 10 },
+        outcome: 'Vai dove vanno tutti. Velocissimo, ma senza idee.\nSTRESS +10%   +15 SECONDI SUL TIMER'
+      },
+      {
+        label: 'Proponi un brainstorming.',
+        effects: { stress: -10 },
+        outcome: 'Le sardine annuiscono tutte insieme.\nSTRESS -10%'
+      },
+      {
+        label: 'Le aspetti passare.',
+        effects: { hp: 10, timer: -10 },
+        outcome: 'Ci vogliono dieci minuti. Ma che spettacolo.\nSALUTE MENTALE +10%   -10 SECONDI SUL TIMER'
+      }
+    ]
   }
 };
 

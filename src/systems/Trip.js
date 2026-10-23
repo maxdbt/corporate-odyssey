@@ -8,7 +8,7 @@ import { TRANSPORT, DEFAULT_SUITCASE, BUDGET_TO_EURO } from '../data/trip.js';
 const indexOf = (id) => LEVELS.findIndex((l) => l.id === id);
 
 // Ground legs already redesigned for the trip: one is drawn at random on arrival.
-export const GROUND_LEGS = ['4-7'];
+export const GROUND_LEGS = ['4-7', '4-8', '4-9'];
 // Every ground leg (including the ones still to redesign, selectable from the menu).
 export const isGroundLeg = (id) => ['4-7', '4-8', '4-9'].includes(id);
 

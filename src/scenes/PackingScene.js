@@ -10,8 +10,8 @@ import { tstyle, resultPanel } from '../ui/TripUI.js';
 
 const COLS = 5;
 const CELL_W = 144;
-const CELL_H = 56;
-const GAP = 6;
+const CELL_H = 44;
+const GAP = 5;
 const GRID_X = (GAME_WIDTH - (COLS * CELL_W + (COLS - 1) * GAP)) / 2;
 const GRID_Y = 84;
 
@@ -41,7 +41,9 @@ export default class PackingScene extends Phaser.Scene {
       tstyle(10, '#ffffff')).setOrigin(0.5);
 
     this.cells = [...TRIP_ITEMS.map((it) => ({ item: it })), { go: true }].map((cell, i) => {
-      const x = GRID_X + (i % COLS) * (CELL_W + GAP);
+      // PARTI alone on the last row: centred.
+      const col = cell.go && i % COLS === 0 ? Math.floor(COLS / 2) : i % COLS;
+      const x = GRID_X + col * (CELL_W + GAP);
       const y = GRID_Y + Math.floor(i / COLS) * (CELL_H + GAP);
       const bg = this.add.rectangle(x, y, CELL_W, CELL_H, cell.go ? 0x1f6a2a : 0x10204a, 0.92).setOrigin(0).setStrokeStyle(2, 0x4060a0)
         .setInteractive({ useHandCursor: true });

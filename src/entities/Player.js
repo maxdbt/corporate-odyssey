@@ -4,6 +4,7 @@ import {
 } from '../config/constants.js';
 import { GameState } from '../state/GameState.js';
 import { audio } from '../systems/Audio8bit.js';
+import { TAXI_METER, FUEL_METER, BATTERY_METER } from '../data/trip.js';
 
 const WALK_SPEED = 160;
 const RUN_SPEED = 260;
@@ -31,13 +32,22 @@ const POSE_BODY = {
   crouch: 'crouch', slide: 'slide', sleep: 'sleep'
 };
 
-// Trip rentals (4-7 Deserto). lift = how high the rider sits; wind = 0 immune .. 1 full headwind.
+// Trip rentals (4-7 Deserto, 4-8 Ghiacciaio). lift = how high the rider sits; wind = 0 immune .. 1 full headwind.
 // immune: enemy kinds ignored on contact; crash: kinds that throw you off; ram: destroys what it hits.
+// meter: budget spent per second while moving; grip: no sliding on ice; slippery: always sliding (no brakes);
+// dash: runs off on its own every few seconds (1 forward, -1 back, dashMsg); originX: where the rider sits on the sprite;
+// swim: underwater stroke; hover: underwater speed steered with up/down; head: texture worn on the head.
 export const MOUNTS = {
   // turbo / flap: with the dates the camel goes much faster and flaps its wings when you jump in mid-air.
   camel: { tex: TEX.CAMEL, label: 'DROMEDARIO', body: [36, 40], lift: 16, speed: 180, run: 220, jump: -500, wind: 0, immune: ['cactus', 'mirage'], turbo: 1.6, flap: -340 },
-  moto: { tex: TEX.MOTO, label: 'MOTO', body: [36, 34], lift: 8, speed: 300, run: 360, jump: -420, wind: 0.3, crash: ['cactus'] },
-  taxi: { tex: TEX.TAXI, label: 'TAXI', body: [44, 34], lift: 6, speed: 250, run: 290, jump: -400, wind: 0, ram: true }
+  moto: { tex: TEX.MOTO, label: 'MOTO', body: [36, 34], lift: 8, speed: 300, run: 360, jump: -420, wind: 0.3, crash: ['cactus'], crashMsg: 'CADUTO DALLA MOTO!' },
+  taxi: { tex: TEX.TAXI, label: 'TAXI', body: [44, 34], lift: 6, speed: 250, run: 290, jump: -400, wind: 0, ram: true, meter: TAXI_METER, meterOut: 'BUDGET FINITO!\nIL TASSISTA TI FA SCENDERE' },
+  husky: { tex: TEX.HUSKY_SLED, label: 'SLITTA CON HUSKY', body: [40, 30], lift: 6, speed: 210, run: 250, jump: -450, wind: 0.3, grip: true, immune: ['penguin'], dash: 1, dashMsg: 'GLI HUSKY PARTONO DA SOLI!', originX: 0.25 },
+  snowmobile: { tex: TEX.SNOWMOBILE, label: 'MOTOSLITTA', body: [40, 30], lift: 8, speed: 290, run: 350, jump: -430, wind: 0, grip: true, crash: ['snowman'], crashMsg: 'CADUTO DALLA MOTOSLITTA!', meter: FUEL_METER, meterOut: 'BUDGET FINITO!\nNIENTE BENZINA PER LA MOTOSLITTA' },
+  skis: { tex: TEX.SKIS, label: 'SCI', body: [18, 34], lift: 3, speed: 270, run: 390, jump: -520, wind: 0.6, slippery: true, crash: ['snowman', 'penguin'], crashMsg: 'CHE CAPITOMBOLO!\nSCI PERSI' },
+  submarine: { tex: TEX.SUBMARINE, label: 'SOTTOMARINO', body: [44, 40], lift: 12, speed: 260, run: 300, jump: -400, wind: 0.2, hover: 170, immune: ['jellyfish', 'mine'], meter: BATTERY_METER, meterOut: 'BUDGET FINITO!\nIL SOTTOMARINO SI SPEGNE' },
+  fins: { tex: TEX.FINS, head: TEX.MASK, label: 'PINNE E MASCHERA', body: [18, 34], lift: 3, speed: 300, run: 370, jump: -430, wind: 0.8, swim: -300 },
+  seahorse: { tex: TEX.SEAHORSE, label: 'CAVALLUCCIO MARINO', body: [26, 44], lift: 14, speed: 240, run: 290, jump: -430, wind: 0.5, swim: -260, immune: ['jellyfish'], crash: ['shark'], crashMsg: 'LO SQUALO HA SPAVENTATO\nIL CAVALLUCCIO!', dash: -1, dashMsg: 'IL CAVALLUCCIO TORNA INDIETRO!' }
 };
 
 const PRESSED_KEYS = ['jumpPressed', 'attackPressed', 'switchWeaponPressed', 'slidePressed'];
@@ -102,6 +112,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     const turbo = type === 'camel' && GameState.hasItem('dates');
     this.mount = { type, cfg, sprite, turbo, nextBalk: this.clock + Phaser.Math.Between(5000, 8000), balkUntil: 0 };
     if (turbo) this.mount.wings = this.scene.add.image(this.x, this.y, TEX.CAMEL_WING).setOrigin(0.5, 1).setDepth(DEPTH.PLAYER + 2).setVisible(false);
+    if (cfg.head) this.mount.head = this.scene.add.image(this.x, this.y, cfg.head).setDepth(DEPTH.PLAYER + 2);
     this.bodyCategory = null;
     this._setPose('idle');
     if (this.body) this.y -= cfg.lift;
@@ -114,6 +125,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if (!m) return;
     this.mount = null;
     m.wings?.destroy();
+    m.head?.destroy();
     if (silent) m.sprite.destroy();
     else {
       this.scene.tweens.add({
@@ -340,7 +352,16 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         audio.sfx('hurt');
       }
       if (this.clock < m.balkUntil) input = { ...input, left: false, right: false, jumpPressed: false, jump: false };
-      input = { ...input, down: false, slidePressed: false };
+      // Huskies spot a penguin and run off, the seahorse turns back: now and then, whatever you press.
+      if (m.cfg.dash && this.clock >= m.nextBalk) {
+        m.dashUntil = this.clock + (m.cfg.dash < 0 ? 900 : 1300);
+        m.dashDir = m.cfg.dash < 0 ? -this.facing : this.facing;
+        m.nextBalk = this.clock + Phaser.Math.Between(7000, 10000);
+        this._floatText(m.cfg.dashMsg, '#9be7ff');
+        audio.sfx('doublejump');
+      }
+      if (this.clock < (m.dashUntil || 0)) input = { ...input, left: m.dashDir < 0, right: m.dashDir > 0, run: true };
+      input = { ...input, down: m.cfg.hover ? input.down : false, slidePressed: false };
     }
 
     const body = this.body;
@@ -394,6 +415,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.hasStatus('promotion')) speed *= 1.5;
     if (this.hasStatus('cold')) speed *= 1.4;
     if (env.underwater) speed *= 0.7;
+    if (env.underwater && this.heavySuit && !m) speed *= 0.75;   // sea leg without the swimsuit
     const windK = m ? m.cfg.wind : 1;
     if (env.windX !== 0 && dir !== 0 && Math.sign(dir) !== Math.sign(env.windX)) speed *= 1 - 0.5 * windK;
 
@@ -402,7 +424,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.isCrouching) target = 0;
 
     let k;
-    if (env.ice) k = 0.015;
+    if (m?.cfg.slippery) k = grounded ? 0.02 : 0.05;
+    else if (env.ice && !m?.cfg.grip) k = 0.015;
     else if (this.hasStatus('cold')) k = 0.04;
     else k = grounded ? 0.35 : 0.2;
     if (this.isDizzy() && grounded && !disabled) {
@@ -426,9 +449,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     // Jumping / swimming
-    if (env.underwater) {
+    if (env.underwater && m?.cfg.hover) {
+      // Submarine: up (or jump) / down steer it freely.
+      const vy = ((input.down ? 1 : 0) - (input.up || input.jump ? 1 : 0)) * m.cfg.hover;
+      body.setVelocityY(body.velocity.y + (vy - body.velocity.y) * 0.15);
+    } else if (env.underwater) {
       if (input.jumpPressed) {
-        body.setVelocityY(SWIM_V);
+        body.setVelocityY(m?.cfg.swim ?? SWIM_V);
         audio.sfx('jump');
       }
       if (body.velocity.y > 90) body.setVelocityY(90);
@@ -620,6 +647,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       const ms = this.mount.sprite;
       const bob = grounded && moving ? Math.round(Math.sin(this.clock / 70)) : 0;
       ms.setPosition(this.x, body.bottom + bob).setFlipX(this.facing < 0);
+      const ox = this.mount.cfg.originX;
+      if (ox) ms.setOrigin(this.facing < 0 ? 1 - ox : ox, 1);
       ms.setTint(this.clock < this.mount.balkUntil ? 0xffb080 : 0xffffff);
       const w = this.mount.wings;
       if (w) {
@@ -628,6 +657,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         w.setVisible(!grounded).setPosition(this.x - this.facing * 6, body.bottom - 18).setFlipX(this.facing < 0)
           .setScale(1, Math.floor(this.clock / beat) % 2 ? 1 : -0.6);
       }
+      this.mount.head?.setPosition(this.x + this.facing * 3, this.y - this.displayHeight + 9).setFlipX(this.facing < 0);
       if (this.mount.turbo && grounded && moving && this.clock >= (this.mount.dustAt || 0)) {
         this.mount.dustAt = this.clock + 70;
         this._dust(body.bottom);
@@ -723,7 +753,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   preDestroy() {
     if (this.shieldGfx) this.shieldGfx.destroy();
-    if (this.mount) { this.mount.sprite.destroy(); this.mount.wings?.destroy(); }
+    if (this.mount) { this.mount.sprite.destroy(); this.mount.wings?.destroy(); this.mount.head?.destroy(); }
     if (this.parasol) this.parasol.destroy();
     try { this._resetCamera(); } catch (e) { /* camera already gone on shutdown */ }
     super.preDestroy();

@@ -181,7 +181,7 @@ level flow. Creates BEFORE spawning anything:
 
 Quiz terminals: on touch, `this.scene.pause(); this.scene.launch('QuizScene', { quizId })` (each terminal
 used once; `quizId = nextQuizId(level.quizSetting)`: one shuffled deck per setting, quizzes carry
-`setting` (default `'office'`), e.g. level4_desert uses `quizSetting: 'desert'` so no office quizzes there). QuizScene shows the question (keyboard 1/2/3 or A/B/C, arrows+Enter, or tap), calls
+`setting` (default `'office'`), e.g. level4_desert uses `quizSetting: 'desert'`, level4_glacier `'glacier'`, so no office quizzes there). QuizScene shows the question (keyboard 1/2/3 or A/B/C, arrows+Enter, or tap), calls
 `this.scene.get('GameScene').applyEffects(choice.effects)`, shows the outcome text, then
 `this.scene.resume('GameScene'); this.scene.stop()`.
 
@@ -209,25 +209,44 @@ One trip in stages, with a BUDGET bar carried across them in `GameState.trip`
   underwear, suit and swimsuit.
 - ALWAYS start a level with `startLevel(scene, index)` and advance with `goNext(scene, index)`: they route to the
   static scene and pick the branch: 4-1 Valigia → 4-2 Mezzo → 4-3 Aeroporto | 4-4 Stazione → 4-5 Volo | 4-6 Treno →
-  random ground leg from `GROUND_LEGS` (now only 4-7 Deserto) → 4-10 Cliente → 5-1.
+  random ground leg from `GROUND_LEGS` (4-7 Deserto, 4-8 Ghiacciaio, 4-9 Mare) → 4-10 Cliente → 5-1.
 - `beginStage(index)` stores the budget at stage start (a replay restores it); `ensureTrip(index)` builds a default
   trip when a stage is started directly from the menu (debug, `TRIP_STAGES_IN_MENU`). `finishTrip()` converts the
   leftover budget to euro (`BUDGET_TO_EURO`) and clears the trip.
-- Data (items, transports, prices, food stand menus): `src/data/trip.js`. `TRIP_FUND` (480) is the whole allowance:
+- Data (items, transports, prices, food stand menus by `level.theme`, rental dialogs `RENTALS` by theme): `src/data/trip.js`. `TRIP_FUND` (480) is the whole allowance:
   the ticket is paid out of it (train 180 → 300 left, plane 300 → 180 left but +60s on the clock). Shared dialogs/HUD for static scenes: `src/ui/TripUI.js`.
 - In-level trip props live in `src/systems/TripLevel.js` (`scene.tripLevel`): falling drops from the departure
   boards (`tripdrops` hazard), duty free shelves, document check, rental kiosk (opens `RentalScene` overlay →
   `rent(type)` → `player.mountUp(type)`), taxi meter, sniffer search, petition stand (`level.petition: [x...]`,
-  spawns two `Petitioner`s that chase you and block you to sign), food stand (`level.food: [x, y]`, forced stop →
-  `FoodScene` overlay: 3 dishes from `FOOD_MENUS`, shuffled good / trip (5s hallucination) / toxic (5s in the
-  toilet), `FOOD_OUTCOMES`). Enemies Sniffer / Pickpocket / Petitioner in `entities/enemies/TripEnemies.js`.
-- Mounts: `MOUNTS` in Player.js (camel / moto / taxi); while mounted no double jump, slide or ladders;
+  spawns two `Petitioner`s that chase you and block you to sign), crevasses (`level.crevasses: [[x, w]...]`, gaps with a label), chill (`level.chill`: without the JACKET item
+  a cold spell every 11-15s, stress +5), food stand (`level.food: [x, y]`, forced stop →
+  `FoodScene` overlay: 3 dishes from `FOOD_MENUS`, good one at a random position, trip (5s hallucination) / toxic (5s in the
+  toilet), `FOOD_OUTCOMES`; one pick only). Enemies Sniffer / Pickpocket / Petitioner in `entities/enemies/TripEnemies.js`.
+- Mounts: `MOUNTS` in Player.js (camel / moto / taxi / husky / snowmobile / skis / submarine / fins / seahorse); optional cfg keys: `meter`
+  (budget €/s, `meterOut` message), `crashMsg`, `grip` (no ice slip), `slippery` (low friction), `dash` (1 = burst
+  forward like the husky, -1 = jerk back like the seahorse, with `dashMsg`), `hover` (underwater the mount steers
+  up/down at that speed: submarine), `swim` (stroke velocity underwater), `head` (texture worn on the head: mask), `originX` (sprite anchor for long mounts); while mounted no double jump, slide or ladders;
   the camel with the DATES item is turbo (`cfg.turbo` speed, wings, mid-air jumps = flaps `cfg.flap`);
   GameScene.playerVsEnemy asks `player.mountContact(enemy)` first (immune / ram / crash).
+- NegotiationScene touch buttons (SALTA / LANCIA) only on touch devices (`device.input.touch`, like TouchControls).
 - NegotiationScene phases: question 1 (first impression) → dodge the requests (18s, jump with SPACE) →
-  consultants (stomp them or throw e-mails with C/Q; some hop over e-mails) → questions 2-4 → outcome.
-  Each action phase scores 0-2 from the patience left; `MAX_POINTS` 12.
-- JourneyScene: the train keeps the side cabin; the plane is a front view (`drawPlaneCabin`: window wall, two
-  seats + aisle + two seats, seated passengers `pax_*` from `gfx/trip.js`, hostess with trolley, seat-belt sign).
-- 4-8 Ghiacciaio and 4-9 Mare are still the old levels: to become ground legs they need their own mounts
-  (sled / snowmobile, submarine / boat / seahorse) and an entry in `GROUND_LEGS`.
+  consultants (stomp them or throw e-mails with C/Q; some hop over e-mails) → boss, the "super consultant"
+  (`BOSS_HP` 10, e-mail = 1, stomp on the head = 2, 45s; its projectiles show a random `CURSES` line when they hit,
+  e-mails can parry them) → questions 2-4 → outcome. Each action phase scores 0-2 from the patience left; `MAX_POINTS` 14.
+  Theme from the ground leg (`GameState.trip.leg`, set by GameScene; data in `src/data/clients.js`, textures and
+  rooms in `src/gfx/clients.js`): desert = pharaoh in an Egyptian temple, consultants in jacket + kilt, mummy
+  throwing homing curse orbs; glacier = penguin in an ice temple, consultants in heavy coats, polar bear in a suit
+  lobbing "pesci paduli"; sea = little mermaid in an undersea palace, diver consultants, giant octopus lobbing
+  shells and crabs (crabs scuttle along the floor). Debug: `scene.start('NegotiationScene', { leg })`.
+- JourneyScene: plane and train share the front view (`drawCabin(plane)`: window wall, two seats + aisle + two
+  seats, seated passengers `pax_*` from `gfx/trip.js`, hostess with trolley). Plane: portholes with clouds, WC, bins,
+  seat-belt sign; train: red seats, wide windows with the passing landscape (`drawLandscape`), sliding door,
+  luggage racks, speed display.
+- 4-8 Ghiacciaio: ice caves with stalactites, crevasses, storm zones (Zones.js wind with `storm: true`: snow,
+  grey veil, 'BUFERA!' when inside), Penguin (belly-slides at you) / Snowman (static, invulnerable), BAITA food stand.
+- 4-9 Mare: all underwater (`level.swim`: without the SWIMSUIT `player.heavySuit` = slower on foot underwater;
+  the rental kiosk zone is full height). Rental `RENTALS.sea` (`foot`/`footMsg` relabel the free option): submarine
+  (hover, battery = `BATTERY_METER`, immune to jellyfish and mines), fins + mask (fast), seahorse (immune to
+  jellyfish, jerks back). Current zones (wind with `current: true`: bubbles, blue veil), Jellyfish enemy, SUSHI BAR
+  food stand (`reef_bar`), quizzes 25-27 (`quizSetting: 'sea'`).
+- 4-4 Stazione: falling drops `DROPS` are lighter than the airport (no budget, interval 2000).

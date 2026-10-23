@@ -98,6 +98,12 @@ const ICONS = {
     p.r(2, 4, 12, 1, 0x1a4aa8).r(7, 5, 1, 3, 0xffffff).r(8, 5, 1, 3, 0xffffff);
     p.r(3, 11, 3, 1, 0xffd800).r(10, 11, 3, 1, 0xffd800);
   },
+  jacket: (p) => {
+    // Red down jacket with quilted bands and a zip
+    p.r(3, 2, 10, 13, 0xd02020).r(0, 4, 3, 10, 0xd02020).r(13, 4, 3, 10, 0xd02020).r(4, 0, 8, 3, 0xa01010);
+    [5, 8, 11].forEach((y) => p.r(0, y, 16, 1, 0xa01010));
+    p.r(7, 2, 2, 13, 0xd8d8d8).r(0, 13, 3, 1, 0xf1c27d).r(13, 13, 3, 1, 0xf1c27d);
+  },
   swimsuit_woman: (p) => {
     p.r(3, 3, 3, 4, 0x20c0c0).r(10, 3, 3, 4, 0x20c0c0).r(3, 9, 10, 4, 0x20c0c0).r(6, 13, 4, 2, 0x20c0c0);
     p.r(6, 4, 4, 1, 0x108080).r(5, 10, 1, 1, 0xffd800).r(10, 11, 1, 1, 0xffd800);
@@ -167,6 +173,32 @@ function characters(scene) {
     if (f) p.r(6, 23, 5, 7, 0x3a404a).r(13, 23, 5, 5, 0x3a404a).r(5, 30, 6, 2, 0x111111).r(14, 28, 6, 2, 0x111111);
     else p.r(7, 23, 4, 7, 0x3a404a).r(13, 23, 4, 7, 0x3a404a).r(6, 30, 6, 2, 0x111111).r(13, 30, 6, 2, 0x111111);
   }));
+  // Manager penguin 24x24 (facing right): red tie, two waddle frames and the belly slide.
+  const penguin = (p, f) => {
+    const B = 0x1a1a2a;
+    p.r(5, 9, 12, 13, B).r(8, 12, 8, 10, 0xffffff).r(7, 3, 10, 7, B).r(12, 5, 2, 2, 0xffffff).r(13, 5, 1, 1, 0x111111);
+    p.r(17, 6, 4, 2, 0xffa000).r(11, 11, 2, 1, 0xd02020).r(10, 12, 3, 6, 0xd02020);
+    p.r(3, 12, 3, 8, B).r(17, 12, 2, 7, B);
+    if (f) p.r(6, 22, 5, 2, 0xffa000).r(13, 21, 5, 2, 0xffa000);
+    else p.r(7, 22, 5, 2, 0xffa000).r(12, 22, 5, 2, 0xffa000);
+  };
+  makeTex(scene, TEX.PENGUIN1, 24, 24, (p) => penguin(p, 0));
+  makeTex(scene, TEX.PENGUIN2, 24, 24, (p) => penguin(p, 1));
+  makeTex(scene, TEX.PENGUIN_SLIDE, 24, 24, (p) => {
+    const B = 0x1a1a2a;
+    p.r(1, 15, 17, 7, B).r(3, 19, 14, 4, 0xffffff).r(15, 12, 7, 7, B).r(22, 15, 2, 2, 0xffa000).r(18, 14, 1, 1, 0xffffff);
+    p.r(8, 22, 6, 2, 0xd02020).r(0, 16, 2, 3, 0xffa000);
+    [[0, 23], [4, 23]].forEach(([x, y]) => p.r(x, y, 2, 1, 0xffffff, 0.8));
+  });
+  // Snowman 24x36 with a tie and a hat.
+  makeTex(scene, TEX.SNOWMAN, 24, 36, (p) => {
+    p.disc(12, 28, 8, 0xffffff).disc(12, 17, 6, 0xffffff).disc(12, 8, 5, 0xffffff);
+    p.r(5, 30, 14, 2, 0xd0e4f4).r(7, 20, 10, 1, 0xd0e4f4);
+    p.r(10, 6, 1, 1, 0x111111).r(14, 6, 1, 1, 0x111111).r(12, 8, 4, 1, 0xff8a20).r(10, 11, 4, 1, 0x333333);
+    p.r(7, 0, 10, 4, 0x222222).r(5, 3, 14, 1, 0x222222).r(7, 2, 10, 1, 0xd02020);
+    p.r(11, 13, 2, 1, 0x2a6ad8).r(10, 14, 4, 7, 0x2a6ad8).r(11, 21, 2, 1, 0x2a6ad8);
+    p.r(1, 15, 5, 1, 0x6a4020).r(18, 15, 5, 1, 0x6a4020).r(0, 13, 1, 2, 0x6a4020).r(23, 13, 1, 2, 0x6a4020);
+  });
   // Petition volunteer: green "LONFO" t-shirt, curly hair, clipboard held out, two frames.
   [TEX.ACTIVIST1, TEX.ACTIVIST2].forEach((key, f) => makeTex(scene, key, 24, 32, (p) => {
     p.r(6, 0, 12, 5, 0xc0602a).r(5, 2, 2, 5, 0xc0602a).r(17, 2, 2, 5, 0xc0602a);   // curly hair
@@ -234,6 +266,39 @@ function props(scene) {
     p.r(48, 44, 18, 10, 0x4a4a4a).r(46, 42, 22, 3, 0x6a6a6a).r(52, 38, 2, 4, 0xffffff, 0.7).r(58, 36, 2, 6, 0xffffff, 0.7);
     p.r(12, 46, 10, 6, 0xffd800).r(26, 46, 10, 6, 0xd04020).r(10, 52, 30, 2, 0x6a4a20);
   });
+  // Mountain hut: log walls, snowy roof, smoking chimney, lit windows.
+  makeTex(scene, TEX.HUT, 96, 72, (p) => {
+    p.r(66, 4, 8, 14, 0x6a6a6a).r(65, 2, 10, 3, 0xffffff);
+    for (let i = 0; i <= 24; i++) {
+      const half = Math.min(48, 2 + i * 2);
+      p.r(48 - half, 6 + i, half * 2, 1, i > 21 ? 0x5a3a1a : 0xffffff);
+    }
+    p.r(6, 31, 84, 41, 0x8a5a2a);
+    for (let y = 35; y < 72; y += 5) p.r(6, y, 84, 1, 0x5a3a1a);
+    p.r(40, 48, 16, 24, 0x4a2a10).r(53, 60, 2, 2, 0xffd800);
+    [[14, 44], [68, 44]].forEach(([x, y]) => p.r(x, y, 14, 12, 0xffd860).box(x, y, 14, 12, 0x4a2a10).r(x + 6, y, 2, 12, 0x4a2a10));
+    p.r(26, 33, 44, 10, 0xfff4dc).text('BAITA', 34, 35, 0xd02020);
+    p.r(0, 68, 96, 4, 0xffffff);
+  });
+  // Dishes of the glacier hut (40x30).
+  makeTex(scene, 'food_cioccolata', 40, 30, (p) => {
+    p.r(2, 24, 36, 5, 0xffffff).r(0, 27, 40, 2, 0xd8d8d8);
+    p.r(11, 10, 18, 15, 0xd02020).r(11, 10, 18, 2, 0xff6060).r(29, 13, 5, 2, 0xd02020).r(32, 13, 2, 8, 0xd02020).r(29, 19, 5, 2, 0xd02020);
+    p.r(12, 7, 16, 4, 0xffffff).r(15, 5, 10, 3, 0xffffff).r(18, 3, 4, 2, 0xffffff).r(13, 9, 14, 1, 0x5a2a10);
+    p.r(14, 0, 1, 3, 0xffffff, 0.6).r(25, 1, 1, 3, 0xffffff, 0.6);
+  });
+  makeTex(scene, 'food_grappa', 40, 30, (p) => {
+    p.r(2, 24, 36, 5, 0xffffff).r(0, 27, 40, 2, 0xd8d8d8);
+    p.r(6, 8, 10, 17, 0xd8f0ff, 0.8).r(9, 2, 4, 6, 0xd8f0ff, 0.8).r(9, 0, 4, 2, 0x8a5a2a).r(7, 14, 8, 6, 0xfff4dc).r(8, 16, 6, 1, 0x3ca03c);
+    p.r(10, 9, 2, 14, 0x9ad04a, 0.7);
+    p.r(24, 15, 10, 10, 0xd8f0ff, 0.8).r(25, 18, 8, 6, 0xfff8c0).r(24, 15, 10, 1, 0xffffff);
+  });
+  makeTex(scene, 'food_fonduta', 40, 30, (p) => {
+    p.r(2, 24, 36, 5, 0xffffff).r(0, 27, 40, 2, 0xd8d8d8);
+    p.r(6, 13, 28, 11, 0x8a2a1a).r(4, 12, 32, 3, 0xa03a2a).r(7, 11, 26, 3, 0xffd860).r(10, 10, 6, 2, 0xffe890);
+    p.r(24, 2, 2, 10, 0x9a9a9a).r(21, 1, 8, 4, 0xe0b060).r(22, 5, 2, 4, 0xffd860);
+    p.r(1, 22, 4, 3, 0x6a6a6a).r(35, 22, 4, 3, 0x6a6a6a);
+  });
   // Dishes of the desert food stand (40x30).
   makeTex(scene, 'food_panino', 40, 30, (p) => {
     p.r(2, 22, 36, 6, 0xffffff).r(0, 26, 40, 3, 0xd8d8d8);
@@ -298,6 +363,116 @@ function mounts(scene) {
     p.r(10, 10, 24, 6, 0xd02020).r(14, 6, 14, 5, 0xd02020).r(14, 6, 14, 1, 0xff8080).r(30, 2, 3, 10, 0x333333);
     p.r(29, 1, 6, 2, 0x333333).r(34, 8, 4, 3, 0xffffa0).r(4, 13, 8, 3, 0x6a6a6a).r(14, 14, 16, 3, 0x9a9a9a);
   });
+  // Husky sled 64x28 (facing right): the sled on the left (rider at x 16), two huskies pulling in front.
+  makeTex(scene, TEX.HUSKY_SLED, 64, 28, (p) => {
+    p.r(0, 26, 30, 2, 0x5a3a1a).r(28, 24, 3, 2, 0x5a3a1a).r(0, 8, 4, 18, 0x8a5a2a).r(0, 8, 4, 2, 0xb07a3a);
+    p.r(2, 16, 24, 8, 0xa0602a).r(2, 16, 24, 2, 0xc08040).r(6, 24, 2, 2, 0x5a3a1a).r(20, 24, 2, 2, 0x5a3a1a);
+    p.r(26, 17, 8, 1, 0x333333);
+    [32, 48].forEach((x) => {
+      const g = 0x6a7280;
+      p.r(x - 2, 12, 3, 2, g).r(x, 13, 12, 6, g).r(x + 1, 17, 10, 2, 0xffffff);
+      p.r(x + 10, 9, 6, 6, g).r(x + 12, 12, 4, 3, 0xffffff).r(x + 11, 7, 2, 3, 0x4a5260).r(x + 14, 7, 2, 3, 0x4a5260);
+      p.r(x + 13, 10, 1, 1, 0x111111).r(x + 15, 12, 1, 1, 0x111111).r(x + 3, 13, 2, 6, 0xd02020);
+      p.r(x + 1, 19, 2, 7, g).r(x + 9, 19, 2, 7, g).r(x + 1, 25, 2, 1, 0xffffff).r(x + 9, 25, 2, 1, 0xffffff);
+    });
+    p.r(44, 15, 4, 1, 0x333333);
+  });
+  // Snowmobile 48x24 (facing right): yellow body, track at the back, ski in front.
+  makeTex(scene, TEX.SNOWMOBILE, 48, 24, (p) => {
+    p.r(4, 18, 28, 6, 0x222222);
+    [8, 15, 22, 29].forEach((x) => p.disc(x, 21, 2, 0x5a5a5a));
+    p.r(30, 22, 16, 2, 0x9a9a9a).r(44, 19, 3, 3, 0x9a9a9a).r(36, 14, 3, 8, 0x333333);
+    p.r(4, 10, 34, 8, 0xffb000).r(4, 10, 34, 2, 0xffd860).r(30, 6, 12, 6, 0xffb000).r(38, 2, 4, 5, 0x9ad0ff, 0.8);
+    p.r(8, 7, 16, 4, 0x222222).r(42, 11, 4, 3, 0xffffa0).r(2, 12, 3, 3, 0xff3030).r(10, 14, 18, 2, 0x111111);
+  });
+  // Skis 44x6 under the feet (tips in front, to the right), with a pair of poles.
+  makeTex(scene, TEX.SKIS, 44, 6, (p) => {
+    p.r(2, 4, 38, 2, 0xd02020).r(40, 2, 2, 2, 0xd02020).r(42, 1, 2, 1, 0xd02020);
+    p.r(6, 3, 36, 1, 0xff6060).r(18, 2, 8, 2, 0x333333);
+  });
+  // Yellow submarine 56x30 (facing right): the rider looks out of the hatch tower.
+  makeTex(scene, TEX.SUBMARINE, 56, 30, (p) => {
+    const Y = 0xffc820;
+    p.r(6, 13, 44, 16, Y).r(3, 16, 50, 10, Y).r(1, 19, 54, 4, Y).r(6, 13, 44, 2, 0xffe070).r(6, 27, 44, 2, 0xd09a10);
+    p.r(20, 4, 16, 10, Y).r(20, 4, 16, 2, 0xffe070).r(31, 0, 2, 5, 0x6a6a6a).r(31, 0, 5, 2, 0x6a6a6a);
+    [14, 42].forEach((x) => p.disc(x, 20, 3.5, 0x6a6a6a).disc(x, 20, 2.5, 0x9be7ff));
+    p.r(0, 15, 3, 12, 0x8a8a8a).r(0, 18, 2, 6, 0x5a5a5a).r(54, 19, 2, 3, 0xffffa0);
+  });
+  // Fins 40x6 under the feet (pointing forward) and the mask with the snorkel (14x10, worn on the head).
+  // Fins 40x14 (worn facing right): two yellow blades trailing behind the feet mid-kick (one up, one down),
+  // fanning out to a forked tip, with black foot pockets and light ribs. The far fin is darker.
+  makeTex(scene, TEX.FINS, 40, 14, (p) => {
+    const fin = (px, cy, len, slope, col, edge, rib) => {
+      for (let i = 0; i < len; i++) {
+        const h = Math.round(2 + (i / len) * 5);
+        const x = px - 1 - i;
+        const y = Math.round(cy + slope * i - h / 2);
+        if (i >= len - 2) p.r(x, y, 1, 2, col).r(x, y + h - 2, 1, 2, col);
+        else p.r(x, y, 1, h, col).r(x, y + h - 1, 1, 1, edge);
+        if (i > 2 && i < len - 3) p.r(x, Math.round(cy + slope * i), 1, 1, rib);
+      }
+    };
+    fin(27, 5, 24, -0.12, 0xd0a000, 0x9a7400, 0xe8c840);
+    p.r(26, 3, 8, 4, 0x222222).r(26, 3, 8, 1, 0x444444);
+    fin(25, 9, 25, 0.1, 0xffd000, 0xc89800, 0xfff4a0);
+    p.r(24, 7, 9, 5, 0x222222).r(24, 7, 9, 1, 0x444444);
+  });
+  makeTex(scene, TEX.MASK, 14, 10, (p) => {
+    p.r(1, 0, 2, 7, 0xffd800).r(1, 6, 4, 2, 0xffd800).r(0, 3, 5, 2, 0x222222);
+    p.r(4, 2, 10, 6, 0x222222).r(5, 3, 8, 4, 0x9be7ff).r(6, 3, 2, 1, 0xffffff);
+  });
+  // Seahorse 36x44 (facing right) with a saddle, curled tail.
+  makeTex(scene, TEX.SEAHORSE, 36, 44, (p) => {
+    const O = 0xffa030, D = 0xd07a10;
+    p.r(18, 0, 10, 9, O).r(27, 3, 9, 3, O).r(16, 0, 3, 5, 0xff7a20).r(23, 2, 2, 2, 0x111111);
+    p.r(14, 8, 12, 10, O).r(10, 16, 15, 13, O).r(20, 12, 5, 16, 0xffd080);
+    [18, 22, 26].forEach((y) => p.r(10, y, 3, 1, D));
+    p.r(5, 18, 5, 9, 0xffe070).r(8, 14, 14, 3, 0x8a3a2a).r(9, 13, 4, 1, 0x8a3a2a);
+    p.r(12, 29, 9, 6, O).r(15, 35, 9, 4, O).r(22, 32, 4, 6, O).r(19, 31, 4, 2, O).r(20, 33, 2, 2, D);
+  });
+  // Underwater sushi bar 96x72: stone hut with a coral roof, portholes and seaweed.
+  makeTex(scene, TEX.REEF_BAR, 96, 72, (p) => {
+    for (let i = 0; i <= 18; i++) {
+      const half = Math.min(48, 14 + Math.round(Math.sqrt(i) * 8));
+      p.r(48 - half, 6 + i, half * 2, 1, i > 15 ? 0xd05060 : 0xff7a8a);
+    }
+    p.r(40, 2, 3, 5, 0xff7a8a).r(54, 0, 3, 7, 0xff7a8a);
+    p.r(6, 25, 84, 47, 0x6a7a8a);
+    for (let y = 30; y < 72; y += 7) for (let x = 6 + (y % 2) * 6; x < 88; x += 14) p.r(x, y, 10, 1, 0x4a5a6a);
+    p.r(40, 48, 16, 24, 0x1a2a3a).r(53, 60, 2, 2, 0xffd800);
+    [[20, 52], [76, 52]].forEach(([x, y]) => p.disc(x, y, 7, 0x8a8a8a).disc(x, y, 5, 0x9be7ff));
+    p.r(28, 30, 40, 11, 0xfff4dc).text('SUSHI', 38, 33, 0xd02020);
+    p.r(0, 38, 3, 34, 0x2a8a3a).r(2, 46, 3, 3, 0x2a8a3a).r(92, 42, 3, 30, 0x2a8a3a).r(90, 50, 3, 3, 0x2a8a3a);
+    p.r(0, 68, 96, 4, 0xe0c890);
+  });
+  // Dishes of the sushi bar (40x30).
+  makeTex(scene, 'food_sushi', 40, 30, (p) => {
+    p.r(2, 22, 36, 6, 0x8a5a2a).r(2, 22, 36, 1, 0xb07a3a).r(4, 28, 4, 2, 0x5a3a1a).r(32, 28, 4, 2, 0x5a3a1a);
+    [5, 16, 27].forEach((x) => p.r(x, 16, 9, 6, 0xfff8f0).r(x - 1, 12, 11, 5, 0xff8a60).r(x, 13, 9, 1, 0xffc0a0).r(x + 3, 17, 3, 5, 0x1a2a1a));
+    p.r(4, 6, 32, 1, 0xb07a3a).r(6, 8, 30, 1, 0xb07a3a);
+  });
+  makeTex(scene, 'food_alghe', 40, 30, (p) => {
+    p.r(2, 24, 36, 5, 0xffffff).r(0, 27, 40, 2, 0xd8d8d8);
+    p.r(6, 15, 28, 10, 0xd0e0f0).r(8, 24, 24, 2, 0xb0c0d0).r(6, 15, 28, 1, 0xffffff);
+    p.r(8, 10, 24, 6, 0x2aa040).r(10, 6, 3, 5, 0x3ac050).r(18, 4, 3, 7, 0x3ac050).r(26, 6, 3, 5, 0x3ac050).r(14, 8, 2, 3, 0x1a8a30);
+    [[12, 11], [20, 12], [27, 11], [16, 13]].forEach(([x, y]) => p.r(x, y, 1, 1, 0xffffff));
+  });
+  makeTex(scene, 'food_paranza', 40, 30, (p) => {
+    p.r(2, 24, 36, 5, 0xffffff).r(0, 27, 40, 2, 0xd8d8d8);
+    for (let i = 0; i < 12; i++) p.r(12 + Math.floor(i / 2), 12 + i, 16 - i, 1, 0xfff4dc);
+    [[10, 4], [16, 2], [22, 5]].forEach(([x, y]) => p.r(x, y, 6, 10, 0xd8a040).r(x + 1, y, 4, 1, 0xf0c060).r(x + 2, y + 2, 1, 1, 0x111111).r(x + 1, y + 10, 4, 2, 0xb07a20));
+    p.r(28, 18, 7, 6, 0xffe040).r(29, 19, 3, 2, 0xfff4a0);
+  });
+  // Jellyfish 20x24, two frames (tentacles waving).
+  [TEX.JELLY1, TEX.JELLY2].forEach((key, f) => makeTex(scene, key, 20, 24, (p) => {
+    const P = 0xff80c0;
+    p.r(5, 0, 10, 3, P).r(3, 2, 14, 6, P).r(2, 6, 16, 4, P).r(5, 2, 4, 2, 0xffc0e0).r(2, 9, 16, 1, 0xd05090);
+    p.r(7, 5, 1, 2, 0x111111).r(12, 5, 1, 2, 0x111111);
+    [4, 8, 11, 15].forEach((x, i) => {
+      const dx = (f + i) % 2;
+      p.r(x + dx, 10, 1, 5, P, 0.85).r(x + 1 - dx, 15, 1, 5 + (i % 2) * 3, P, 0.85);
+    });
+  }));
   makeTex(scene, TEX.TAXI, 56, 28, (p) => {
     p.r(2, 10, 52, 12, 0xffd800).r(12, 2, 30, 10, 0xffd800).r(14, 4, 12, 7, 0x9ad0ff).r(28, 4, 12, 7, 0x9ad0ff);
     p.r(22, 0, 10, 3, 0x111111).text('TAXI', 19, -1, 0xffd800);

@@ -1,4 +1,5 @@
-// Trip (Mondo 4) characters: the airport sniffer dog, the station pickpocket, the petition volunteers.
+// Trip (Mondo 4) characters: the airport sniffer dog, the station pickpocket, the petition volunteers,
+// the glacier penguins and snowmen, the sea jellyfish.
 import Phaser from 'phaser';
 import { TEX } from '../../config/constants.js';
 import { GameState } from '../../state/GameState.js';
@@ -190,5 +191,78 @@ export class Petitioner extends Enemy {
     if (this.dead) return;
     floatText(this.scene, this.x, this.y - 36, 'FIRMERO\' ONLINE!', '#b8ff9a', 9, 900);
     super.die(type);
+  }
+}
+
+// Pinguino manager (ghiacciaio): waddles back and forth; when you get close he dives and slides
+// on his belly straight at you. Stompable.
+export class Penguin extends Enemy {
+  constructor(scene, x, y, props = {}) {
+    super(scene, x, y, TEX.PENGUIN1, {
+      kind: 'penguin', hp: 1, stompable: true, damage: { hp: 8, stress: 6 }, bodySize: [16, 18]
+    });
+    this.homeX = x;
+    this.range = props.range || 110;
+    this.dir = -1;
+    this.state = 'walk';
+    this.until = 0;
+    this.nextSlide = 0;
+  }
+
+  think(now) {
+    const p = this.target;
+    let speed = 45;
+    if (this.state === 'walk') {
+      if (Math.abs(this.x - this.homeX) > this.range) this.dir = sign(this.homeX - this.x);
+      if (p && now > this.nextSlide && Math.abs(p.x - this.x) < 230 && Math.abs(p.body.bottom - this.body.bottom) < 50) {
+        this.state = 'slide';
+        this.dir = sign(p.x - this.x);
+        this.until = now + 1500;
+        floatText(this.scene, this.x, this.y - 30, Phaser.Utils.Array.GetRandom(['SINERGIE!', 'ASAP!', 'FACCIAMO UN PUNTO!', 'ALLINEIAMOCI!']), '#a0e0ff', 7, 700);
+      }
+    } else {
+      speed = 240;
+      if (now > this.until) {
+        this.state = 'walk';
+        this.nextSlide = now + 2500;
+      }
+    }
+    if (this.onGround() && !this.groundAhead(this.dir)) {
+      if (this.state === 'slide') { this.state = 'walk'; this.nextSlide = now + 2500; }
+      this.dir = -this.dir;
+    }
+    this.body.setVelocityX(this.dir * speed * this.speedMult());
+    this.setFlipX(this.dir < 0);
+    if (this.state === 'slide') this.setTexture(TEX.PENGUIN_SLIDE);
+    else stepFrames(this, now, TEX.PENGUIN1, TEX.PENGUIN2, 200);
+  }
+}
+
+// Pupazzo di neve con la cravatta (ghiacciaio): static, painful; motoslitta and skis crash into it.
+export class Snowman extends Enemy {
+  constructor(scene, x, y) {
+    super(scene, x, y, TEX.SNOWMAN, {
+      kind: 'snowman', hp: 99, stompable: false, invulnerable: true, damage: { hp: 10, stress: 5 },
+      immovable: true, bodySize: [18, 34]
+    });
+  }
+
+  think() { this.body.setVelocityX(0); }
+}
+
+// Medusa (mare): drifts up and down and stings on contact; the submarine and the seahorse don't mind.
+export class Jellyfish extends Enemy {
+  constructor(scene, x, y, props = {}) {
+    super(scene, x, y, TEX.JELLY1, {
+      kind: 'jellyfish', hp: 1, stompable: false, flying: true, damage: { hp: 8, stress: 8 }, bodySize: [16, 18]
+    });
+    this.baseY = y;
+    this.range = props.range || 50;
+    this.phase = Math.random() * Math.PI * 2;
+  }
+
+  think(now) {
+    this.y = this.baseY + Math.sin(now / 900 + this.phase) * this.range;
+    stepFrames(this, now, TEX.JELLY1, TEX.JELLY2, 350);
   }
 }

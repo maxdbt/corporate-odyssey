@@ -7,6 +7,7 @@ import { generateItems } from '../gfx/items.js';
 import { generateWorld } from '../gfx/world.js';
 import { generateCanteen } from '../gfx/canteen.js';
 import { generateTrip } from '../gfx/trip.js';
+import { generateClients } from '../gfx/clients.js';
 import { generateAnims } from '../gfx/anims.js';
 import { setupStaticCamera } from '../utils/view.js';
 
@@ -31,6 +32,7 @@ export default class BootScene extends Phaser.Scene {
       generateWorld(this);
       generateCanteen(this);
       generateTrip(this);
+      generateClients(this);
       generateAnims(this);
       this.scene.start('MenuScene');
     });

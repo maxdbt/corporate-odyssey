@@ -19,6 +19,7 @@ const VISIONS = [TEX.TEAMS_METEOR, TEX.EXCEL, TEX.P_TEAMS, TEX.MAIL, TEX.TALKER1
 
 // Ground-leg food stand (overlay over GameScene): a forced stop, three local dishes. One is good,
 // one is hallucinogenic (5 s of spinning Teams / Excel / avatars), one is toxic (5 s locked in the toilet).
+// The good one is drawn at random every time.
 export default class FoodScene extends Phaser.Scene {
   constructor() {
     super('FoodScene');
@@ -27,7 +28,9 @@ export default class FoodScene extends Phaser.Scene {
   init() {
     this.phase = 'choose';
     this.sel = 1;
-    this.behind = Phaser.Utils.Array.Shuffle(['good', 'trip', 'toxic']);
+    this.behind = ['trip', 'toxic'];
+    this.behind.splice(Phaser.Math.Between(0, 2), 0, 'good');
+    if (Math.random() < 0.5) this.behind.reverse();
   }
 
   create() {
@@ -36,7 +39,7 @@ export default class FoodScene extends Phaser.Scene {
     this.menu = FOOD_MENUS[gs?.level?.theme] || FOOD_MENUS.desert;
     this.drawStand();
     this.refreshHud = tripHud(this, 'SOSTA OBBLIGATA');
-    this.add.text(GAME_WIDTH / 2, 46, `CHIOSCO "${this.menu.stand}"`, tstyle(16, '#ffd800', { strokeThickness: 5 })).setOrigin(0.5);
+    this.add.text(GAME_WIDTH / 2, 46, `${this.menu.place} "${this.menu.stand}"`, tstyle(16, '#ffd800', { strokeThickness: 5 })).setOrigin(0.5);
     this.add.text(GAME_WIDTH / 2, 72, this.menu.cook, tstyle(9, '#ffffff', { align: 'center', wordWrap: { width: 700 } })).setOrigin(0.5);
 
     this.cards = this.menu.dishes.map((d, i) => this.card(d, i));
@@ -59,15 +62,16 @@ export default class FoodScene extends Phaser.Scene {
 
   drawStand() {
     const g = this.add.graphics();
-    g.fillStyle(0xd8b078).fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    for (let x = 0; x < GAME_WIDTH; x += 48) g.fillStyle(0xc8a068).fillRect(x, 30, 3, 330);
+    const c0 = { bg: 0xd8b078, plank: 0xc8a068, shelf: 0x6a4a2a, counter: 0x8a5a2a, counterTop: 0xa06a3a, counterLine: 0x7a4a1a, ...this.menu.palette };
+    g.fillStyle(c0.bg).fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    for (let x = 0; x < GAME_WIDTH; x += 48) g.fillStyle(c0.plank).fillRect(x, 30, 3, 330);
     // Back shelf with jars and spices
-    g.fillStyle(0x6a4a2a).fillRect(0, 100, GAME_WIDTH, 6);
+    g.fillStyle(c0.shelf).fillRect(0, 100, GAME_WIDTH, 6);
     const jars = [0xd04020, 0xffb000, 0x3ca03c, 0x8a3ab0, 0xe8e0c0];
-    for (let x = 14; x < GAME_WIDTH; x += 34) g.fillStyle(jars[(x / 34) % 5 | 0]).fillRect(x, 84, 16, 16).fillStyle(0x6a4a2a).fillRect(x + 2, 80, 12, 4);
+    for (let x = 14; x < GAME_WIDTH; x += 34) g.fillStyle(jars[(x / 34) % 5 | 0]).fillRect(x, 84, 16, 16).fillStyle(c0.shelf).fillRect(x + 2, 80, 12, 4);
     // Counter
-    g.fillStyle(0x8a5a2a).fillRect(0, 352, GAME_WIDTH, 98).fillStyle(0xa06a3a).fillRect(0, 352, GAME_WIDTH, 8);
-    for (let x = 0; x < GAME_WIDTH; x += 64) g.fillStyle(0x7a4a1a).fillRect(x, 362, 2, 88);
+    g.fillStyle(c0.counter).fillRect(0, 352, GAME_WIDTH, 98).fillStyle(c0.counterTop).fillRect(0, 352, GAME_WIDTH, 8);
+    for (let x = 0; x < GAME_WIDTH; x += 64) g.fillStyle(c0.counterLine).fillRect(x, 362, 2, 88);
     this.add.image(60, 432, TEX.COOK1).setOrigin(0.5, 1).setScale(2.5);
     const c = GameState.character || 'man';
     this.player = this.add.image(740, 432, playerTex(c, 'idle')).setOrigin(0.5, 1).setScale(2.5).setFlipX(true);
@@ -172,7 +176,7 @@ export default class FoodScene extends Phaser.Scene {
     door.add(this.add.rectangle(50, 110, 8, 14, 0xd0d0d0));
     layer.add(door);
     layer.add(this.add.image(120, 380, 'wc_toilet').setOrigin(0.5, 1).setScale(1.5));
-    layer.add(this.add.text(GAME_WIDTH / 2, 60, 'INTOSSICAZIONE ALIMENTARE!\nBLOCCATO NEL BAGNO DEL CHIOSCO',
+    layer.add(this.add.text(GAME_WIDTH / 2, 60, `INTOSSICAZIONE ALIMENTARE!\nBLOCCATO NEL BAGNO ${this.menu.ofPlace}`,
       tstyle(16, '#b8f070', { align: 'center', strokeThickness: 5, lineSpacing: 4 })).setOrigin(0.5));
     const moan = this.add.text(GAME_WIDTH / 2 + 110, 200, 'OOOH...\nIL MIO STOMACO...', tstyle(10, '#000000', {
       strokeThickness: 0, backgroundColor: '#ffffff', padding: { x: 6, y: 4 }, align: 'center' })).setOrigin(0, 0.5);
@@ -230,7 +234,7 @@ export default class FoodScene extends Phaser.Scene {
     const titles = {
       good: [`${this.dish.name}: SQUISITO!`, '#7CFC00'],
       trip: ['CIBO LOCALE... MOLTO "TRADIZIONALE"', '#ff9fd0'],
-      toxic: ['DA QUESTO CHIOSCO NON SI TORNA PIU\'', '#ff8080']
+      toxic: [`${this.menu.fromPlace} NON SI TORNA PIU'`, '#ff8080']
     };
     resultPanel(this, { title: titles[kind][0], color: titles[kind][1], lines, y: 240, onClose: () => this.finish() });
   }
