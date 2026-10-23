@@ -32,8 +32,9 @@ unique key (`if (!scene.textures.exists(k)) { ...generateTexture(k) }`).
 
 ## Audio (PLAYER/UI) — `src/systems/Audio8bit.js`
 `export const audio` with: `sfx(name)` names: `jump, doublejump, coin, hurt, stomp, shoot, powerup, explosion,
-quiz, select, gameover, victory, freeze, sneeze, splash, alarm, bossHit, checkpoint`; `music(track)` tracks:
-`menu, level, promotion, boss`; `stopMusic()`; `unlock()` (call on first user input). Pure WebAudio square/
+quiz, select, gameover, victory, freeze, sneeze, splash, alarm, bossHit, checkpoint, kick, hat, perfect, miss, cheer`;
+`music(track)` tracks: `menu, level, promotion, boss`; `stopMusic()`; `note(n, dur, type, vol)` (one note on the
+music bus, for scenes that sequence their own music, e.g. PartyScene with its accelerating tempo); `unlock()` (call on first user input). Pure WebAudio square/
 triangle oscillators, never throws if AudioContext is unavailable.
 
 ## Input (PLAYER/UI) — `src/systems/InputController.js`
@@ -189,6 +190,18 @@ Effect keys (all optional): `stress` (delta), `stressSet` (absolute), `hp` (delt
 `tickets` (delta), `vacationDays` (delta), `timer` (delta seconds), `nextLevelEnemySpeed` (multiplier, e.g.
 1.15), `colleaguesHostile` (bool), `spawnBugs` (count, spawned near the player), `weapon` ('www' etc.; also
 grants device 'laptop' if none), `promotion` (seconds).
+
+1-1 SALA FESTE: `level.partyDoor: [x, y]` → `PartyDoor` (`src/systems/PartyDoor.js`, textures in `src/gfx/party.js`):
+double door with neon sign and an elf bouncer; UP next to it (edge of `input.up`, updated after the input in
+GameScene.update) opens the `PartyScene` overlay. Once per level attempt (rebuilt on restart): afterwards the sign
+reads "FESTA FINITA" and the elf answers "SEI GIA' ENTRATO!". PartyScene: 25 s "just dance" on Jingle Bells
+(sequenced per beat with `audio.note`, 110 → 150 BPM); the chart is precomputed from the beat times (every 2 beats,
+every beat, then extra off-beats in the last quarter), arrows ← ↓ ↑ → fall in 4 lanes (arrows / WASD, 4 buttons only
+on touch devices). Judgement ≤0.07 s PERFETTO (100), ≤0.15 s BENE (50), else SBAGLIATO (passed arrows and stray
+presses too); combo multiplier x2/x3/x4 at 10/20/30. Precision = (perfect + 0.6·bene) / (arrows + stray): ≥ 60% →
+random prize (aumento 12 € lordi, viaggio a Coccia di Morto, cotechino a vita), else random disaster (ciuco di
+Alicudi -20 s, vino sul CEO, Jingle Bells al CdA). Rivals' scores on the board are flavour only. Effects are applied
+on close, then GameScene resumes with the player at the door and level music.
 
 ## Menu / GameOver / Victory (PLAYER/UI)
 - MenuScene: title "CORPORATE ODYSSEY", character select (Jack / Wendy, big preview of the sprites, keyboard

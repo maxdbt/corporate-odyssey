@@ -184,6 +184,11 @@ class Audio8bit {
           break;
         case 'bossHit': this._tone('square', 200, 60, t, 0.2, 0.4, d); this._noise(t, 0.1, 0.2); break;
         case 'checkpoint': seq(['G5', 'C6', 'E6', 'G6'], 0.09, 'triangle', 0.5); break;
+        case 'kick': this._tone('triangle', 160, 40, t, 0.12, 0.7, d); break;
+        case 'hat': this._noise(t, 0.03, 0.08); break;
+        case 'perfect': seq(['C6', 'G6'], 0.05, 'square', 0.2); break;
+        case 'miss': this._tone('square', 180, 110, t, 0.12, 0.25, d); break;
+        case 'cheer': this._noise(t, 0.9, 0.25); seq(['C5', 'E5', 'G5', 'C6'], 0.1, 'triangle', 0.4); break;
         default: this._tone('square', 440, 440, t, 0.05, 0.2, d);
       }
     } catch (e) { /* audio must never break the game */ }
@@ -220,6 +225,15 @@ class Audio8bit {
         this.musicTimer = setTimeout(schedule, 250);
       };
       schedule();
+    } catch (e) { /* ignore */ }
+  }
+
+  // One note on the music bus, for scenes that sequence their own music (PartyScene: tempo speeds up).
+  note(n, dur, type = 'square', vol = 0.5) {
+    try {
+      const ctx = this._ensure();
+      if (!ctx || ctx.state !== 'running' || !freq(n)) return;
+      this._tone(type, freq(n), 0, ctx.currentTime, dur, vol, this.musicGain);
     } catch (e) { /* ignore */ }
   }
 

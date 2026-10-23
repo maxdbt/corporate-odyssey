@@ -21,6 +21,7 @@ export default {
   ],
   platforms: [[1900, 232, 200]],
   ladders: [[2080, 232, FLOOR]],
+  partyDoor: [1985, FLOOR],
   zones: [
     { type: 'puddle', x: 560, y: FLOOR - 10, w: 96, h: 10 },
     { type: 'puddle', x: 2400, y: FLOOR - 10, w: 128, h: 10 },

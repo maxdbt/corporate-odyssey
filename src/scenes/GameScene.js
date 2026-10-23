@@ -16,6 +16,7 @@ import Canteen from '../systems/Canteen.js';
 import TripLevel from '../systems/TripLevel.js';
 import { beginStage, goNext, underwearPenalty, isGroundLeg } from '../systems/Trip.js';
 import { TRANSPORT } from '../data/trip.js';
+import PartyDoor from '../systems/PartyDoor.js';
 
 const PIT_DAMAGE = 20;
 const BURNOUT_DELAY = 1400;
@@ -104,6 +105,7 @@ export default class GameScene extends Phaser.Scene {
 
     if (level.planeTicket) this.createPlaneTicket(...level.planeTicket);
     if (level.mysteryDish) this.createMysteryDish(...level.mysteryDish);
+    this.partyDoor = level.partyDoor ? new PartyDoor(this, ...level.partyDoor) : null;
     this.forcedRunUntil = 0;
 
     // Camera
@@ -637,6 +639,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.hazards.forEach((h) => h.update?.(time, delta));
     this.tripLevel?.update(time, delta);
+    this.partyDoor?.update(input);
     this.zones.update(time, delta, p);
     this.updateLadderDrop(input);
     if (this.autoscroll) this.updateAutoscroll(time, delta);
