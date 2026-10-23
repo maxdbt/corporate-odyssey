@@ -384,17 +384,17 @@ export default class PartyScene extends Phaser.Scene {
       add(this.add.text(cx + 90, 170, 'ZZZ...', tstyle(14, '#ffffff'))).setOrigin(0, 0.5);
       this.tweens.add({ targets: p, scaleY: 3.15, duration: 500, yoyo: true, repeat: -1 });
     } else if (id === 'wine') {
-      const ceo = add(this.add.image(cx + 80, 196, TEX.BOSS_CEO).setOrigin(0.5, 1).setScale(1.6));
-      add(this.add.text(cx + 80, 44, 'IL CEO', tstyle(10, '#ffd800')).setOrigin(0.5));
+      const ceo = add(this.add.image(cx + 80, 196, 'ceo_standing').setOrigin(0.5, 1).setScale(1.7));
+      add(this.add.text(cx + 80, 34, 'IL CEO', tstyle(10, '#ffd800')).setOrigin(0.5));
       const glass = add(this.add.text(cx - 140, 150, 'Y', tstyle(26, '#ff4060')).setOrigin(0.5));
-      this.tweens.add({ targets: glass, x: cx + 70, y: 110, angle: 540, duration: 700, ease: 'Quad.In', onComplete: () => {
+      this.tweens.add({ targets: glass, x: cx + 70, y: 130, angle: 540, duration: 700, ease: 'Quad.In', onComplete: () => {
         glass.destroy();
         this.tweens.add({ targets: ceo, x: ceo.x + 4, duration: 50, yoyo: true, repeat: 5 });
         audio.sfx('hurt');
         for (let i = 0; i < 7; i++) {
-          add(this.add.circle(cx + 80 + Phaser.Math.Between(-30, 30), 120 + Phaser.Math.Between(-35, 40), Phaser.Math.Between(6, 16), 0x9a0a2a));
+          add(this.add.circle(cx + 80 + Phaser.Math.Between(-30, 30), 135 + Phaser.Math.Between(-22, 22), Phaser.Math.Between(6, 16), 0x9a0a2a));
         }
-        add(this.add.text(cx + 80, 196, 'NOOO!', tstyle(14, '#ffffff'))).setOrigin(0.5);
+        add(this.add.text(cx + 80, 206, 'NOOO!', tstyle(14, '#ffffff'))).setOrigin(0.5);
       } });
     } else {
       add(this.add.image(cx - 60, 190, playerTex(this.char, 'idle')).setOrigin(0.5, 1).setScale(3));

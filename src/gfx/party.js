@@ -66,6 +66,20 @@ export function ensurePartyTextures(scene) {
     }
     p.r(9, 7, 3, 3, 0xffffff).r(20, 18, 2, 2, 0xffffff);
   });
+  // Standing CEO 48x88 (same look as the boss on the throne): grey hair, sunglasses, cigar, black suit, gold tie.
+  makeTex(scene, 'ceo_standing', 48, 88, (p) => {
+    const SU = 0x15151c;
+    const S = 0xe0b088;
+    const GR = 0xc8c8c8;
+    p.r(10, 8, 28, 28, S).r(8, 12, 32, 20, S);
+    p.r(8, 6, 32, 6, GR).r(6, 10, 4, 10, GR).r(38, 10, 4, 10, GR);
+    p.r(14, 18, 8, 3, 0x111111).r(26, 18, 8, 3, 0x111111).r(22, 18, 4, 1, 0x111111);
+    p.r(16, 28, 16, 2, 0x7a2020).r(32, 28, 10, 2, 0x8b5a2b).r(40, 27, 2, 2, 0xff5500);
+    p.r(6, 36, 36, 32, SU).r(20, 36, 8, 26, 0xffffff).r(22, 38, 4, 22, 0xd4af37);
+    p.r(0, 40, 7, 24, SU).r(41, 40, 7, 24, SU).r(0, 62, 7, 5, S).r(41, 62, 7, 5, S);
+    p.r(10, 68, 11, 16, 0x1e1e28).r(27, 68, 11, 16, 0x1e1e28);
+    p.r(8, 84, 14, 4, 0x050505).r(26, 84, 14, 4, 0x050505);
+  });
   // Cotechino 40x16: dark red sausage tied at both ends.
   makeTex(scene, 'cotechino', 40, 16, (p) => {
     p.r(4, 3, 32, 11, 0x8a2a2a).r(2, 5, 36, 7, 0x8a2a2a).r(6, 4, 26, 2, 0xb04a4a);
