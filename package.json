@@ -1,6 +1,6 @@
 {
   "name": "corporate-odyssey",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "private": true,
   "description": "Corporate Odyssey - platform 2D 8-bit in Phaser 3",
   "type": "module",
