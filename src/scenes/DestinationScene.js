@@ -12,12 +12,13 @@ const PIC_W = 190;
 const PIC_H = 120;
 
 const SITES = [
-  { leg: 'desert', name: 'IL DESERTO', text: 'Sede accanto alle piramidi.\n"E\' a due passi dalla stazione."', draw: 'pyramid' },
-  { leg: 'glacier', name: 'IL GHIACCIAIO', text: 'Sede in alta montagna.\nUna location... fresca.', draw: 'mountain' },
-  { leg: 'sea', name: 'IL MARE', text: 'Sede sul fondale marino.\nPortarsi il costume.', draw: 'sea' }
+  { leg: 'desert', name: 'SEDE SUD', text: 'Progetto "Smart Sand"', draw: 'desertHints' },
+  { leg: 'glacier', name: 'SEDE NORD', text: 'Progetto "Digital Mountain"', draw: 'glacierHints' },
+  { leg: 'sea', name: 'SEDE MARITTIMA', text: 'Progetto "Blue Sea"', draw: 'seaHints' }
 ];
 
-// Trip stage 0 "Il Cliente Lontano": pick one of the client's 3 sites (pyramid / mountain / sea).
+// Trip stage 0 "Il Cliente Lontano": pick one of the client's 3 sites. The pictures show the same glass office
+// building with small hints only (cactus / snowflake / bubbles): the extreme location is revealed later.
 // The choice becomes GameState.trip.leg (set by PackingScene) and decides the ground leg after the journey.
 export default class DestinationScene extends Phaser.Scene {
   constructor() {
@@ -60,46 +61,50 @@ export default class DestinationScene extends Phaser.Scene {
     frame.on('pointerover', () => { if (!this.done) { this.sel = i; this.paint(); } });
     frame.on('pointerdown', () => this.choose(i));
     const g = this.add.graphics();
+    this.office(g, x - PIC_W / 2, top + 14);
     this[site.draw](g, x - PIC_W / 2, top + 14);
     g.lineStyle(3, 0x3a2a1a).strokeRect(x - PIC_W / 2, top + 14, PIC_W, PIC_H);
     this.add.text(x, top + PIC_H + 30, `${i + 1}. ${site.name}`, tstyle(13, '#ffd800')).setOrigin(0.5);
-    this.add.text(x, top + PIC_H + 52, site.text, tstyle(9, '#3a2a1a', { strokeThickness: 0, align: 'center', lineSpacing: 4 })).setOrigin(0.5, 0);
+    this.add.text(x, top + PIC_H + 56, site.text, tstyle(11, '#3a2a1a', { strokeThickness: 0, align: 'center' })).setOrigin(0.5, 0);
     return { frame };
   }
 
   // ---------------------------------------------------------------- pictures (x, y = top-left of a PIC_W x PIC_H frame)
 
-  pyramid(g, x, y) {
-    g.fillStyle(0xffb347).fillRect(x, y, PIC_W, 70).fillStyle(0xffd27a).fillRect(x, y + 40, PIC_W, 30);
-    g.fillStyle(0xfff3a0).fillCircle(x + 160, y + 24, 14);
-    g.fillStyle(0xe8c070).fillRect(x, y + 70, PIC_W, PIC_H - 70);
-    g.fillStyle(0xc8964a).fillTriangle(x + 30, y + 100, x + 90, y + 28, x + 150, y + 100);
-    g.fillStyle(0xa87838).fillTriangle(x + 90, y + 28, x + 150, y + 100, x + 110, y + 100);
-    g.fillStyle(0xc8964a).fillTriangle(x + 130, y + 100, x + 160, y + 66, x + 190, y + 100);
-    for (let r = 0; r < 4; r++) g.fillStyle(0x9a6a2a).fillRect(x + 48 + r * 12, y + 46 + r * 14, 84 - r * 24, 2);
-    g.fillStyle(0x3a8a3a).fillRect(x + 14, y + 80, 3, 22).fillTriangle(x + 4, y + 82, x + 15, y + 74, x + 27, y + 82);
+  // The same modern glass office for every site: sky, pavement, tower with windows, entrance.
+  office(g, x, y) {
+    g.fillStyle(0x9ad4f0).fillRect(x, y, PIC_W, PIC_H);
+    g.fillStyle(0xc8c8c0).fillRect(x, y + 100, PIC_W, PIC_H - 100);
+    g.fillStyle(0x4a5a6a).fillRect(x + 55, y + 14, 80, 88);
+    for (let r = 0; r < 6; r++) for (let c = 0; c < 5; c++) {
+      g.fillStyle((r + c) % 3 ? 0x6ab0d8 : 0x8ac8ec).fillRect(x + 60 + c * 15, y + 19 + r * 12, 12, 9);
+    }
+    g.fillStyle(0x2a3a4a).fillRect(x + 85, y + 88, 20, 14);
+    g.fillStyle(0xd8e8f0).fillRect(x + 87, y + 90, 7, 12).fillRect(x + 96, y + 90, 7, 12);
   }
 
-  mountain(g, x, y) {
-    g.fillStyle(0x7ec8f0).fillRect(x, y, PIC_W, PIC_H).fillStyle(0xa8dcf8).fillRect(x, y + 50, PIC_W, 40);
-    g.fillStyle(0x6a7a9a).fillTriangle(x, y + PIC_H, x + 70, y + 22, x + 140, y + PIC_H);
-    g.fillStyle(0x56668a).fillTriangle(x + 90, y + PIC_H, x + 150, y + 40, x + PIC_W, y + PIC_H);
-    g.fillStyle(0xffffff).fillTriangle(x + 52, y + 42, x + 70, y + 22, x + 88, y + 42);
-    g.fillStyle(0xffffff).fillTriangle(x + 136, y + 54, x + 150, y + 40, x + 164, y + 54);
-    g.fillStyle(0xe8f4ff).fillRect(x, y + 102, PIC_W, PIC_H - 102);
-    for (let i = 0; i < 8; i++) g.fillStyle(0xffffff).fillRect(x + 12 + i * 23, y + 8 + (i * 37) % 40, 2, 2);
+  // Hints, kept small: a cactus by the door, a sandy pavement and a triangle reflected in the glass.
+  desertHints(g, x, y) {
+    g.fillStyle(0xe0c890).fillRect(x, y + 100, PIC_W, PIC_H - 100);
+    g.fillStyle(0xb08a50, 0.6).fillTriangle(x + 64, y + 46, x + 72, y + 34, x + 80, y + 46);
+    g.fillStyle(0x3a8a3a).fillRect(x + 122, y + 92, 4, 10).fillRect(x + 119, y + 95, 3, 2).fillRect(x + 119, y + 92, 2, 3);
+    g.fillStyle(0x3a8a3a).fillRect(x + 126, y + 94, 3, 2).fillRect(x + 128, y + 91, 2, 3);
   }
 
-  sea(g, x, y) {
-    g.fillStyle(0x8ad8ff).fillRect(x, y, PIC_W, 34);
-    g.fillStyle(0xfff3a0).fillCircle(x + 30, y + 16, 10);
-    for (let i = 0; i < 4; i++) g.fillStyle([0x2a8ad8, 0x2070c0, 0x1a58a0, 0x10407a][i]).fillRect(x, y + 34 + i * 18, PIC_W, 18);
-    for (let wx = 0; wx < PIC_W; wx += 20) g.fillStyle(0xffffff).fillRect(x + wx, y + 34, 10, 3);
-    g.fillStyle(0xe8d8a0).fillRect(x, y + 106, PIC_W, PIC_H - 106);
-    g.fillStyle(0xffa040).fillEllipse(x + 120, y + 64, 22, 12).fillTriangle(x + 130, y + 64, x + 140, y + 57, x + 140, y + 71);
-    g.fillStyle(0xff6aa0).fillEllipse(x + 60, y + 86, 18, 10).fillTriangle(x + 52, y + 86, x + 44, y + 80, x + 44, y + 92);
-    g.fillStyle(0x3ab05a).fillRect(x + 160, y + 80, 4, 26).fillRect(x + 170, y + 88, 4, 18).fillRect(x + 22, y + 92, 4, 14);
-    g.fillStyle(0xffffff, 0.7).fillCircle(x + 100, y + 54, 3).fillCircle(x + 104, y + 46, 2);
+  // A snowflake by the tower, snow on the roof and a tiny penguin near the entrance.
+  glacierHints(g, x, y) {
+    g.fillStyle(0xffffff).fillRect(x + 55, y + 12, 80, 3);
+    g.fillStyle(0xffffff).fillRect(x + 150, y + 30, 5, 1).fillRect(x + 152, y + 28, 1, 5).fillRect(x + 151, y + 29, 1, 1).fillRect(x + 153, y + 31, 1, 1);
+    g.fillStyle(0x222222).fillRect(x + 118, y + 94, 4, 7);
+    g.fillStyle(0xffffff).fillRect(x + 119, y + 96, 2, 4);
+    g.fillStyle(0xffa020).fillRect(x + 122, y + 96, 1, 1).fillRect(x + 118, y + 101, 4, 1);
+  }
+
+  // A few bubbles rising past the tower, a fish behind a window and a bit of seaweed.
+  seaHints(g, x, y) {
+    g.fillStyle(0xff9a30).fillRect(x + 92, y + 44, 6, 3).fillRect(x + 98, y + 43, 2, 5);
+    g.lineStyle(1, 0xffffff, 0.9).strokeCircle(x + 145, y + 60, 3).strokeCircle(x + 148, y + 48, 2).strokeCircle(x + 144, y + 38, 1.5);
+    g.fillStyle(0x3ab05a).fillRect(x + 30, y + 92, 2, 10).fillRect(x + 33, y + 95, 2, 7);
   }
 
   // ---------------------------------------------------------------- choice

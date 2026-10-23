@@ -223,8 +223,8 @@ One trip in stages, with a BUDGET bar carried across them in `GameState.trip`
 - The suitcase holds `SUITCASE_SIZE` (10) items; `itemTex(id, character)` gives per-character icons for
   underwear, suit and swimsuit.
 - ALWAYS start a level with `startLevel(scene, index)` and advance with `goNext(scene, index)`: they route to the
-  static scene and pick the branch: 4-1 Il Cliente Lontano (DestinationScene: choose the client's site
-  pyramid / mountain / sea → `trip.leg`, then PackingScene) → 4-2 Mezzo → 4-3 Aeroporto | 4-4 Stazione → 4-5 Volo | 4-6 Treno →
+  static scene and pick the branch: 4-1 Il Cliente Lontano (DestinationScene: choose Sede Sud / Nord / Marittima,
+  same office picture with small hints only → `trip.leg` desert / glacier / sea, then PackingScene) → 4-2 Mezzo → 4-3 Aeroporto | 4-4 Stazione → 4-5 Volo | 4-6 Treno →
   the chosen ground leg via `LEG_LEVEL` (4-7 Deserto, 4-8 Ghiacciaio, 4-9 Mare; random from `GROUND_LEGS` if unset) → 4-10 Cliente → 5-1.
 - `beginStage(index)` stores the budget at stage start (a replay restores it); `ensureTrip(index)` builds a default
   trip when a stage is started directly from the menu (debug, `TRIP_STAGES_IN_MENU`). `finishTrip()` converts the
