@@ -32,7 +32,8 @@ const ICE_TEX = [TEX.T_ICE, TEX.ICE_PLATFORM];
 const TRIP_GOALS = {
   gate: [TEX.GATE_DOOR, 'IMBARCO', '#7CFC00'],
   train: [TEX.TRAIN_DOOR, 'IL TUO TRENO', '#7CFC00'],
-  office: [TEX.OFFICE, 'UFFICIO DEL CLIENTE', '#ffd800']
+  office: [TEX.OFFICE, 'UFFICIO DEL CLIENTE', '#ffd800'],
+  elevator: ['exec_elevator', 'ASCENSORE', '#ffd800'] // Mondo 5 floors (gfx/exec.js)
 };
 const POSTIT_TEX = { yellow: TEX.POSTIT_YELLOW, orange: TEX.POSTIT_ORANGE, green: TEX.POSTIT_GREEN };
 
@@ -148,7 +149,7 @@ export default class LevelBuilder {
         fontFamily: 'monospace', fontSize: '12px', fontStyle: 'bold', color: '#ff6060', stroke: '#000', strokeThickness: 3
       }).setOrigin(0.5).setDepth(DEPTH.DECOR + 2);
     } else if (TRIP_GOALS[type]) {
-      // Trip exits: boarding gate, train carriage, client's office.
+      // Trip exits: boarding gate, train carriage, client's office; Mondo 5 elevator.
       const [tex, label, color] = TRIP_GOALS[type];
       s.goal = s.physics.add.staticImage(x, y, tex).setOrigin(0.5, 1).refreshBody().setDepth(DEPTH.DECOR + 2);
       const top = y - s.goal.height - 12;

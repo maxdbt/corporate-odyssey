@@ -66,7 +66,7 @@ export function ensurePartyTextures(scene) {
     }
     p.r(9, 7, 3, 3, 0xffffff).r(20, 18, 2, 2, 0xffffff);
   });
-  // Standing CEO 48x88 (same look as the boss on the throne): grey hair, sunglasses, cigar, black suit, gold tie.
+  // Standing Mega-Direttore 48x88 (same look as the boss on the throne): grey hair, sunglasses, cigar, black suit, gold tie.
   makeTex(scene, 'ceo_standing', 48, 88, (p) => {
     const SU = 0x15151c;
     const S = 0xe0b088;

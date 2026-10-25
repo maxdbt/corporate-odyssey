@@ -157,3 +157,28 @@ export function generatePlayers(scene) {
     }
   }
 }
+
+// Beach version for the Caribbean ending: bare skin and barefoot; swim trunks for the man, bikini for the woman.
+const BEACH = {
+  man: {
+    pal: { Y: 0xff8c1a, Z: 0xffe040 },
+    torso: (r) => r.replace(/[WTL]/g, 'S'),
+    legs: (r, i) => (i === 0 ? r.replace(/P/g, 'Y') : i === 1 ? r.replace(/P/g, (_, j) => (j % 3 ? 'Y' : 'Z')) : r.replace(/[PB]/g, 'S'))
+  },
+  woman: {
+    pal: { Y: 0xff4fa0 },
+    torso: (r, i) => (i === 1 ? '.SSYYSSYYSS.' : r.replace(/[JWL]/g, 'S')),
+    legs: (r, i) => (i === 0 ? r.replace(/K/g, 'Y') : r.replace(/[KR]/g, 'S'))
+  }
+};
+
+// Texture `<character>_beach` (idle pose), generated on first use.
+export function ensureBeachPlayer(scene, character) {
+  const key = playerTex(character, 'beach');
+  if (scene.textures.exists(key)) return key;
+  const c = PLAYER_DEFS[character];
+  const b = BEACH[character];
+  const rows = [...c.head, ...c.torso.map(b.torso), ...c.legs.stand.map(b.legs)];
+  gridTex(scene, key, rows, { ...c.pal, ...b.pal }, 2);
+  return key;
+}

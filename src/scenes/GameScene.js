@@ -17,6 +17,7 @@ import TripLevel from '../systems/TripLevel.js';
 import { beginStage, goNext, underwearPenalty, isGroundLeg } from '../systems/Trip.js';
 import { TRANSPORT } from '../data/trip.js';
 import PartyDoor from '../systems/PartyDoor.js';
+import { ensureExecTextures } from '../gfx/exec.js';
 
 const PIT_DAMAGE = 20;
 const BURNOUT_DELAY = 1400;
@@ -72,6 +73,7 @@ export default class GameScene extends Phaser.Scene {
     this.items = this.physics.add.group({ allowGravity: false, immovable: true });
     this.goal = null;
 
+    if (level.exec) ensureExecTextures(this);
     const { zoneDefs } = new LevelBuilder(this, level).build();
     this.zones = new Zones(this, zoneDefs);
     this.ladderZones = zoneDefs.filter((z) => z.type === 'ladder');
@@ -518,21 +520,35 @@ export default class GameScene extends Phaser.Scene {
     this.platforms.add(this.arenaWall);
     this.add.rectangle(a.left - 8, 0, 16, a.floorY, 0x000000, 0.6).setOrigin(0.5, 0).setDepth(DEPTH.PLATFORMS);
     audio.music('boss');
-    this.ui?.message?.(b.type === 'boss_ceo' ? 'IL MEGA-DIRETTORE!' : 'IL CLIENTE DALL\'INFERNO!', '#ff4040', 2000);
-    this.time.delayedCall(700, () => { this.boss = this.spawnEnemy(b.type, b.x, b.y, { arena: a }); });
+    this.ui?.message?.(b.shout || (b.type === 'boss_ceo' ? 'IL MEGA-DIRETTORE!' : 'IL CLIENTE DALL\'INFERNO!'), '#ff4040', 2000);
+    this.time.delayedCall(700, () => { this.boss = this.spawnEnemy(b.type, b.x, b.y, { ...b.props, arena: a }); });
   }
 
-  handleBossDefeated() {
+  handleBossDefeated(boss) {
     if (this.ended) return;
     this.bossActive = false;
     this.ui?.bossBar?.(null, null);
     const b = this.level.boss;
+    // 5-4: the Mega-Direttore runs off to the roof, the chase goes on in the next level.
+    if (boss?.fled) {
+      this.ended = true;
+      audio.stopMusic();
+      this.ui?.message?.('IL MEGA-DIRETTORE SCAPPA SUL TETTO!\nINSEGUILO!', '#ffd800', 2400);
+      this.time.delayedCall(2600, () => {
+        this.cameras.main.fadeOut(400, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => goNext(this, this.levelIndex));
+      });
+      return;
+    }
     if (this.level.final) {
       this.ended = true;
       audio.stopMusic();
       audio.sfx('victory');
-      this.ui?.message?.('IL CEO E\' STATO SCONFITTO!', '#ffd800', 2500);
-      this.time.delayedCall(2600, () => this.scene.start('VictoryScene'));
+      this.ui?.message?.('IL MEGA-DIRETTORE VOLA VIA\nCOL PARACADUTE D\'ORO!', '#ffd800', 2500);
+      this.time.delayedCall(2600, () => {
+        this.cameras.main.fadeOut(400, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('VictoryScene'));
+      });
       return;
     }
     audio.music('level');
@@ -562,7 +578,9 @@ export default class GameScene extends Phaser.Scene {
     this.time.delayedCall(2400, () => {
       this.cameras.main.fadeOut(400, 0, 0, 0);
       this.cameras.main.once('camerafadeoutcomplete', () => {
-        goNext(this, this.levelIndex);
+        // Mondo 5: the elevator ride to the next floor.
+        if (this.level.elevator) this.scene.start('ElevatorScene', { levelIndex: this.levelIndex });
+        else goNext(this, this.levelIndex);
       });
     });
   }

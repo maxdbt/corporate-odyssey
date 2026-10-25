@@ -38,6 +38,9 @@ export const GameState = {
     this.device = null;
     this.weapon = 'email';
     this.trip = null;
+    this.tripLeg = null;
+    this.runStartedAt = Date.now(); // final choice survey: play time and starting level (set by the menu)
+    this.runFrom = null;
     this.pendingNext = { enemySpeedMult: 1 };
     this.levelMods = { enemySpeedMult: 1, colleaguesHostile: false };
   },

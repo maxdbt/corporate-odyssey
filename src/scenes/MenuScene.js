@@ -56,6 +56,8 @@ export default class MenuScene extends Phaser.Scene {
     LEVEL_META.forEach((m, i) => {
       // Trip stages: only the start of the trip unless the debug flag lists them all.
       if (m.trip && !TRIP_STAGES_IN_MENU && m.id !== '4-1') return;
+      // Climb floors (Mondo 5): only the first one, the climb goes on floor by floor.
+      if (m.climb && !TRIP_STAGES_IN_MENU && m.id !== '5-1') return;
       let w = this.worlds.find((x) => x.name === m.world);
       if (!w) this.worlds.push(w = { name: m.world, levels: [] });
       w.levels.push(i);
@@ -190,7 +192,7 @@ export default class MenuScene extends Phaser.Scene {
     const levels = this.worlds[this.worldIndex].levels;
     const gap = 8;
     const chips = levels.map((li, i) => {
-      const label = `${levels.length > 1 ? `${i + 1}. ` : ''}${LEVEL_META[li].name}`;
+      const label = `${levels.length > 1 ? `${i + 1}. ` : ''}${(!TRIP_STAGES_IN_MENU && LEVEL_META[li].menuName) || LEVEL_META[li].name}`;
       return this.add.text(0, 0, label, style(levels.length > 4 ? 10 : 11, '#ffffff', {
         backgroundColor: '#10204a', padding: { x: 6, y: 3 }, strokeThickness: 3
       })).setOrigin(0, 0.5).setInteractive({ useHandCursor: true })
@@ -241,6 +243,7 @@ export default class MenuScene extends Phaser.Scene {
     audio.sfx('powerup');
     audio.stopMusic();
     GameState.newGame(CHARACTERS[this.selected]);
+    GameState.runFrom = LEVEL_META[this.levelIndex]?.id || null; // for the final choice survey
     this.cameras.main.fadeOut(400, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       startLevel(this, this.levelIndex);

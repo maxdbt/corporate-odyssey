@@ -1,13 +1,26 @@
-// Boss finale (Mondo 5): Il Mega-Direttore, on a moving leather throne.
+// Boss finale (Mondo 5): Il Mega-Direttore, in three phases.
+// 1 (L'Attico): on the moving leather throne (Q4 folders, Mega-Riunione, Excel rain).
+// 2 (L'Attico, below 60% hp): stands up and fights on foot (charge, leap with shockwaves, Excel rain);
+//   with props.flee, below 30% hp he runs off to the roof (BOSS_DEFEATED with boss.fled = true).
+// 3 (Il Tetto, props.phase = 3): on the helipad with the golden parachute (gold bags, rotor wind, charge, leap);
+//   defeated, he jumps off with the golden parachute.
 import Phaser from 'phaser';
 import { TEX, EVENTS, DEPTH } from '../../config/constants.js';
+import { ensureExecTextures } from '../../gfx/exec.js';
 import { audio } from '../../systems/Audio8bit.js';
 import Enemy from '../enemies/Enemy.js';
 import EnemyProjectile, { arcVelocity } from '../enemies/EnemyProjectile.js';
 import { bigText, floatText, popFx } from '../enemies/fx.js';
 
 const NAME = 'IL MEGA-DIRETTORE';
-const PATTERNS = ['q4', 'meeting', 'excel'];
+const PATTERNS = {
+  1: ['q4', 'meeting', 'excel'],
+  2: ['charge', 'leap', 'excel'],
+  3: ['gold', 'charge', 'rotor', 'leap']
+};
+const STAND_AT = 0.6; // phase 2 below this hp ratio
+const FLEE_AT = 0.3;  // with props.flee: runs to the roof below this hp ratio
+const LEAP_H = 150;
 
 // Q4 binder pile: blocks the path until destroyed by projectiles. Lives in scene.obstacles.
 export class Q4Obstacle extends Phaser.Physics.Arcade.Sprite {
@@ -65,10 +78,14 @@ export class Q4Obstacle extends Phaser.Physics.Arcade.Sprite {
 
 export default class BossCEO extends Enemy {
   constructor(scene, x, y, props = {}) {
+    ensureExecTextures(scene);
     super(scene, x, y, TEX.BOSS_CEO, {
-      kind: 'boss_ceo', hp: 50, stompable: true, damage: { hp: 20, stress: 10 }
+      kind: 'boss_ceo', hp: props.hp ?? 50, stompable: true, damage: { hp: 20, stress: 10 }
     });
     this.isBoss = true;
+    this.phase = 1;
+    this.flee = !!props.flee;
+    this.lift = 0;
     const a = props.arena || {};
     this.arena = {
       left: a.left ?? x - 400, right: a.right ?? x + 400,
@@ -85,6 +102,7 @@ export default class BossCEO extends Enemy {
     this.hitCooldown = 0;
     this.obstacles = [];
     this.siren = this.attach(scene.add.image(x, y - 96, TEX.SIREN).setDepth(DEPTH.FX).setVisible(false));
+    if (props.phase === 3) this.setupRoof(props.heli);
     bigText(scene, NAME, '#ffd700', 1600, 0.25);
     audio.sfx('alarm');
     this.emitHealth();
@@ -96,28 +114,45 @@ export default class BossCEO extends Enemy {
 
   get enraged() { return this.hp <= this.maxHp / 2; }
 
+  get standing() { return this.phase >= 2; }
+
+  // Default sprites face left; the standing CEO faces right.
+  face(x) { this.setFlipX(this.standing ? x < this.x : x > this.x); }
+
   think(now, delta) {
     const dt = delta / 1000;
     this.body.setVelocity(0, 0);
-    this.y = this.arena.floorY;
-    this.siren.setPosition(this.x, this.y - 100);
     const p = this.target;
+    if (this.leap) this.updateLeap(now);
+    if (this.charge) this.updateCharge(now, dt);
+    if (now < (this.windUntil || 0) && p) p.env.windX = -170;
+    this.y = this.arena.floorY - this.lift;
+    this.siren.setPosition(this.x, this.y - 100);
+    if (this.pack) this.pack.setPosition(this.x + (this.flipX ? 12 : -12), this.y - 44).setFlipX(this.flipX);
 
     switch (this.state) {
       case 'intro':
         if (now > this.until) this.toMove(now);
         break;
       case 'move': {
-        const speed = (this.enraged ? 110 : 70) * this.speedMult();
+        const speed = (this.enraged ? 110 : 70) * (this.standing ? 1.3 : 1) * this.speedMult();
         this.x += this.dir * speed * dt;
         if (this.x < this.arena.left + 80) { this.x = this.arena.left + 80; this.dir = 1; }
         if (this.x > this.arena.right - 80) { this.x = this.arena.right - 80; this.dir = -1; }
-        if (p) this.setFlipX(p.x > this.x);
+        if (p) this.face(p.x);
         if (now > this.until) this.startPattern(now);
         break;
       }
       case 'busy':
+        if (now > this.until && !this.leap && !this.charge) this.toMove(now);
+        break;
+      case 'standup':
         if (now > this.until) this.toMove(now);
+        break;
+      case 'flee':
+        this.x += 280 * dt;
+        this.setFlipX(false);
+        if (this.x > this.arena.right + 80) this.finishFlee();
         break;
     }
   }
@@ -125,16 +160,197 @@ export default class BossCEO extends Enemy {
   toMove(now) {
     this.state = 'move';
     this.customTint = null;
-    this.until = now + (this.enraged ? 1800 : 2600);
+    this.until = now + (this.enraged ? 1800 : 2600) * (this.standing ? 0.7 : 1);
   }
 
   startPattern(now) {
-    const pattern = PATTERNS[this.patternIndex % PATTERNS.length];
+    const list = PATTERNS[this.phase];
+    const pattern = list[this.patternIndex % list.length];
     this.patternIndex++;
     this.state = 'busy';
     if (pattern === 'q4') this.patternQ4(now);
     else if (pattern === 'meeting') this.patternMeeting(now);
+    else if (pattern === 'charge') this.patternCharge(now);
+    else if (pattern === 'leap') this.patternLeap(now);
+    else if (pattern === 'gold') this.patternGold(now);
+    else if (pattern === 'rotor') this.patternRotor(now);
     else this.patternExcel(now);
+  }
+
+  // ---------------------------------------------------------------- phase changes
+
+  standUp(now) {
+    this.phase = 2;
+    this.patternIndex = 0;
+    this.state = 'standup';
+    this.until = now + 1400;
+    this.leap = null;
+    this.charge = null;
+    this.customTint = null;
+    this.siren.setVisible(false);
+    // The Q4 folder walls fall down: on foot he fights in the open.
+    for (const o of this.obstacles) if (o.active) o.crumble();
+    this.obstacles = [];
+    this.throne = this.attach(this.scene.add.image(this.x, this.arena.floorY, 'throne_empty').setOrigin(0.5, 1).setDepth(DEPTH.ENEMIES - 1));
+    this.toStanding();
+    bigText(this.scene, 'SI ALZA DAL TRONO!', '#ff8040', 1400, 0.3);
+    audio.sfx('alarm');
+    this.scene.cameras.main.shake(300, 0.008);
+    // Steps away from the throne.
+    const to = this.x + (this.x > (this.arena.left + this.arena.right) / 2 ? -110 : 110);
+    this.scene.tweens.addCounter({ from: this.x, to, duration: 600,
+      onUpdate: (tw) => { if (this.active && !this.dead) this.x = tw.getValue(); } });
+  }
+
+  toStanding() {
+    this.setTexture('ceo_standing');
+    this.setBodyBottom(28, 76);
+  }
+
+  setupRoof(heli) {
+    this.phase = 3;
+    this.toStanding();
+    this.pack = this.attach(this.scene.add.image(this.x, this.y - 44, 'gold_pack').setDepth(DEPTH.ENEMIES - 1));
+    if (heli) {
+      this.heli = this.attach(this.scene.add.image(heli.x, heli.y, 'helicopter').setOrigin(0.5, 1).setDepth(DEPTH.DECOR + 1));
+      this.rotor = this.attach(this.scene.add.image(heli.x - 8, heli.y - 62, 'rotor').setDepth(DEPTH.DECOR + 2));
+      this.scene.tweens.add({ targets: this.rotor, scaleX: 0.15, duration: 90, yoyo: true, repeat: -1 });
+    }
+  }
+
+  startFlee() {
+    this.state = 'flee';
+    this.leap = null;
+    this.charge = null;
+    this.lift = 0;
+    this.customTint = null;
+    this.body.enable = false;
+    for (const o of this.obstacles) if (o.active) o.crumble();
+    this.obstacles = [];
+    this.scene.events.emit(EVENTS.BOSS_HEALTH, { name: NAME, ratio: null });
+    bigText(this.scene, 'SCAPPA SUL TETTO!', '#ffd700', 1600, 0.3);
+    floatText(this.scene, this.x, this.y - 96, 'NON MI AVRETE MAI!', '#ffd700', 11, 1200);
+    audio.sfx('alarm');
+  }
+
+  finishFlee() {
+    if (this.dead) return;
+    this.dead = true;
+    this.fled = true;
+    this.scene.events.emit(EVENTS.BOSS_DEFEATED, this);
+    this.destroy();
+  }
+
+  // --- Taglio dei costi: wind-up, then a dash across the arena (jump over him or on his head) -------------
+  patternCharge(now) {
+    const p = this.target;
+    const dir = p ? (p.x < this.x ? -1 : 1) : -this.dir;
+    this.until = now + 600;
+    this.customTint = 0xff9090;
+    this.face(this.x + dir);
+    this.charge = { dir, at: now + 650 };
+    floatText(this.scene, this.x, this.y - 96, 'TAGLIO DEI COSTI!', '#ff8080', 12, 1000);
+    audio.sfx('alarm');
+  }
+
+  updateCharge(now, dt) {
+    const c = this.charge;
+    if (now < c.at) { this.x += Math.sin(now / 30) * 0.8; return; }
+    this.x += c.dir * (this.enraged ? 460 : 400) * this.speedMult() * dt;
+    const minX = this.arena.left + 50;
+    const maxX = this.arena.right - 50;
+    if (this.x <= minX || this.x >= maxX) {
+      this.x = Phaser.Math.Clamp(this.x, minX, maxX);
+      this.charge = null;
+      this.customTint = null;
+      this.dir = -c.dir;
+      this.until = now + 500;
+      this.scene.cameras.main.shake(200, 0.008);
+      audio.sfx('explosion');
+    }
+  }
+
+  // --- Ristrutturazione: leaps onto the player, shockwaves on landing --------------------------------------
+  patternLeap(now) {
+    const p = this.target;
+    const a = this.arena;
+    const tx = Phaser.Math.Clamp(p ? p.x : this.x, a.left + 70, a.right - 70);
+    this.until = now + 1300;
+    this.customTint = 0xffd080;
+    this.leap = { sx: this.x, tx, start: now + 350, dur: 850 };
+    if (p) this.face(p.x);
+    floatText(this.scene, this.x, this.y - 96, 'RISTRUTTURAZIONE!', '#ffd080', 12, 1000);
+  }
+
+  updateLeap(now) {
+    const l = this.leap;
+    const t = (now - l.start) / l.dur;
+    if (t < 0) return;
+    if (t < 1) {
+      this.x = Phaser.Math.Linear(l.sx, l.tx, t);
+      this.lift = Math.sin(t * Math.PI) * LEAP_H;
+      return;
+    }
+    this.x = l.tx;
+    this.lift = 0;
+    this.leap = null;
+    this.customTint = null;
+    this.until = now + 700;
+    this.scene.cameras.main.shake(250, 0.01);
+    audio.sfx('explosion');
+    [-1, 1].forEach((d) => {
+      const w = new EnemyProjectile(this.scene, this.x + d * 30, this.arena.floorY, TEX.REDWAVE, {
+        vx: d * 300, ignoreWalls: true, lifespan: 2400, scale: { x: 1.2, y: 0.45 },
+        damage: { hp: 10, stress: 8 }, destroyOnPlayer: false, flipWithDir: false
+      });
+      w.setOrigin(0.5, 1).setAlpha(0.85).setTint(0xffb040);
+      if (d < 0) w.setFlipX(true);
+    });
+  }
+
+  // --- La buonuscita: bags of gold lobbed around the player (phase 3) --------------------------------------
+  patternGold(now) {
+    const p = this.target;
+    this.until = now + 1800;
+    this.customTint = 0xfff080;
+    floatText(this.scene, this.x, this.y - 96, 'LA MIA BUONUSCITA!', '#ffd700', 12, 1000);
+    const n = this.enraged ? 4 : 3;
+    for (let i = 0; i < n; i++) {
+      this.later(250 + i * 280, () => {
+        const tx = Phaser.Math.Clamp((p ? p.x : this.x) + (i - (n - 1) / 2) * 70, this.arena.left + 30, this.arena.right - 30);
+        const sx = this.x;
+        const sy = this.y - 70;
+        const v = arcVelocity(sx, sy, tx, this.arena.floorY - 10, 0.9);
+        new EnemyProjectile(this.scene, sx, sy, 'gold_bag', {
+          vx: v.vx, vy: v.vy, gravity: true, spin: 200, bounces: 1, bounceVy: 220, lifespan: 3500,
+          damage: { hp: 8, stress: 8 }, flipWithDir: false, fxOnDestroy: true
+        });
+        audio.sfx('coin');
+      });
+    }
+  }
+
+  // --- Vento delle pale: the helicopter rotor pushes you away while share certificates fly by (phase 3) ----
+  patternRotor(now) {
+    this.until = now + 3000;
+    this.windUntil = now + 2800;
+    bigText(this.scene, 'VENTO DELLE PALE!', '#9ad4f0', 1200, 0.3);
+    audio.sfx('freeze');
+    const view = this.scene.cameras.main.worldView;
+    for (let i = 0; i < 4; i++) {
+      this.later(400 + i * 600, () => {
+        const y = this.arena.floorY - (i % 2 ? 22 : 64);
+        new EnemyProjectile(this.scene, view.right + 20, y, 'stock_cert', {
+          vx: -330, ignoreWalls: true, lifespan: 4000, spin: 300, damage: { hp: 6, stress: 6 }, flipWithDir: false
+        });
+      });
+    }
+    for (let i = 0; i < 14; i++) {
+      const s = this.attach(this.scene.add.rectangle(view.right + Math.random() * 200, view.y + 60 + Math.random() * 320, 26, 2, 0xffffff, 0.6)
+        .setDepth(DEPTH.FX));
+      this.scene.tweens.add({ targets: s, x: view.x - 60, duration: 600 + Math.random() * 400, delay: Math.random() * 2200,
+        onComplete: () => s.destroy() });
+    }
   }
 
   // --- Faldoni Q4 -------------------------------------------------------
@@ -295,7 +511,7 @@ export default class BossCEO extends Enemy {
   slow(ms) { super.slow(ms, 0.7); }
 
   hit(amount, type) {
-    if (this.dead) return;
+    if (this.dead || this.state === 'standup' || this.state === 'flee') return;
     const now = this.now;
     if (type === 'stomp') {
       if (now < this.hitCooldown) return;
@@ -304,9 +520,21 @@ export default class BossCEO extends Enemy {
     }
     super.hit(amount, type);
     if (this.dead) return;
-    this.setTexture(TEX.BOSS_CEO_HURT);
-    this.later(200, () => this.setTexture(TEX.BOSS_CEO));
+    const ratio = this.hp / this.maxHp;
+    if (this.phase === 1) {
+      this.setTexture(TEX.BOSS_CEO_HURT);
+      this.later(200, () => { if (this.phase === 1) this.setTexture(TEX.BOSS_CEO); });
+      if (ratio <= STAND_AT) this.standUp(now);
+    } else if (this.phase === 2 && this.flee && ratio <= FLEE_AT) {
+      this.startFlee(now);
+      return;
+    }
     this.emitHealth();
+  }
+
+  onPlayerContact(player) {
+    if (this.state === 'flee' || this.state === 'standup') return;
+    super.onPlayerContact(player);
   }
 
   die() {
@@ -317,7 +545,8 @@ export default class BossCEO extends Enemy {
     scene.events.emit(EVENTS.BOSS_HEALTH, { name: NAME, ratio: null });
     for (const o of this.obstacles) if (o.active) o.crumble();
     this.obstacles = [];
-    bigText(scene, 'SEI IL NUOVO CEO!', '#ffd700', 2000, 0.3);
+    bigText(scene, 'HAI SCONFITTO\nIL MEGA-DIRETTORE!', '#ffd700', 2200, 0.3);
+    if (this.standing) { this.parachuteAway(); return; }
     for (let i = 0; i < 10; i++) {
       scene.time.delayedCall(i * 150, () => {
         popFx(scene, this.x + Math.random() * 90 - 45, this.y - Math.random() * 80, 1.3);
@@ -331,6 +560,29 @@ export default class BossCEO extends Enemy {
         scene.events.emit(EVENTS.BOSS_DEFEATED, this);
         this.destroy();
       }
+    });
+  }
+
+  // Defeated on the roof: jumps off with the golden parachute and floats away.
+  parachuteAway() {
+    const scene = this.scene;
+    this.customTint = null;
+    this.clearTint();
+    this.windUntil = 0;
+    this.pack?.setVisible(false);
+    this.setFlipX(false);
+    const canopy = this.attach(scene.add.image(this.x, this.y - 80, 'gold_canopy').setOrigin(0.5, 1).setDepth(DEPTH.ENEMIES).setScale(0.2));
+    floatText(scene, this.x, this.y - 96, 'TANTO HO LA BUONUSCITA!', '#ffd700', 11, 1600);
+    audio.sfx('powerup');
+    scene.tweens.add({ targets: canopy, scale: 1, duration: 400, ease: 'Back.Out' });
+    scene.tweens.add({ targets: [this, canopy], y: '-=40', duration: 400, ease: 'Quad.Out' });
+    scene.tweens.add({ targets: [this, canopy], x: '+=320', y: '-=300', delay: 450, duration: 2600, ease: 'Sine.In' });
+    scene.tweens.add({ targets: [this, canopy], angle: { from: -8, to: 8 }, duration: 500, yoyo: true, repeat: -1 });
+    scene.time.delayedCall(2800, () => {
+      if (!this.scene) return;
+      scene.events.emit(EVENTS.ENEMY_KILLED, this);
+      scene.events.emit(EVENTS.BOSS_DEFEATED, this);
+      this.destroy();
     });
   }
 

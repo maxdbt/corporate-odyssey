@@ -287,7 +287,7 @@ export class Party extends Enemy {
 }
 
 // Teams icon 16x16 (purple tile, white "T", red notification badge), generated once.
-function ensureTeamsIconTexture(scene) {
+export function ensureTeamsIconTexture(scene) {
   if (scene.textures.exists('teams_icon')) return;
   const g = scene.make.graphics({ x: 0, y: 0 }, false);
   g.fillStyle(0x000000).fillRect(1, 3, 13, 13);

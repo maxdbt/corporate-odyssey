@@ -13,7 +13,8 @@ const THEMES = {
   sea:     { top: 0x0d6cb5, bottom: 0x03203f, wall: 0x0a3d6b, wallDark: 0x072b4d },
   exec:    { top: 0x3a0d12, bottom: 0x6b1a22, wall: 0xc9a227, wallDark: 0x9c7a12 },
   airport: { top: 0x6fb8ff, bottom: 0xd8eeff, wall: 0xe8ecf2, wallDark: 0xb8c0cc },
-  station: { top: 0x8a96a8, bottom: 0xc8ccd4, wall: 0x9a8a78, wallDark: 0x6a5a4a }
+  station: { top: 0x8a96a8, bottom: 0xc8ccd4, wall: 0x9a8a78, wallDark: 0x6a5a4a },
+  roof:    { top: 0x3a1a5a, bottom: 0xff9a50, wall: 0x2a1a3a, wallDark: 0x1a1028 }
 };
 
 const rnd = (seed) => {
@@ -145,6 +146,21 @@ export function drawBackground(scene, theme, worldW) {
       }
       far.fillStyle(0xfff2b0, 0.7);
       for (let x = 0; x < farW; x += 200) { far.fillCircle(x + 100, 24, 10); far.fillRect(x + 98, 0, 4, 16); }
+      break;
+    }
+    case 'roof': {
+      // Sunset over the city: low sun, far skyline, nearer towers with lit windows.
+      far.fillStyle(0xffe070, 1).fillCircle(GAME_WIDTH * 0.65, 300, 46);
+      far.fillStyle(0xff7040, 0.5).fillRect(0, 290, farW, 6).fillRect(0, 310, farW, 4);
+      far.fillStyle(0x5a2a5a, 1);
+      for (let x = 0; x < farW; x += 50) { const h = 60 + r() * 110; far.fillRect(x, 400 - h, 44, h); }
+      mid.fillStyle(t.wall, 1);
+      for (let x = 0; x < midW; x += 110) {
+        const h = 90 + r() * 120;
+        mid.fillStyle(t.wall, 1).fillRect(x, 420 - h, 96, h);
+        mid.fillStyle(0xffd070, 0.8);
+        for (let wy = 430 - h; wy < 400; wy += 18) for (let wx = x + 10; wx < x + 90; wx += 16) if (r() < 0.45) mid.fillRect(wx, wy, 8, 8);
+      }
       break;
     }
     case 'airport': {

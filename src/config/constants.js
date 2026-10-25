@@ -217,7 +217,12 @@ export const LEVEL_META = [
   { id: '4-8', world: 'Mondo 4: La Trasferta', name: 'Il Ghiacciaio', trip: true },
   { id: '4-9', world: 'Mondo 4: La Trasferta', name: 'Il Mare', trip: true },
   { id: '4-10', world: 'Mondo 4: La Trasferta', name: 'Il Cliente', scene: 'NegotiationScene', trip: true },
-  { id: '5-1', world: 'Mondo 5: Il Piano degli Executive', name: 'La Cima della Piramide' }
+  // Mondo 5 is a climb, floor by floor (elevator between floors): the menu shows only the start of the climb.
+  { id: '5-1', world: 'Mondo 5: Il Piano degli Executive', name: 'Ufficio Legale', menuName: 'La Cima della Piramide', climb: true },
+  { id: '5-2', world: 'Mondo 5: Il Piano degli Executive', name: 'Risorse Umane', climb: true },
+  { id: '5-3', world: 'Mondo 5: Il Piano degli Executive', name: 'La Segreteria', climb: true },
+  { id: '5-4', world: 'Mondo 5: Il Piano degli Executive', name: 'L\'Attico', climb: true },
+  { id: '5-5', world: 'Mondo 5: Il Piano degli Executive', name: 'Il Tetto', climb: true }
 ];
 
 // Debug: every trip stage is selectable from the menu. false = only "Il Cliente Lontano" (the full trip).

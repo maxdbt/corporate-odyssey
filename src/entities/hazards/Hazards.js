@@ -1,9 +1,12 @@
 // Hazard controllers: non-physics spawners updated by GameScene ({ update(time, delta), destroy() }).
-import { TEX, DEPTH, FONT } from '../../config/constants.js';
+import Phaser from 'phaser';
+import { TEX, DEPTH, FONT, GAME_WIDTH, GAME_HEIGHT } from '../../config/constants.js';
+import { pinToView } from '../../utils/view.js';
 import { GameState } from '../../state/GameState.js';
 import { audio } from '../../systems/Audio8bit.js';
 import EnemyProjectile from '../enemies/EnemyProjectile.js';
-import { floatText } from '../enemies/fx.js';
+import { floatText, bigText } from '../enemies/fx.js';
+import { ensureExecTextures } from '../../gfx/exec.js';
 
 class Hazard {
   constructor(scene, props = {}) {
@@ -113,5 +116,79 @@ export class TeamsMeteor extends Hazard {
         }
       }));
     });
+  }
+}
+
+// Crollo in Borsa (Mondo 5): every `interval` ms an alarm, the floor turns black and white for `duration` ms
+// and share certificates rain around the player. Grayscale = camera ColorMatrix (WebGL) or a grey veil (canvas).
+export class StockCrash extends Hazard {
+  constructor(scene, props = {}) {
+    super(scene, { interval: 16000, ...props });
+    ensureExecTextures(scene);
+    this.duration = props.duration ?? 5000;
+    this.next = scene.time.now + (props.first ?? 6000);
+    this.until = 0;
+    this.dropNext = 0;
+    this.fx = null;
+    this.veil = null;
+  }
+
+  update() {
+    const now = this.scene.time.now;
+    if (!this.until) { super.update(); return; }
+    if (now >= this.until) { this.end(); return; }
+    const p = this.player;
+    if (p && now >= this.dropNext) {
+      this.dropNext = now + 280;
+      this.drop(p);
+    }
+  }
+
+  spawn(p, now) {
+    this.until = now + this.duration;
+    this.dropNext = now + 500;
+    bigText(this.scene, 'CROLLO IN BORSA!', '#ff3030', 1200, 0.3);
+    audio.sfx('alarm');
+    this.gray(true);
+  }
+
+  drop(p) {
+    const view = this.scene.cameras.main.worldView;
+    const lead = p.body ? p.body.velocity.x * 0.5 : 0;
+    const x = p.x + lead + (Math.random() * 520 - 240);
+    this.track(new EnemyProjectile(this.scene, x, view.y - 20, 'stock_cert', {
+      vy: 170 + Math.random() * 70, vx: Math.random() * 60 - 30, spin: Math.random() * 240 - 120,
+      lifespan: 5000, damage: { hp: 4, stress: 7 }, flipWithDir: false
+    }));
+  }
+
+  end() {
+    this.until = 0;
+    this.next = this.scene.time.now + this.interval * (0.75 + Math.random() * 0.5);
+    this.gray(false);
+    this.scene.ui?.message?.('LA BORSA SI RIPRENDE', '#7CFC00', 1000);
+  }
+
+  gray(on) {
+    const scene = this.scene;
+    const cam = scene.cameras?.main;
+    if (on) {
+      if (this.fx || this.veil) return;
+      if (cam && scene.renderer?.type === Phaser.WEBGL && cam.postFX) {
+        this.fx = cam.postFX.addColorMatrix();
+        this.fx.grayscale(1);
+      } else {
+        this.veil = pinToView(scene.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x808080, 0.45).setOrigin(0), 0, 0, 0)
+          .setDepth(DEPTH.FX - 1);
+      }
+      return;
+    }
+    if (this.fx) { try { cam?.postFX?.remove(this.fx); } catch (e) { /* camera gone */ } this.fx = null; }
+    if (this.veil) { if (this.veil.scene) this.veil.destroy(); this.veil = null; }
+  }
+
+  destroy() {
+    super.destroy();
+    this.gray(false);
   }
 }

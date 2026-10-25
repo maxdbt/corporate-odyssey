@@ -96,12 +96,48 @@ export const BRIEFS = {
     ]
   },
   '5-1': {
-    where: 'Ultimo piano, area Executive. Moquette e parquet di lusso.',
-    goal: 'Supera i Guardiani del Budget e sconfiggi il Mega-Direttore.',
+    where: 'Piano 40, Ufficio Legale. Inizia la scalata verso la cima.',
+    goal: 'Attraversa il piano e prendi l\'ascensore.',
     tips: [
-      'I Guardiani del Budget pattugliano il corridoio.',
-      'Usa le armi del dispositivo: e-mail, Teams, caffè, orologio, WWW.',
-      'Il boss finale ha più fasi: tieni d\'occhio la barra.'
+      'I Consulenti Strategici lanciano slide di PowerPoint: schivale!',
+      'CROLLO IN BORSA: piovono azioni e tutto diventa grigio per qualche secondo.',
+      'Raccogli il laptop: e-mail, Teams, caffè, orologio, WWW.'
+    ]
+  },
+  '5-2': {
+    where: 'Piano 45, Risorse Umane. Sorrisi obbligatori.',
+    goal: 'Raggiungi l\'ascensore in fondo al corridoio.',
+    tips: [
+      'Gli Yes-Man ti seguono annuendo e si moltiplicano: eliminali in fretta!',
+      'Un salto in testa basta per zittirli.',
+      'Attento ai buchi nel pavimento.'
+    ]
+  },
+  '5-3': {
+    where: 'Piano 49, La Segreteria del Mega-Direttore.',
+    goal: 'Trova il BADGE VIP e fatti aprire il vetro blindato.',
+    tips: [
+      'Senza appuntamento la Segretaria non ti fa passare.',
+      'Il badge è in alto: arrampicati su scrivanie e scaffali.',
+      'La Segretaria non si può colpire: non provarci nemmeno.'
+    ]
+  },
+  '5-4': {
+    where: 'Piano 50, L\'Attico. L\'ufficio del Mega-Direttore.',
+    goal: 'Affronta il Mega-Direttore.',
+    tips: [
+      'Prima ti attacca dal trono, poi si alza e combatte a piedi.',
+      'A piedi carica e salta: saltagli sopra e schiva le onde d\'urto.',
+      'Se le cose si mettono male... potrebbe scappare.'
+    ]
+  },
+  '5-5': {
+    where: 'Il Tetto, al tramonto. Un elicottero aspetta sulla piazzola.',
+    goal: 'Sconfiggi il Mega-Direttore per l\'ultima volta.',
+    tips: [
+      'Lancia sacchi di buonuscita: occhio ai rimbalzi.',
+      'Il vento delle pale ti spinge indietro: resisti e salta le azioni.',
+      'Ha un paracadute d\'oro... ovviamente.'
     ]
   }
 };

@@ -17,7 +17,7 @@ Shared files (already written, do not rename keys — you may ADD keys if strict
 | ENEMIES | `src/entities/enemies/*.js`, `src/entities/bosses/*.js`, `src/entities/hazards/*.js`, `src/entities/EnemyFactory.js` |
 | GAME | `src/scenes/GameScene.js`, `src/levels/*.js`, `src/systems/*` other than InputController/Audio8bit (e.g. `LevelBuilder.js`, `WeaponSystem.js`, `Collectibles.js`, `Zones.js`), `src/entities/Collectible.js`, `src/entities/PlayerProjectile.js` |
 
-Scene keys: `BootScene`, `MenuScene`, `GameScene`, `UIScene`, `QuizScene`, `GameOverScene`, `VictoryScene`.
+Scene keys: `BootScene`, `MenuScene`, `GameScene`, `UIScene`, `QuizScene`, `GameOverScene`, `VictoryScene`, `ElevatorScene` (plus the trip / party overlays listed below).
 Every scene file `export default class X extends Phaser.Scene { constructor(){ super('X'); } }`.
 
 ## Textures & animations (GFX)
@@ -145,17 +145,39 @@ Enemy types & props:
 - `boss_client` Boss "Il Cliente dall'Inferno": floats on a burning office chair; homing fireball "Feedback fuori
   scope"; periodically shouts "LO VOGLIO PRONTO PER IERI!" (big text) and sends shockwaves along the floor
   (jump them). hp 30. props `{ arena: { left, right, floorY } }`.
-- `boss_ceo` Boss "Il Mega-Direttore": on a moving leather throne. Patterns cycle: Q4 folders (land and become
-  obstacles in `scene.obstacles` with `hit()`, hp 3, block the path until destroyed by projectiles); Mega-Riunione
-  Sincrona (siren + "ALLARME!" then a tall red wave from the screen corner across the floor — needs a
-  double jump); Pioggia di Excel (Tetris-like spreadsheet blocks fall in all columns but one, highlighted
-  briefly before). hp 50. Takes damage from player projectiles and stomps. props `{ arena: { left, right, floorY, ceilingY } }`.
+- `boss_ceo` Boss "Il Mega-Direttore" (never call him CEO: "CEO" is only the post the CdA offers in the ending), in
+  three phases. Phase 1 (5-4 L'Attico) on a moving leather throne. Its patterns cycle:
+  - Q4 folders, which land and become obstacles in `scene.obstacles` with `hit()` and hp 3, blocking the path until
+    destroyed by projectiles;
+  - Mega-Riunione Sincrona: a siren and "ALLARME!", then a tall red wave from the screen corner across the floor
+    (needs a double jump);
+  - Pioggia di Excel: Tetris-like spreadsheet blocks fall in every column but one, which is highlighted briefly first.
+
+  Below 60% hp, `standUp()` starts phase 2: the folder obstacles crumble and he fights on foot (charge, leap with
+  shockwaves, Excel rain). With `props.flee`, below 30% hp he runs off to the roof and fires `BOSS_DEFEATED` with
+  `boss.fled = true`; GameScene then completes the level instead of ending the game. Phase 3 (`props.phase = 3`,
+  5-5 Il Tetto) takes place on the helipad: bags of gold ("buonuscita"), rotor wind with flying share certificates,
+  "TAGLIO DEI COSTI!" charge, leap. When defeated he jumps off with the golden parachute, then → VictoryScene.
+  hp 50. Takes damage from player projectiles and stomps. props `{ arena: { left, right, floorY, ceilingY }, flee, phase, heli }`.
+- Mondo 5 enemies (`entities/enemies/ExecEnemies.js`, textures in `gfx/exec.js`):
+  - `yesman` Yes-Man follows you nodding, and every few seconds a clone hops out (capped through
+    `scene.yesmen`).
+  - `strategist` Consulente Strategico paces, faces you and lobs PowerPoint slides (`props.range`).
+  - `secretary` Segretaria guards a glass gate at `gateDx`: "HA UN APPUNTAMENTO?" and a push-back until you
+    pick up the VIP badge at `props.badge` (`scene.hasBadge`), then the gate opens. She is invulnerable and has no
+    gravity, because an immovable body is not separated from static platforms.
 
 Hazard controller types:
 - `mailrain` Le Mail: envelopes rain vertically from the top of the camera view near the player while
   player.x in `[from, to]`, every `interval` ms (900).
 - `teamsmeteor` Loghi Teams giganti come meteoriti (with a short warning shadow) while player.x in `[from, to]`;
   hit → `player.applyStatus('asleep', 3000)` + hp -5.
+- `stockcrash` Crollo in Borsa (Mondo 5) runs while player.x is in `[from, to]`:
+  - an alarm sounds every `interval` ms (`first` sets the first delay);
+  - for `duration` ms (5000) the floor turns black and white (camera ColorMatrix on WebGL, a grey veil on canvas;
+    idempotent) and share certificates rain around the player.
+
+  The offices stay luxurious: there is no stock-exchange scenery.
 
 Enemy projectiles: class(es) added to `scene.enemyBullets` (then configure body). Implement
 `onHitPlayer(player)` (default takeDamage then destroy) and optional `onHitWall()`.
@@ -213,7 +235,28 @@ on close, then GameScene resumes with the player at the door and level music.
   `GameState.hasCheckpoint() && GameState.vacationDays > 0`: vacationDays--, `revive()`, start GameScene
   `{ levelIndex, fromCheckpoint: true }`), "Ricomincia il livello" (`revive()`, checkpoint = null, start
   GameScene `{ levelIndex }`), "Menu".
-- VictoryScene: ending ("Sei diventato il nuovo CEO... o forse è ora di andare in ferie?"), stats, back to menu.
+- VictoryScene runs the final fork as a chain of steps (`next(fn)` fades, then calls `clear()`, then runs the next step):
+  1. celebration: confetti, a choir of colleagues and Mondo 5 enemies, plus the trip client from
+     `GameState.tripLeg`;
+  2. the CdA offer text;
+  3. the choice between two cards: "1. NUOVO CEO" (armchair, with mail piling up) and "2. SCAPPO AI CARAIBI" (island).
+     Keyboard left/right + Enter, or click;
+  4. one of two endings:
+     - CEO ending: you sit on the throne and become the Mega-Direttore ("AH AH AH!"). Then "24 DICEMBRE, UN ANNO
+       DOPO": a new hire, "PRIMO GIORNO DI LAVORO!", "IL CICLO CONTINUA.";
+     - island ending: resignation letter, plane, hammock and coconut. A bottle drifts in with a Teams message
+       "Solo una call di 5 minuti?", which gets thrown back ("...ANCHE NO.");
+  5. the stats panel (`FINALE: ...`), then back to the menu.
+
+  `choose()` calls `logFinalChoice('ceo' | 'caraibi')` (`src/systems/Survey.js`; see docs/SURVEY.md). It saves an
+  anonymous row to localStorage and, when `SURVEY_URL` is set, POSTs it to a Google Apps Script that appends it to a
+  Sheet. The version comes from `__APP_VERSION__`, defined in vite.config.js from package.json; `GameState.runStartedAt`
+  and `runFrom` record play time and the starting level. The island ending uses the beach sprite
+  `ensureBeachPlayer(scene, character)` from gfx/players.js: trunks or bikini, barefoot.
+
+  Timers MUST go through `this.after(ms, fn)` / `this.every(cfg)`, never `this.time.*` directly. `clear()` bumps
+  `this.gen`, and these helpers drop callbacks from an older gen. Reason: `clear()` runs inside the camera fade
+  callback, and timers removed there can still fire in the same frame on destroyed objects (`drawImage` of null).
 
 ## Mondo 4: La Trasferta (GAME) — `src/systems/Trip.js`
 One trip in stages, with a BUDGET bar carried across them in `GameState.trip`
@@ -266,3 +309,17 @@ One trip in stages, with a BUDGET bar carried across them in `GameState.trip`
   jellyfish, jerks back). Current zones (wind with `current: true`: bubbles, blue veil), Jellyfish enemy, SUSHI BAR
   food stand (`reef_bar`), quizzes 25-27 (`quizSetting: 'sea'`).
 - 4-4 Stazione: falling drops `DROPS` are lighter than the airport (no budget, interval 2000).
+
+## Mondo 5: La Cima della Piramide (GAME)
+A short climb of five floors. `LEVEL_META` entries have `climb: true`, and the menu shows only 5-1 (`menuName`).
+The levels are 5-1 Ufficio Legale → 5-2 Risorse Umane → 5-3 La Segreteria → 5-4 L'Attico (boss phases 1-2, `flee`)
+→ 5-5 Il Tetto (boss phase 3, then VictoryScene).
+- Level flags:
+  - `exec: true` loads `gfx/exec.js` textures (gold frames, sofas, plants, reception, elevator, slides, shares);
+  - `theme: 'exec'`, and the 5-5 roof theme in Backgrounds.js (sky, helipad);
+  - goal `{ type: 'elevator' }` (LevelBuilder exit sign "ASCENSORE") plus `elevator: true`. On completion GameScene
+    starts `ElevatorScene { levelIndex }`.
+- ElevatorScene plays the ride between floors: doors close, muzak (`Audio8bit` elevator track), the floor counter
+  climbs (one floor number per level), you glimpse one random line, DING, then `goNext`.
+- Trip.js `finishTrip()` stores `GameState.tripLeg` (desert / glacier / sea; reset by `newGame`) so that the trip
+  client attends the final celebration.

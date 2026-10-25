@@ -9,6 +9,10 @@ import level4_desert from './level4_desert.js';
 import level4_glacier from './level4_glacier.js';
 import level4_sea from './level4_sea.js';
 import level5_1 from './level5_1.js';
+import level5_2 from './level5_2.js';
+import level5_3 from './level5_3.js';
+import level5_4 from './level5_4.js';
+import level5_5 from './level5_5.js';
 
 // Static trip stages (meta.scene) have no level data: their scene draws everything.
 const stage = (extra = {}) => ({ ...extra });
@@ -18,7 +22,7 @@ export const LEVELS = [
   level1_1, level1_2, level2_1, level3_1,
   stage(), stage(), level4_airport, level4_station, stage({ journey: 'plane' }), stage({ journey: 'train' }),
   level4_desert, level4_glacier, level4_sea, stage(),
-  level5_1
+  level5_1, level5_2, level5_3, level5_4, level5_5
 ].map((lvl, i) => ({ ...LEVEL_META[i], ...lvl }));
 
 export default LEVELS;

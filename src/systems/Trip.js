@@ -82,6 +82,7 @@ export function finishTrip() {
   const left = GameState.budget();
   const euro = Math.round(left * BUDGET_TO_EURO);
   if (euro > 0) GameState.addBonus('euro', euro);
+  GameState.tripLeg = GameState.trip?.leg || null; // the client comes to the final celebration
   GameState.trip = null;
   return euro;
 }

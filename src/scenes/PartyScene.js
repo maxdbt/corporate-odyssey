@@ -50,7 +50,7 @@ const COLLEAGUES = [[TEX.PARTY1, TEX.PARTY2], [TEX.TALKER1, TEX.TALKER2], [TEX.C
 
 const OUTCOMES = {
   good: [
-    { id: 'raise', title: 'IL CEO TI HA NOTATO SULLA PISTA!', color: '#7CFC00', hp: 20, stress: -10, euro: 12,
+    { id: 'raise', title: 'IL MEGA-DIRETTORE TI HA NOTATO!', color: '#7CFC00', hp: 20, stress: -10, euro: 12,
       text: ['Ti da\' un aumento... di 12 € lordi.', 'Ma e\' pur sempre un aumento!'] },
     { id: 'trip', title: 'HAI VINTO LA GARA DI BALLO!', color: '#7CFC00', hp: 40, stress: -30,
       text: ['Premio: un viaggio premio...', '...a Coccia di Morto!'] },
@@ -61,7 +61,7 @@ const OUTCOMES = {
     { id: 'donkey', title: 'HAI BALLATO COME UN CIUCO DI ALICUDI', color: '#ff8080', stress: 15, time: -20,
       text: ['Per la vergogna ti ubriachi', 'e svieni al centro della pista.'] },
     { id: 'wine', title: 'INCIDENTE DIPLOMATICO!', color: '#ff8080', stress: 25,
-      text: ['Ballando scoordinato sbatti contro il CEO', 'e gli rovesci il vino rosso sul vestito.'] },
+      text: ['Ballando scoordinato sbatti contro il Mega-Direttore', 'e gli rovesci il vino rosso sul vestito.'] },
     { id: 'jingle', title: 'SEI ARRIVATO ULTIMO!', color: '#ff8080', stress: 20,
       text: ['Ti tocca cantare "Jingle Bells" davanti', 'al consiglio di amministrazione. Stonando.'] }
   ]
@@ -362,7 +362,7 @@ export default class PartyScene extends Phaser.Scene {
     const head = fy - p.displayHeight;
     const add = (o) => { L.add(o); return o; };
     const hop = () => this.tweens.add({ targets: p, y: fy - 26, duration: 160, yoyo: true, repeat: 2, ease: 'Quad.Out' });
-    // The CEO walks onto the floor and stops next to the player.
+    // The Mega-Direttore walks onto the floor and stops next to the player.
     const ceoIn = (x, dur = 600) => {
       const ceo = add(this.add.image(560, fy, 'ceo_standing').setOrigin(0.5, 1).setScale(1.4));
       this.tweens.add({ targets: ceo, x, duration: dur, ease: 'Quad.Out' });
@@ -418,7 +418,7 @@ export default class PartyScene extends Phaser.Scene {
       const z = add(this.add.text(px + 40, fy - 70, 'ZZZ...', tstyle(14, '#ffffff')).setOrigin(0.5).setAlpha(0));
       this.tweens.add({ targets: z, alpha: 1, y: fy - 90, delay: 900, duration: 600 });
     } else if (id === 'wine') {
-      // The CEO is on the floor with a glass; the player dances clumsily into him and spills the wine.
+      // The Mega-Direttore is on the floor with a glass; the player dances clumsily into him and spills the wine.
       const ceoX = px + 95;
       const ceo = ceoIn(ceoX, 500);
       const glass = add(this.add.text(560 - 30, fy - 70, 'Y', tstyle(20, '#ff4060')).setOrigin(0.5));
