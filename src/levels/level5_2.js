@@ -27,7 +27,7 @@ export default {
     ['minute', 2150, FLOOR, { range: 200 }],
     ['yesman', 2300, FLOOR]
   ],
-  hazards: [['stockcrash', { from: 400, to: 2350, first: 7000, interval: 16000 }]],
+  hazards: [['stockcrash', { from: 400, to: 2350, first: 7000, interval: 24000 }]],
   items: [
     ...row('euro', 180, 340, 4),
     ...row('euro', 420, 270, 3),

@@ -120,12 +120,12 @@ export class TeamsMeteor extends Hazard {
 }
 
 // Crollo in Borsa (Mondo 5): every `interval` ms an alarm, the floor turns black and white for `duration` ms
-// and share certificates rain around the player. Grayscale = camera ColorMatrix (WebGL) or a grey veil (canvas).
+// and a few share certificates fall around the player. Grayscale = camera ColorMatrix (WebGL) or a grey veil (canvas).
 export class StockCrash extends Hazard {
   constructor(scene, props = {}) {
     super(scene, { interval: 16000, ...props });
     ensureExecTextures(scene);
-    this.duration = props.duration ?? 5000;
+    this.duration = props.duration ?? 4000;
     this.next = scene.time.now + (props.first ?? 6000);
     this.until = 0;
     this.dropNext = 0;
@@ -139,7 +139,7 @@ export class StockCrash extends Hazard {
     if (now >= this.until) { this.end(); return; }
     const p = this.player;
     if (p && now >= this.dropNext) {
-      this.dropNext = now + 280;
+      this.dropNext = now + 700 + Math.random() * 150; // a few readable certificates, not a curtain
       this.drop(p);
     }
   }
@@ -155,7 +155,7 @@ export class StockCrash extends Hazard {
   drop(p) {
     const view = this.scene.cameras.main.worldView;
     const lead = p.body ? p.body.velocity.x * 0.5 : 0;
-    const x = p.x + lead + (Math.random() * 520 - 240);
+    const x = p.x + lead + (Math.random() * 340 - 170);
     this.track(new EnemyProjectile(this.scene, x, view.y - 20, 'stock_cert', {
       vy: 170 + Math.random() * 70, vx: Math.random() * 60 - 30, spin: Math.random() * 240 - 120,
       lifespan: 5000, damage: { hp: 4, stress: 7 }, flipWithDir: false

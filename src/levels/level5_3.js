@@ -27,7 +27,7 @@ export default {
     ['secretary', 1950, FLOOR, { badge: [1385, 80], gateDx: 34 }],
     ['strategist', 2500, FLOOR, { range: 40 }]
   ],
-  hazards: [['stockcrash', { from: 400, to: 1900, first: 8000, interval: 17000 }]],
+  hazards: [['stockcrash', { from: 400, to: 1900, first: 8000, interval: 25000 }]],
   items: [
     ...row('euro', 180, 340, 4),
     ...row('euro', 470, 270, 3),

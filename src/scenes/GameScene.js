@@ -17,6 +17,7 @@ import TripLevel from '../systems/TripLevel.js';
 import { beginStage, goNext, underwearPenalty, isGroundLeg } from '../systems/Trip.js';
 import { TRANSPORT } from '../data/trip.js';
 import PartyDoor from '../systems/PartyDoor.js';
+import RevenueDoor from '../systems/RevenueDoor.js';
 import { ensureExecTextures } from '../gfx/exec.js';
 
 const PIT_DAMAGE = 20;
@@ -108,6 +109,7 @@ export default class GameScene extends Phaser.Scene {
     if (level.planeTicket) this.createPlaneTicket(...level.planeTicket);
     if (level.mysteryDish) this.createMysteryDish(...level.mysteryDish);
     this.partyDoor = level.partyDoor ? new PartyDoor(this, ...level.partyDoor) : null;
+    this.revenueDoor = level.revenueDoor ? new RevenueDoor(this, ...level.revenueDoor) : null;
     this.forcedRunUntil = 0;
 
     // Camera
@@ -658,6 +660,7 @@ export default class GameScene extends Phaser.Scene {
     this.hazards.forEach((h) => h.update?.(time, delta));
     this.tripLevel?.update(time, delta);
     this.partyDoor?.update(input);
+    this.revenueDoor?.update(input);
     this.zones.update(time, delta, p);
     this.updateLadderDrop(input);
     if (this.autoscroll) this.updateAutoscroll(time, delta);
@@ -724,5 +727,6 @@ export default class GameScene extends Phaser.Scene {
     this.scene.stop('RentalScene');
     this.scene.stop('FoodScene');
     this.scene.stop('BeachScene');
+    this.scene.stop('RevenueScene');
   }
 }

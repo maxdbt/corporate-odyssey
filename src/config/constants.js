@@ -218,7 +218,7 @@ export const LEVEL_META = [
   { id: '4-9', world: 'Mondo 4: La Trasferta', name: 'Il Mare', trip: true },
   { id: '4-10', world: 'Mondo 4: La Trasferta', name: 'Il Cliente', scene: 'NegotiationScene', trip: true },
   // Mondo 5 is a climb, floor by floor (elevator between floors): the menu shows only the start of the climb.
-  { id: '5-1', world: 'Mondo 5: Il Piano degli Executive', name: 'Ufficio Legale', menuName: 'La Cima della Piramide', climb: true },
+  { id: '5-1', world: 'Mondo 5: Il Piano degli Executive', name: 'Finance', menuName: 'La Cima della Piramide', climb: true },
   { id: '5-2', world: 'Mondo 5: Il Piano degli Executive', name: 'Risorse Umane', climb: true },
   { id: '5-3', world: 'Mondo 5: Il Piano degli Executive', name: 'La Segreteria', climb: true },
   { id: '5-4', world: 'Mondo 5: Il Piano degli Executive', name: 'L\'Attico', climb: true },

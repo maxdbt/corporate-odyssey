@@ -33,7 +33,7 @@ unique key (`if (!scene.textures.exists(k)) { ...generateTexture(k) }`).
 ## Audio (PLAYER/UI) — `src/systems/Audio8bit.js`
 `export const audio` with: `sfx(name)` names: `jump, doublejump, coin, hurt, stomp, shoot, powerup, explosion,
 quiz, select, gameover, victory, freeze, sneeze, splash, alarm, bossHit, checkpoint, kick, hat, perfect, miss, cheer`;
-`music(track)` tracks: `menu, level, promotion, boss`; `stopMusic()`; `note(n, dur, type, vol)` (one note on the
+`music(track)` tracks: `menu, level, promotion, boss, elevator, island, space`; `stopMusic()`; `note(n, dur, type, vol)` (one note on the
 music bus, for scenes that sequence their own music, e.g. PartyScene with its accelerating tempo); `unlock()` (call on first user input). Pure WebAudio square/
 triangle oscillators, never throws if AudioContext is unavailable.
 
@@ -174,8 +174,8 @@ Hazard controller types:
   hit → `player.applyStatus('asleep', 3000)` + hp -5.
 - `stockcrash` Crollo in Borsa (Mondo 5) runs while player.x is in `[from, to]`:
   - an alarm sounds every `interval` ms (`first` sets the first delay);
-  - for `duration` ms (5000) the floor turns black and white (camera ColorMatrix on WebGL, a grey veil on canvas;
-    idempotent) and share certificates rain around the player.
+  - for `duration` ms (4000) the floor turns black and white (camera ColorMatrix on WebGL, a grey veil on canvas;
+    idempotent) and a few share certificates fall around the player (one every ~0.7-0.85 s, ±170 px).
 
   The offices stay luxurious: there is no stock-exchange scenery.
 
@@ -227,7 +227,21 @@ gag is played on the dance floor around the player (spotlit; the CEO walks onto 
 result panel sits above it. Effects are applied
 on close, then GameScene resumes with the player at the door and level music.
 
+5-1 CACCIA AI RICAVI: `level.revenueDoor: [x, y]` (y = top of the platform) → `RevenueDoor`
+(`src/systems/RevenueDoor.js`, texture `service_door` in `gfx/exec.js`): a service door "SOLO PERSONALE AUTORIZZATO"
+on the high platform. Same pattern as PartyDoor (UP edge, standing within 34 px, once per attempt; afterwards
+"CHIUSO PER TRIMESTRALE"). It opens the `RevenueScene` overlay: a 35 s spaceship flight (arrows / WASD, or follow
+the pointer while pressed) in a field of bubbles. R (ricavi) = +5 € and EBITDA +1; C (costi) = EBITDA -1. In the
+last 10 s some C bubbles (darker, angry) home in on the ship: "COSTI NASCOSTI", EBITDA -2. An EBITDA gauge (half
+dial, ±15 M€) sits in the HUD. Outcome by final EBITDA: ≥ 12 TRIMESTRALE RECORD (+50 €, +20 salute), > 0 UTILE IN
+CRESCITA (+20 €), 0 IN PAREGGIO, < 0 PROFIT WARNING (+20 stress). The euro from the R bubbles are always paid on
+close. Music: `space` track. The ship fires a laser (SPACE / C / Q held, one shot every 220 ms; touch: FUOCO button
+bottom-right, the other finger steers): a shot pops a C bubble (chasers take two hits) but also burns an R bubble,
+so that revenue is lost.
+
 ## Menu / GameOver / Victory (PLAYER/UI)
+- MenuScene on phones / tablets (Phaser `device.os`: android, iOS, iPad or not desktop; `?mobile=1` forces it) shows,
+  once per session, a notice that the game is optimised for PC, with "OK, CONTINUA"; a veil blocks the menu below.
 - MenuScene: title "CORPORATE ODYSSEY", character select (Jack / Wendy, big preview of the sprites, keyboard
   left/right + Enter/Space, or tap), controls help for PC and mobile, level selector (from `LEVEL_META`,
   default 1-1; chips wrap on more rows). Start: `GameState.newGame(char); startLevel(this, levelIndex)`.
@@ -312,7 +326,7 @@ One trip in stages, with a BUDGET bar carried across them in `GameState.trip`
 
 ## Mondo 5: La Cima della Piramide (GAME)
 A short climb of five floors. `LEVEL_META` entries have `climb: true`, and the menu shows only 5-1 (`menuName`).
-The levels are 5-1 Ufficio Legale → 5-2 Risorse Umane → 5-3 La Segreteria → 5-4 L'Attico (boss phases 1-2, `flee`)
+The levels are 5-1 Finance (backdoor to RevenueScene) → 5-2 Risorse Umane → 5-3 La Segreteria → 5-4 L'Attico (boss phases 1-2, `flee`)
 → 5-5 Il Tetto (boss phase 3, then VictoryScene).
 - Level flags:
   - `exec: true` loads `gfx/exec.js` textures (gold frames, sofas, plants, reception, elevator, slides, shares);

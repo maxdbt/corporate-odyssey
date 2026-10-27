@@ -157,6 +157,43 @@ function decor(scene) {
     p.r(4, 8, 1, 10, GOLD_D).r(27, 8, 1, 10, GOLD_D);
     p.r(0, 18, 9, 2, GOLD).r(1, 20, 7, 1, GOLD_D).r(23, 18, 9, 2, GOLD).r(24, 20, 7, 1, GOLD_D);
   });
+  // Finance: trading screens on a gold stand 56x76 (green chart going up, red one going down, ticker).
+  makeTex(scene, 'fin_screens', 56, 76, (p) => {
+    p.r(26, 44, 4, 28, GOLD_D).r(14, 70, 28, 6, GOLD).r(16, 70, 24, 2, 0xf0d070);
+    [[0, 0], [29, 0], [0, 23], [29, 23]].forEach(([x, y], i) => {
+      p.r(x, y, 27, 21, 0x222428).r(x + 2, y + 2, 23, 17, 0x081810);
+      const up = i % 3 !== 1;
+      const col = up ? 0x3ce05a : 0xff4040;
+      for (let k = 0; k < 6; k++) {
+        const h = up ? 3 + k * 2 : 13 - k * 2;
+        p.r(x + 4 + k * 3, y + 17 - h, 2, h, col);
+      }
+    });
+    p.r(0, 46, 56, 4, 0x101010).text('EBITDA', 4, 46, 0x3ce05a);
+  });
+  // Gold safe 40x48 with a dial and a handle.
+  makeTex(scene, 'fin_safe', 40, 48, (p) => {
+    p.r(0, 0, 40, 44, GOLD_D).r(2, 2, 36, 40, GOLD).r(5, 5, 30, 34, 0xc49a22).r(5, 5, 30, 2, 0xf0d070);
+    p.disc(17, 22, 7, 0x6a5010).disc(17, 22, 5, 0xe0e0e0).r(16, 17, 2, 4, K);
+    for (let a = 0; a < 8; a++) p.r(17 + Math.round(Math.cos(a * 0.785) * 6), 22 + Math.round(Math.sin(a * 0.785) * 6), 1, 1, K);
+    p.r(29, 16, 3, 12, 0x6a5010).r(27, 20, 7, 3, 0x8a7020);
+    p.r(3, 44, 6, 4, 0x3a2a10).r(31, 44, 6, 4, 0x3a2a10);
+  });
+  // Wall board with the quarterly results 44x34 (bars + "Q4").
+  makeTex(scene, 'fin_board', 44, 34, (p) => {
+    p.r(0, 0, 44, 34, GOLD).r(2, 2, 40, 30, 0xffffff).text('Q4', 4, 4, 0x1a2a5a).text('EBITDA', 16, 4, 0x2a7a3a);
+    [6, 10, 9, 15, 19].forEach((h, i) => p.r(6 + i * 7, 29 - h, 5, h, i === 4 ? 0x3ce05a : 0x2a6ad8));
+    p.r(4, 29, 36, 1, K);
+  });
+  // Service door 52x84 (the hidden way to "Caccia ai Ricavi"): grey steel, porthole with a starry glow.
+  makeTex(scene, 'service_door', 52, 84, (p) => {
+    p.r(0, 0, 52, 84, 0x3a3e46).r(4, 4, 44, 80, 0x6a707a).r(4, 4, 44, 2, 0x8a909a);
+    for (let y = 12; y < 84; y += 18) p.r(6, y, 40, 1, 0x585e68);
+    p.disc(26, 26, 9, 0x2a2e36).disc(26, 26, 7, 0x10103a);
+    [[23, 23], [29, 25], [25, 30], [28, 21]].forEach(([x, y]) => p.r(x, y, 1, 1, 0xffffff));
+    p.r(38, 46, 6, 3, 0xd4af37).r(40, 44, 2, 7, 0xd4af37);
+    for (let x = 4; x < 48; x += 8) p.r(x, 76, 4, 6, 0xffd800).r(x + 4, 76, 4, 6, K);
+  });
   // HR posters 32x40 / 40x40.
   makeTex(scene, 'poster_sorridi', 32, 40, (p) => {
     p.r(0, 0, 32, 40, GOLD).r(2, 2, 28, 36, 0xffffff).disc(16, 16, 9, 0xffd800);

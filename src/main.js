@@ -21,6 +21,7 @@ import GameOverScene from './scenes/GameOverScene.js';
 import VictoryScene from './scenes/VictoryScene.js';
 import PartyScene from './scenes/PartyScene.js';
 import ElevatorScene from './scenes/ElevatorScene.js';
+import RevenueScene from './scenes/RevenueScene.js';
 
 // Render every Text at the canvas scale so it stays crisp under the camera zoom.
 const addText = Phaser.GameObjects.GameObjectFactory.prototype.text;
@@ -45,7 +46,7 @@ const config = {
     autoCenter: Phaser.Scale.CENTER_BOTH
   },
   input: { activePointers: 4 },
-  scene: [BootScene, MenuScene, GameScene, UIScene, QuizScene, BriefScene, PauseScene, QuitScene, BeachScene, ToiletScene, RentalScene, FoodScene, DestinationScene, PackingScene, TransportScene, JourneyScene, NegotiationScene, PartyScene, ElevatorScene, GameOverScene, VictoryScene]
+  scene: [BootScene, MenuScene, GameScene, UIScene, QuizScene, BriefScene, PauseScene, QuitScene, BeachScene, ToiletScene, RentalScene, FoodScene, DestinationScene, PackingScene, TransportScene, JourneyScene, NegotiationScene, PartyScene, RevenueScene, ElevatorScene, GameOverScene, VictoryScene]
 };
 
 window.__game = new Phaser.Game(config);

@@ -3,7 +3,8 @@ import { FLOOR, row, arc } from './helpers.js';
 
 const GLASS = 366; // glass desk (20px) top when standing on the floor
 
-// 5-1 Ufficio Legale: first executive floor. Strategy consultants with slides, a Yes-Man, stock market crashes.
+// 5-1 Finance: first executive floor. Strategy consultants with slides, a Yes-Man, stock market crashes.
+// A service door on the high platform leads to the "Caccia ai Ricavi" spaceship mini-game (RevenueScene).
 export default {
   id: '5-1',
   theme: 'exec',
@@ -27,7 +28,7 @@ export default {
     ['yesman', 1700, FLOOR],
     ['strategist', 2300, FLOOR, { range: 40 }]
   ],
-  hazards: [['stockcrash', { from: 500, to: 2350, first: 5000, interval: 15000 }]],
+  hazards: [['stockcrash', { from: 500, to: 2350, first: 6000, interval: 23000 }]],
   items: [
     ...row('euro', 200, 340, 4),
     ['laptop', 420, 330],
@@ -37,16 +38,17 @@ export default {
     ...row('euro', 1160, 210, 5),
     ['coffee', 1290, 210],
     ...row('euro', 1570, 270, 3),
-    ...row('ticket', 1840, 230, 3),
+    ...row('ticket', 1836, 230, 2),
     ['raise', 2160, 270],
     ...row('euro', 2220, 340, 5)
   ],
   terminals: [[1380, FLOOR, 1]],
   decor: [
-    ['law_shelf', 160, FLOOR], ['justice_scale', 300, FLOOR], [TEX.GOLD_FRAME, 620, 300],
-    ['law_shelf', 820, FLOOR], [TEX.LUX_PLANT, 1360, FLOOR], ['law_shelf', 1640, FLOOR],
-    ['justice_scale', 1960, FLOOR], [TEX.GOLD_FRAME, 2260, 290], ['law_shelf', 2380, FLOOR]
+    ['fin_screens', 160, FLOOR], ['fin_safe', 300, FLOOR], ['fin_board', 620, 290],
+    ['fin_screens', 820, FLOOR], [TEX.LUX_PLANT, 1360, FLOOR], ['fin_screens', 1640, FLOOR],
+    ['fin_safe', 1990, FLOOR], [TEX.GOLD_FRAME, 2260, 290], ['fin_screens', 2380, FLOOR]
   ],
+  revenueDoor: [1912, 260],
   goal: { type: 'elevator', x: 2490, y: FLOOR },
   elevator: true
 };

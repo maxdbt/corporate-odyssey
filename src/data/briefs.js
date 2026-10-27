@@ -96,11 +96,12 @@ export const BRIEFS = {
     ]
   },
   '5-1': {
-    where: 'Piano 40, Ufficio Legale. Inizia la scalata verso la cima.',
+    where: 'Piano 40, Finance. Inizia la scalata verso la cima.',
     goal: 'Attraversa il piano e prendi l\'ascensore.',
     tips: [
       'I Consulenti Strategici lanciano slide di PowerPoint: schivale!',
-      'CROLLO IN BORSA: piovono azioni e tutto diventa grigio per qualche secondo.',
+      'CROLLO IN BORSA: cadono azioni e tutto diventa grigio per qualche secondo.',
+      'Una porta di servizio, in alto, nasconde la CACCIA AI RICAVI...',
       'Raccogli il laptop: e-mail, Teams, caffè, orologio, WWW.'
     ]
   },

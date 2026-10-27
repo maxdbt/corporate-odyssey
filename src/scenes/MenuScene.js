@@ -12,6 +12,9 @@ const style = (size, color = '#ffffff', extra = {}) => ({
 const CHAR_LABEL = { man: 'JACK', woman: 'WENDY' };
 const CHAR_DESC = { man: 'Digital Specialist', woman: 'Digital Manager' };
 
+// The game is not optimised for phones yet: warn once per session (?mobile=1 forces it, for testing).
+let mobileNoticeShown = false;
+
 export default class MenuScene extends Phaser.Scene {
   constructor() {
     super('MenuScene');
@@ -99,6 +102,10 @@ export default class MenuScene extends Phaser.Scene {
     if (kb) {
       kb.on('keydown', (ev) => {
         audio.unlock();
+        if (this.notice) {
+          if (ev.key === 'Enter' || ev.key === ' ') this._closeMobileNotice();
+          return;
+        }
         audio.music('menu');
         const k = ev.key.toUpperCase();
         if (k === 'ARROWLEFT' || k === 'A') { this.selected = 0; this._refresh(); audio.sfx('select'); }
@@ -124,6 +131,35 @@ export default class MenuScene extends Phaser.Scene {
     this.starting = false;
     this._buildScenarioChips();
     this._refresh();
+    this._mobileNotice();
+  }
+
+  _mobileNotice() {
+    const os = this.sys.game.device.os;
+    const forced = /[?&]mobile=1/.test(window.location.search);
+    if (mobileNoticeShown || !(forced || os.android || os.iOS || os.iPad || !os.desktop)) return;
+    mobileNoticeShown = true;
+    // A full-screen veil that swallows the clicks meant for the menu below.
+    const veil = this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.75).setOrigin(0).setDepth(100).setInteractive();
+    const panel = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 520, 250, 0x10204a, 0.97).setStrokeStyle(3, 0xffd800)
+      .setDepth(101);
+    const title = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 90, 'ATTENZIONE', style(20, '#ffd800')).setOrigin(0.5).setDepth(102);
+    const body = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20,
+      'Questa versione è ottimizzata per PC\n(tastiera).\n\nDa smartphone e tablet il gioco funziona\nma è ancora molto difficile da controllare:\nstiamo lavorando alla versione mobile.',
+      style(12, '#ffffff', { align: 'center', strokeThickness: 3, lineSpacing: 4 })).setOrigin(0.5).setDepth(102);
+    const ok = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 85, '[ OK, CONTINUA ]', style(18, '#3ce05a', { padding: { x: 20, y: 8 } }))
+      .setOrigin(0.5).setDepth(102).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { audio.unlock(); this._closeMobileNotice(); });
+    this.tweens.add({ targets: ok, scale: 1.08, duration: 500, yoyo: true, repeat: -1 });
+    this.notice = [veil, panel, title, body, ok];
+  }
+
+  _closeMobileNotice() {
+    if (!this.notice) return;
+    audio.sfx('select');
+    this.notice.forEach((o) => o.destroy());
+    // Let this tap finish before the menu below can react to clicks.
+    this.time.delayedCall(0, () => { this.notice = null; });
   }
 
   _drawBackground() {
