@@ -12,12 +12,7 @@ const TOP = 70;           // play field below the HUD
 const BOTTOM = GAME_HEIGHT - 16;
 const SPEED = 270;        // ship speed px/s
 const EURO_PER_R = 5;
-const SHOT_SPEED = 560;
-const SHOT_COOLDOWN = 220; // ms between shots while fire is held
 const GAUGE = 15;         // EBITDA shown on the gauge from -GAUGE to +GAUGE M€
-const FIRE_X = GAME_WIDTH - 60; // touch FUOCO button
-const FIRE_Y = GAME_HEIGHT - 60;
-const onFire = (ptr) => Phaser.Math.Distance.Between(ptr.worldX, ptr.worldY, FIRE_X, FIRE_Y) < 50;
 const COSTS = ['CONSULENZE!', 'AFFITTO!', 'LICENZE!', 'TRASFERTE!', 'CATERING!', 'BONUS MANAGER!', 'RIORGANIZZAZIONE!'];
 const REVENUES = ['VENDITE!', 'NUOVO CLIENTE!', 'RINNOVO!', 'UPSELLING!'];
 
@@ -52,10 +47,6 @@ function ensureRevenueTextures(scene) {
   makeTex(scene, 'rev_flame', 16, 10, (p) => {
     p.r(6, 1, 10, 8, 0xff8020).r(2, 3, 14, 4, 0xffd23f).r(10, 4, 6, 2, 0xffffff);
   });
-  // Laser shot 14x4.
-  makeTex(scene, 'rev_shot', 14, 4, (p) => {
-    p.r(0, 1, 14, 2, 0xffd800).r(4, 0, 10, 4, 0xfff3a0, 0.6).r(8, 1, 6, 2, 0xffffff);
-  });
 }
 
 // "Caccia ai Ricavi" (5-1 Finance backdoor): a spaceship in a field of bubbles. R = ricavi (euro, EBITDA up),
@@ -74,9 +65,6 @@ export default class RevenueScene extends Phaser.Scene {
     this.nC = 0;
     this.nextSpawn = 0;
     this.bubbles = [];
-    this.shots = [];
-    this.nextShot = 0;
-    this.nCut = 0;
     this.leaving = false;
     this.hitUntil = 0;
   }
@@ -97,7 +85,7 @@ export default class RevenueScene extends Phaser.Scene {
 
     this.drawHud();
     this.banner = this.add.text(GAME_WIDTH / 2, 210,
-      'CACCIA AI RICAVI!\nPRENDI LE BOLLE R (RICAVI), EVITA LE C (COSTI)\nSPAZIO / C PER SPARARE AI COSTI (NON AI RICAVI!)\nL\'EBITDA DECIDE IL TUO BONUS',
+      'CACCIA AI RICAVI!\nPRENDI LE BOLLE R (RICAVI), EVITA LE C (COSTI)\nL\'EBITDA DECIDE IL TUO BONUS',
       tstyle(15, '#ffffff', { align: 'center', strokeThickness: 5, lineSpacing: 6 })).setOrigin(0.5).setDepth(40);
     this.time.delayedCall(2800, () => {
       this.banner.setText('DECOLLO!').setFontSize(28);
@@ -106,14 +94,7 @@ export default class RevenueScene extends Phaser.Scene {
     });
 
     const kb = this.input.keyboard;
-    // Touch: a FUOCO button in the bottom-right corner (the other finger steers).
-    this.touch = this.sys.game.device.input.touch;
-    if (this.touch) {
-      this.input.addPointer(1);
-      this.add.circle(FIRE_X, FIRE_Y, 34, 0xd02020, 0.45).setStrokeStyle(3, 0xffd800).setDepth(35);
-      this.add.text(FIRE_X, FIRE_Y, 'FUOCO', tstyle(11, '#ffffff')).setOrigin(0.5).setDepth(36);
-    }
-    this.keys = kb ? kb.addKeys({ up: 'UP', down: 'DOWN', left: 'LEFT', right: 'RIGHT', w: 'W', s: 'S', a: 'A', d: 'D', space: 'SPACE', c: 'C', q: 'Q' }, true, false) : null;
+    this.keys = kb ? kb.addKeys({ up: 'UP', down: 'DOWN', left: 'LEFT', right: 'RIGHT', w: 'W', s: 'S', a: 'A', d: 'D' }, true, false) : null;
   }
 
   // ---------------------------------------------------------------- scenery & HUD
@@ -209,10 +190,8 @@ export default class RevenueScene extends Phaser.Scene {
       if (k.up.isDown || k.w.isDown) dy -= 1;
       if (k.down.isDown || k.s.isDown) dy += 1;
     }
-    const pointers = [this.input.mousePointer, this.input.pointer1, this.input.pointer2].filter((q) => q && q.isDown);
-    const fireTouch = this.touch && pointers.some(onFire);
-    const ptr = pointers.find((q) => !this.touch || !onFire(q));
-    if (ptr) {
+    const ptr = this.input.activePointer;
+    if (ptr.isDown) {
       const tx = ptr.worldX - this.ship.x;
       const ty = ptr.worldY - this.ship.y;
       const d = Math.hypot(tx, ty);
@@ -224,9 +203,6 @@ export default class RevenueScene extends Phaser.Scene {
     this.ship.angle = Phaser.Math.Linear(this.ship.angle, dy * 10, 0.2);
     this.ship.setAlpha(time < this.hitUntil && Math.floor(time / 70) % 2 ? 0.5 : 1);
 
-    const fire = fireTouch || (k && (k.space.isDown || k.c.isDown || k.q.isDown));
-    if (fire && time > this.nextShot) this.shoot(time);
-
     if (time > this.nextSpawn) {
       const p = Phaser.Math.Clamp(this.elapsed / MAX_TIME, 0, 1);
       this.spawnBubble();
@@ -234,14 +210,6 @@ export default class RevenueScene extends Phaser.Scene {
       this.nextSpawn = time + Phaser.Math.Linear(560, 330, p);
     }
 
-    this.shots = this.shots.filter((sh) => {
-      sh.x += SHOT_SPEED * dt;
-      const hit = this.bubbles.find((b) => b.active && Math.abs(b.x - sh.x) < 20 && Math.abs(b.y - sh.y) < 18);
-      if (hit) { this.shotHit(hit); sh.destroy(); return false; }
-      if (sh.x > GAME_WIDTH + 20) { sh.destroy(); return false; }
-      return true;
-    });
-    this.bubbles = this.bubbles.filter((b) => b.active);
     this.bubbles = this.bubbles.filter((b) => {
       b.phase += dt * 3;
       b.x += b.vx * dt;
@@ -260,30 +228,6 @@ export default class RevenueScene extends Phaser.Scene {
 
     this.refreshHud();
     if (this.elapsed >= MAX_TIME) this.endFlight();
-  }
-
-  shoot(time) {
-    this.nextShot = time + SHOT_COOLDOWN;
-    this.shots.push(this.add.image(this.ship.x + 34, this.ship.y + 6, 'rev_shot').setDepth(9));
-    audio.sfx('shoot');
-  }
-
-  // A shot pops a C bubble ("hidden costs" take two hits) but also burns an R bubble: that revenue is lost.
-  shotHit(b) {
-    if (b.chaser && !b.hit) {
-      b.hit = true;
-      b.setTint(0xff9090);
-      return;
-    }
-    const isR = b.kind === 'R';
-    if (!isR) this.nCut++;
-    const pop = this.add.circle(b.x, b.y, 16, isR ? 0x3ce05a : 0xffd800, 0.6).setDepth(9);
-    this.tweens.add({ targets: pop, scale: 2, alpha: 0, duration: 250, onComplete: () => pop.destroy() });
-    const t = this.add.text(b.x, b.y - 22, isR ? 'RICAVO BRUCIATO!' : 'TAGLIO COSTI!', tstyle(10, isR ? '#ff8080' : '#ffd800'))
-      .setOrigin(0.5).setDepth(25);
-    this.tweens.add({ targets: t, y: t.y - 26, alpha: 0, duration: 800, onComplete: () => t.destroy() });
-    audio.sfx(isR ? 'miss' : 'stomp');
-    b.destroy();
   }
 
   collect(b, time) {
@@ -316,8 +260,6 @@ export default class RevenueScene extends Phaser.Scene {
     this.phase = 'result';
     this.bubbles.forEach((b) => b.destroy());
     this.bubbles = [];
-    this.shots.forEach((sh) => sh.destroy());
-    this.shots = [];
     this.ship.setAlpha(1);
     this.refreshHud();
     const o = outcome(this.ebitda);
@@ -326,7 +268,6 @@ export default class RevenueScene extends Phaser.Scene {
     const e = this.ebitda;
     const lines = [...o.text, '',
       `RICAVI: ${this.nR} bolle (+${this.revenue} €)   COSTI: ${this.nC} bolle`,
-      `COSTI TAGLIATI A COLPI DI LASER: ${this.nCut}`,
       `EBITDA FINALE: ${e > 0 ? '+' : ''}${e} M€`, ...effectLines(o)];
     if (o.euro) lines.push(`BONUS +${o.euro} €`);
     resultPanel(this, { title: o.title, color: o.color, lines, y: 250, onClose: () => this.finish(), hint: 'INVIO / TOCCA per tornare in ufficio' });

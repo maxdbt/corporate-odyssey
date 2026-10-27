@@ -235,9 +235,7 @@ the pointer while pressed) in a field of bubbles. R (ricavi) = +5 € and EBITDA
 last 10 s some C bubbles (darker, angry) home in on the ship: "COSTI NASCOSTI", EBITDA -2. An EBITDA gauge (half
 dial, ±15 M€) sits in the HUD. Outcome by final EBITDA: ≥ 12 TRIMESTRALE RECORD (+50 €, +20 salute), > 0 UTILE IN
 CRESCITA (+20 €), 0 IN PAREGGIO, < 0 PROFIT WARNING (+20 stress). The euro from the R bubbles are always paid on
-close. Music: `space` track. The ship fires a laser (SPACE / C / Q held, one shot every 220 ms; touch: FUOCO button
-bottom-right, the other finger steers): a shot pops a C bubble (chasers take two hits) but also burns an R bubble,
-so that revenue is lost.
+close. Music: `space` track.
 
 ## Menu / GameOver / Victory (PLAYER/UI)
 - MenuScene on phones / tablets (Phaser `device.os`: android, iOS, iPad or not desktop; `?mobile=1` forces it) shows,
