@@ -103,8 +103,9 @@ export default class RevenueScene extends Phaser.Scene {
     const g = this.add.graphics();
     g.fillGradientStyle(0x0a0a2a, 0x0a0a2a, 0x2a0a4a, 0x2a0a4a, 1).fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     // A far-away golden skyscraper planet.
-    g.fillStyle(0x3a2a6a).fillCircle(640, 330, 90).fillStyle(0x4a3a8a).fillCircle(620, 310, 70);
-    g.lineStyle(3, 0xd4af37, 0.6).strokeEllipse(640, 330, 260, 40);
+    const px = GAME_WIDTH - 160;
+    g.fillStyle(0x3a2a6a).fillCircle(px, 330, 90).fillStyle(0x4a3a8a).fillCircle(px - 20, 310, 70);
+    g.lineStyle(3, 0xd4af37, 0.6).strokeEllipse(px, 330, 260, 40);
     // Parallax stars: two layers moving left.
     this.stars = [];
     for (let i = 0; i < 70; i++) {
@@ -123,7 +124,7 @@ export default class RevenueScene extends Phaser.Scene {
     this.revText = this.add.text(250, 14, '', tstyle(11, '#9dffb0')).setDepth(21);
     this.countText = this.add.text(250, 36, '', tstyle(10, '#ffffff')).setDepth(21);
     // EBITDA gauge: half dial from red (left) to green (right), needle from the centre.
-    this.gx = 690;
+    this.gx = GAME_WIDTH - 110;
     this.gy = 58;
     const g = this.add.graphics().setDepth(21);
     const cols = [0xd02020, 0xff6a20, 0xffd800, 0x9de040, 0x3ce05a];

@@ -4,7 +4,7 @@ import { audio } from '../systems/Audio8bit.js';
 import { setupStaticCamera } from '../utils/view.js';
 import { tstyle } from '../ui/TripUI.js';
 
-const CARD_X = [150, 400, 650];
+const CARD_X = [GAME_WIDTH / 2 - 250, GAME_WIDTH / 2, GAME_WIDTH / 2 + 250];
 const CARD_Y = 232;
 const CARD_W = 220;
 const CARD_H = 250;

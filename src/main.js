@@ -22,6 +22,8 @@ import VictoryScene from './scenes/VictoryScene.js';
 import PartyScene from './scenes/PartyScene.js';
 import ElevatorScene from './scenes/ElevatorScene.js';
 import RevenueScene from './scenes/RevenueScene.js';
+import './systems/Screen.js';
+import { startPwa } from './systems/Pwa.js';
 
 // Render every Text at the canvas scale so it stays crisp under the camera zoom.
 const addText = Phaser.GameObjects.GameObjectFactory.prototype.text;
@@ -50,3 +52,4 @@ const config = {
 };
 
 window.__game = new Phaser.Game(config);
+window.__game.events.once(Phaser.Core.Events.READY, () => setTimeout(startPwa, 2000));

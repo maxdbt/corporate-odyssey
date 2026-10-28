@@ -1,7 +1,18 @@
 // Shared constants: every module must use these keys instead of hard-coded strings.
 
-export const GAME_WIDTH = 800;
 export const GAME_HEIGHT = 450;
+// The logical height is fixed; the width follows the screen shape (800 = 16:9 up to 1000 ≈ 20:9) so wide
+// windows and phones have no black bands. Touch devices use the landscape shape even if they start in portrait.
+// Fixed at load: resizing later letterboxes until the next reload. Scenes are designed for >= 800.
+// Phones and tablets (finger as the main pointer): landscape shape, closer game camera, bigger HUD.
+export const IS_TOUCH = typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+export const GAME_WIDTH = (() => {
+  if (typeof window === 'undefined') return 800;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const ratio = IS_TOUCH ? Math.max(w, h) / Math.min(w, h) : w / h;
+  return Math.round(Math.min(1000, Math.max(800, GAME_HEIGHT * ratio)) / 2) * 2;
+})();
 export const TILE = 32;
 export const GRAVITY = 900;
 
@@ -12,6 +23,10 @@ export const RENDER_SCALE = (() => {
   const fit = Math.min(window.innerWidth / GAME_WIDTH, window.innerHeight / GAME_HEIGHT) * (window.devicePixelRatio || 1);
   return Math.max(2, Math.min(3, Math.round(fit)));
 })();
+
+// Extra zoom of the platform camera on touch screens: the view shows less level (it then follows the player
+// vertically too) so the characters are bigger on a phone. Boss arenas zoom back out to 1.
+export const TOUCH_ZOOM = IS_TOUCH ? 1.2 : 1;
 
 export const FONT = 'monospace';
 

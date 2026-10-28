@@ -15,16 +15,19 @@ const GOOD_S = 0.15;
 const GOOD_PRECISION = 0.6;  // >= 60% precision: prize, otherwise a disaster
 const HIT_Y = 390;
 const SPAWN_Y = 40;
+// Designed for 800 wide: the lane panel sticks to the right edge, the dance floor centres in what is left.
+const DX = GAME_WIDTH - 800;
+const PANEL_X = 650 + DX;
 const LANES = [
-  { dir: 'left', x: 560, angle: -90, color: 0xff5ab4 },
-  { dir: 'down', x: 620, angle: 180, color: 0x5ab4ff },
-  { dir: 'up', x: 680, angle: 0, color: 0x3cf0a0 },
-  { dir: 'right', x: 740, angle: 90, color: 0xffd23f }
+  { dir: 'left', x: 560 + DX, angle: -90, color: 0xff5ab4 },
+  { dir: 'down', x: 620 + DX, angle: 180, color: 0x5ab4ff },
+  { dir: 'up', x: 680 + DX, angle: 0, color: 0x3cf0a0 },
+  { dir: 'right', x: 740 + DX, angle: 90, color: 0xffd23f }
 ];
 const KEYS = {
   ArrowLeft: 0, a: 0, A: 0, ArrowDown: 1, s: 1, S: 1, ArrowUp: 2, w: 2, W: 2, ArrowRight: 3, d: 3, D: 3
 };
-const PLAYER_X = 380;
+const PLAYER_X = 380 + DX / 2;
 const PLAYER_Y = 432;
 
 // Jingle Bells, one entry per beat-long slot: [note, beats] (16 bars, loops).
@@ -146,7 +149,7 @@ export default class PartyScene extends Phaser.Scene {
     this.ball = this.add.image(PLAYER_X - 60, 62, 'mirror_ball').setScale(1.4);
     // Colleagues dancing on the back row
     this.crowd = COLLEAGUES.map(([a, b], i) => {
-      const x = 120 + i * 90 + (i > 2 ? 40 : 0);
+      const x = 120 + DX / 2 + i * 90 + (i > 2 ? 40 : 0);
       const c = this.add.image(x, 336, a).setOrigin(0.5, 1).setScale(2);
       c.frames2 = [a, b];
       if (i === 4) c.setTint(0xffc0e0);
@@ -161,7 +164,7 @@ export default class PartyScene extends Phaser.Scene {
   paintFloor(beat) {
     const g = this.floor.clear();
     const cols = [0xff5ab4, 0x5ab4ff, 0x3cf0a0, 0xffd23f, 0xb45aff];
-    for (let r = 0; r < 3; r++) for (let x = 0; x < 520; x += 52) {
+    for (let r = 0; r < 3; r++) for (let x = 0; x < 520 + DX; x += 52) {
       const i = x / 52 + r * 10;
       const lit = beat >= 0 && (i * 7 + beat * 3) % 4 === 0;
       g.fillStyle(lit ? cols[(i + beat) % 5] : ((i + r) % 2 ? 0x2a1a3a : 0x34224a)).fillRect(x, 330 + r * 40, 51, 39);
@@ -169,18 +172,18 @@ export default class PartyScene extends Phaser.Scene {
   }
 
   drawLanes() {
-    this.add.rectangle(650, GAME_HEIGHT / 2 + 10, 250, GAME_HEIGHT - 20, 0x000000, 0.55).setStrokeStyle(2, 0xff5ab4);
-    this.add.rectangle(650, HIT_Y, 244, 2, 0xffffff, 0.35);
+    this.add.rectangle(PANEL_X, GAME_HEIGHT / 2 + 10, 250, GAME_HEIGHT - 20, 0x000000, 0.55).setStrokeStyle(2, 0xff5ab4);
+    this.add.rectangle(PANEL_X, HIT_Y, 244, 2, 0xffffff, 0.35);
     this.targets = LANES.map((l) => this.add.image(l.x, HIT_Y, 'dance_target').setAngle(l.angle).setScale(1.5).setTint(l.color).setAlpha(0.7));
-    this.judgeText = this.add.text(650, 300, '', tstyle(18, '#ffffff', { strokeThickness: 6 })).setOrigin(0.5).setDepth(30);
+    this.judgeText = this.add.text(PANEL_X, 300, '', tstyle(18, '#ffffff', { strokeThickness: 6 })).setOrigin(0.5).setDepth(30);
   }
 
   drawHud() {
     this.add.rectangle(100, 98, 192, 118, 0x000000, 0.6).setStrokeStyle(2, 0xffd800);
     this.add.text(100, 47, 'CLASSIFICA', tstyle(9, '#ffd800')).setOrigin(0.5);
     this.boardText = this.add.text(10, 58, '', tstyle(8, '#ffffff', { strokeThickness: 2, lineSpacing: 3 }));
-    this.scoreText = this.add.text(650, 18, '', tstyle(12, '#ffffff')).setOrigin(0.5).setDepth(30);
-    this.comboText = this.add.text(650, 36, '', tstyle(10, '#3cf0a0')).setOrigin(0.5).setDepth(30);
+    this.scoreText = this.add.text(PANEL_X, 18, '', tstyle(12, '#ffffff')).setOrigin(0.5).setDepth(30);
+    this.comboText = this.add.text(PANEL_X, 36, '', tstyle(10, '#3cf0a0')).setOrigin(0.5).setDepth(30);
     this.timeText = this.add.text(PLAYER_X - 60, 100, '', tstyle(10, '#9be7ff')).setOrigin(0.5);
   }
 

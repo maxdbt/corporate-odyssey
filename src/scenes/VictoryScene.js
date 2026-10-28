@@ -17,7 +17,9 @@ const CHOICE_TEXT = 'Hai scalato tutta la gerarchia aziendale superando prove di
   'Il CdA vuole nominarti come nuovo CEO oppure puoi licenziarti e iniziare una nuova vita ai Caraibi.\n\nDevi scegliere.';
 const CLIENT_TEX = { desert: 'client_pharaoh', glacier: 'client_penguin', sea: 'client_mermaid' };
 const CHEERS = ['BRAVO!', 'GRANDE!', 'SEI UN MITO!', 'EVVIVA!', 'HIP HIP URRA\'!', 'CHAPEAU!', 'TOP!'];
-const CARD_X = [220, 580];
+// Scenes are composed for 800 wide: CX centres them on wider screens.
+const CX = (GAME_WIDTH - 800) / 2;
+const CARD_X = [220 + CX, 580 + CX];
 const CARD_Y = 240;
 const PIC_W = 300;
 const PIC_H = 170;
@@ -184,7 +186,7 @@ export default class VictoryScene extends Phaser.Scene {
     const crowd = [TEX.TALKER1, 'yesman1', 'secretary1', TEX.PARTY1, CLIENT_TEX[GameState.tripLeg] || TEX.COOK1,
       'strategist1', TEX.GUARDIAN1, 'elf_bouncer']
       .filter((k) => this.textures.exists(k));
-    const xs = [70, 150, 230, 310, 490, 570, 650, 730];
+    const xs = [70, 150, 230, 310, 490, 570, 650, 730].map((x) => x + CX);
     crowd.forEach((k, i) => {
       const s = this.add2(this.add.image(xs[i], 330, k)).setOrigin(0.5, 1).setScale(2).setFlipX(xs[i] > GAME_WIDTH / 2);
       this.tweens.add({ targets: s, y: 312, duration: 260, yoyo: true, repeat: -1, delay: Math.random() * 400, ease: 'Quad.Out' });
@@ -356,16 +358,16 @@ export default class VictoryScene extends Phaser.Scene {
     this.clear();
     audio.music('boss');
     this.goldOffice();
-    const throne = this.add2(this.add.image(560, 330, 'throne_empty')).setOrigin(0.5, 1).setScale(1.2);
+    const throne = this.add2(this.add.image(560 + CX, 330, 'throne_empty')).setOrigin(0.5, 1).setScale(1.2);
     // The board applauds on the left.
     [TEX.GUARDIAN1, 'strategist1', 'yesman1'].forEach((k, i) => {
-      const s = this.add2(this.add.image(60 + i * 50, 330, k)).setOrigin(0.5, 1).setScale(2);
+      const s = this.add2(this.add.image(60 + CX + i * 50, 330, k)).setOrigin(0.5, 1).setScale(2);
       this.tweens.add({ targets: s, y: 324, duration: 180, yoyo: true, repeat: -1, delay: i * 90 });
     });
-    const hero = this.playerSprite(220, 330, 3);
+    const hero = this.playerSprite(220 + CX, 330, 3);
     this.walk(hero);
     const title = this.add2(this.add.text(GAME_WIDTH / 2, 60, 'IL CDA TI NOMINA NUOVO CEO', style(20, '#ffd800', { strokeThickness: 5 }))).setOrigin(0.5);
-    this.tweens.add({ targets: hero, x: 520, duration: 2200, onComplete: () => {
+    this.tweens.add({ targets: hero, x: 520 + CX, duration: 2200, onComplete: () => {
       this.stopWalk(hero);
       // Sits on the throne... and turns into the Mega-Direttore.
       this.tweens.add({ targets: hero, alpha: 0, duration: 300 });
@@ -374,8 +376,8 @@ export default class VictoryScene extends Phaser.Scene {
         audio.sfx('explosion');
         throne.setTexture(TEX.BOSS_CEO).setScale(1.4);
         title.setText('SEI DIVENTATO... IL NUOVO MEGA-DIRETTORE');
-        this.add2(this.add.text(560, 180, 'AH AH AH!', style(14, '#ff6060'))).setOrigin(0.5);
-        this.tweens.add({ targets: throne, x: 540, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+        this.add2(this.add.text(560 + CX, 180, 'AH AH AH!', style(14, '#ff6060'))).setOrigin(0.5);
+        this.tweens.add({ targets: throne, x: 540 + CX, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
       });
       this.after(3600, () => this.fadeTo(() => this.newHire(), 500));
     } });
@@ -394,15 +396,15 @@ export default class VictoryScene extends Phaser.Scene {
       for (let i = 0; i < 8; i++) g.fillRect(x + 8 + i * 14, 160 + (i % 3) * 20, 3, 3);
     }
     g.fillStyle(0x6a6a72).fillRect(0, 350, GAME_WIDTH, GAME_HEIGHT - 350);
-    [180, 420].forEach((x) => this.add2(this.add.image(x, 350, TEX.DESK)).setOrigin(0.5, 1).setScale(1.5));
-    this.add2(this.add.image(660, 350, TEX.XMAS_TREE)).setOrigin(0.5, 1).setScale(1.6);
+    [180, 420].forEach((x) => this.add2(this.add.image(x + CX, 350, TEX.DESK)).setOrigin(0.5, 1).setScale(1.5));
+    this.add2(this.add.image(660 + CX, 350, TEX.XMAS_TREE)).setOrigin(0.5, 1).setScale(1.6);
     this.add2(this.add.text(GAME_WIDTH / 2, 50, '24 DICEMBRE, UN ANNO DOPO', style(18, '#ffffff', { strokeThickness: 5 }))).setOrigin(0.5);
     const other = CHARACTERS.find((c) => c !== GameState.character) || GameState.character;
     const hire = this.playerSprite(-30, 350, 3, other);
     this.walk(hire, other);
-    this.tweens.add({ targets: hire, x: 300, duration: 2600, onComplete: () => {
+    this.tweens.add({ targets: hire, x: 300 + CX, duration: 2600, onComplete: () => {
       this.stopWalk(hire, other);
-      const t = this.add2(this.add.text(300, 230, 'PRIMO GIORNO DI LAVORO!', style(11, '#ffe680'))).setOrigin(0.5);
+      const t = this.add2(this.add.text(300 + CX, 230, 'PRIMO GIORNO DI LAVORO!', style(11, '#ffe680'))).setOrigin(0.5);
       this.tweens.add({ targets: t, y: 222, duration: 400, yoyo: true, repeat: -1 });
       this.after(1600, () => {
         const end = this.add2(this.add.text(GAME_WIDTH / 2, 110, 'IL CICLO CONTINUA.', style(30, '#ffd800', { strokeThickness: 6 }))).setOrigin(0.5).setAlpha(0);
@@ -467,14 +469,14 @@ export default class VictoryScene extends Phaser.Scene {
     this.clear();
     const g = this.add2(this.add.graphics());
     g.fillGradientStyle(0x3ab0f0, 0x3ab0f0, 0xbfe8ff, 0xbfe8ff, 1).fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    g.fillStyle(0xfff3a0).fillCircle(660, 80, 36);
+    g.fillStyle(0xfff3a0).fillCircle(GAME_WIDTH - 140, 80, 36);
     this.waves(0, 240, GAME_WIDTH, 110, 1);
     const sand = this.add2(this.add.graphics()).setDepth(3);
-    sand.fillStyle(0xf0d890).fillRect(0, 330, GAME_WIDTH, GAME_HEIGHT - 330).fillEllipse(260, 334, 620, 60);
-    this.palm(150, 380, 1.6, 4);
-    this.palm(410, 384, 1.5, 4);
+    sand.fillStyle(0xf0d890).fillRect(0, 330, GAME_WIDTH, GAME_HEIGHT - 330).fillEllipse(260 + CX, 334, 620 + CX * 2, 60);
+    this.palm(150 + CX, 380, 1.6, 4);
+    this.palm(410 + CX, 384, 1.5, 4);
     // Hammock between the palms with the player lying in it, swinging.
-    const ham = this.add2(this.add.container(285, 258)).setDepth(6);
+    const ham = this.add2(this.add.container(285 + CX, 258)).setDepth(6);
     const hg = this.add.graphics();
     hg.lineStyle(4, 0xd04040).beginPath();
     for (let i = 0; i <= 12; i++) {
@@ -488,18 +490,18 @@ export default class VictoryScene extends Phaser.Scene {
     ham.add([lying, hg]);
     this.tweens.add({ targets: ham, angle: { from: -3, to: 3 }, duration: 1300, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
     // Coconut drink on the sand.
-    const coco = this.add2(this.add.graphics({ x: 470, y: 392 })).setDepth(7);
+    const coco = this.add2(this.add.graphics({ x: 470 + CX, y: 392 })).setDepth(7);
     coco.fillStyle(0x6a4020).fillCircle(0, 0, 12).fillStyle(0xfff4dc).fillEllipse(0, -8, 18, 6);
     coco.lineStyle(2, 0xff60a0).lineBetween(2, -8, 12, -26);
     coco.fillStyle(0x3ab05a).fillTriangle(-4, -10, -14, -22, 0, -14);
-    const zz = this.add2(this.add.text(300, 200, 'Finalmente un po\' di pace...', style(13, '#ffffff'))).setOrigin(0.5).setDepth(9);
+    const zz = this.add2(this.add.text(300 + CX, 200, 'Finalmente un po\' di pace...', style(13, '#ffffff'))).setOrigin(0.5).setDepth(9);
 
     // A bottle drifts ashore... with a Teams message.
     this.after(3200, () => {
       zz.destroy();
       const b = this.bottle(GAME_WIDTH + 30, 300);
       this.tweens.add({ targets: b, angle: { from: -10, to: 10 }, duration: 500, yoyo: true, repeat: -1 });
-      this.tweens.add({ targets: b, x: 560, y: 345, duration: 2600, ease: 'Sine.Out', onComplete: () => this.message(b) });
+      this.tweens.add({ targets: b, x: 560 + CX, y: 345, duration: 2600, ease: 'Sine.Out', onComplete: () => this.message(b) });
     });
   }
 
@@ -515,15 +517,15 @@ export default class VictoryScene extends Phaser.Scene {
       // Thrown back into the sea.
       this.tweens.killTweensOf(b);
       audio.sfx('jump');
-      this.tweens.add({ targets: b, x: 760, duration: 1100, ease: 'Linear' });
+      this.tweens.add({ targets: b, x: GAME_WIDTH - 40, duration: 1100, ease: 'Linear' });
       this.tweens.add({ targets: b, y: 150, duration: 550, ease: 'Quad.Out', yoyo: true });
       this.tweens.add({ targets: b, angle: 720, duration: 1100 });
       this.after(1150, () => {
         audio.sfx('splash');
         b.setVisible(false);
         for (let i = 0; i < 8; i++) {
-          const d = this.add2(this.add.circle(760, 300, 3, 0xffffff)).setDepth(9);
-          this.tweens.add({ targets: d, x: 760 + Phaser.Math.Between(-30, 30), y: 300 - Phaser.Math.Between(10, 40), alpha: 0, duration: 500 });
+          const d = this.add2(this.add.circle(GAME_WIDTH - 40, 300, 3, 0xffffff)).setDepth(9);
+          this.tweens.add({ targets: d, x: GAME_WIDTH - 40 + Phaser.Math.Between(-30, 30), y: 300 - Phaser.Math.Between(10, 40), alpha: 0, duration: 500 });
         }
         this.add2(this.add.text(GAME_WIDTH / 2, 130, '...ANCHE NO.', style(26, '#ffd800', { strokeThickness: 6 }))).setOrigin(0.5).setDepth(20);
         this.after(2200, () => this.stats('FINALE: VITA AI CARAIBI'));

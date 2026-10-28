@@ -43,3 +43,28 @@ html, body {
 @media (orientation: portrait) and (pointer: coarse) {
   #rotate-hint { display: flex; }
 }
+
+/* New version available (Pwa.js) */
+#update-banner {
+  position: fixed;
+  top: max(8px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  gap: 6px;
+}
+
+#update-banner button {
+  font: bold 14px monospace;
+  color: #000;
+  background: #ffd800;
+  border: 3px solid #000;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+#update-banner button.close {
+  background: #cccccc;
+  padding: 8px 10px;
+}

@@ -1,6 +1,8 @@
 # Corporate Odyssey — Architecture contract
 
-Phaser 3.90 + Vite, ES modules, `import Phaser from 'phaser'`. Resolution 800x450, `pixelArt: true`,
+Phaser 3.90 + Vite, ES modules, `import Phaser from 'phaser'`. Logical height 450; width `GAME_WIDTH` adapts to
+the screen shape at load (800..1000, landscape shape on touch devices), so scenes must lay out from `GAME_WIDTH`
+and work at >= 800. The canvas renders `RENDER_SCALE` (integer 2..3) times larger; `pixelArt: true`,
 Arcade physics gravity 900. All graphics are generated in code (no image files). Text uses `FONT`
 ('monospace'), bold, usually with a black stroke for an 8-bit look. All in-game text is in **Italian**.
 
@@ -53,9 +55,11 @@ call before `create()` has run (guard internally):
 - `message(text, color = '#ffffff', ms = 2000)` — big centered 8-bit banner.
 - `bossBar(name, ratio)` — show/update boss HP bar; `ratio === null` hides it.
 - `getTouchState()` — `null` on non-touch devices; else same shape as InputController state (held + pressed
-  flags). Touch layout: d-pad left (left/right/up/down), buttons right "SALTA", "SCIVOLA" (held = run, press =
-  slide), "ATTACCA"; tapping the HUD weapon icon = switchWeaponPressed. Shown only if
-  `this.sys.game.device.input.touch`.
+  flags). Touch layout (`src/ui/TouchControls.js`): floating joystick wherever the left thumb lands (below the
+  HUD; up/down = ladders / crouch), compact buttons bottom-right "SALTA", "SCIVOLA" (held = run, press = slide),
+  "ATTACCA"; tapping the HUD weapon icon = switchWeaponPressed. Shown only if `this.sys.game.device.input.touch`.
+- Touch screens (`IS_TOUCH`, `(pointer: coarse)`): the game camera zooms `TOUCH_ZOOM` (1.2) more (boss arenas
+  zoom back) and the HUD is drawn at `HUD_SCALE` (up to 1.2).
 
 ## Player (PLAYER/UI) — `src/entities/Player.js`
 `export default class Player extends Phaser.Physics.Arcade.Sprite`
@@ -239,7 +243,15 @@ close. Music: `space` track.
 
 ## Menu / GameOver / Victory (PLAYER/UI)
 - MenuScene on phones / tablets (Phaser `device.os`: android, iOS, iPad or not desktop; `?mobile=1` forces it) shows,
-  once per session, a notice that the game is optimised for PC, with "OK, CONTINUA"; a veil blocks the menu below.
+  once per session, a "BENVENUTO!" panel (touch controls, fullscreen / iOS "Aggiungi a Home" tip) with "GIOCA";
+  a veil blocks the menu below. Top-left: "SCHERMO INTERO" toggle (if supported) and "INSTALLA IL GIOCO" (only
+  while the browser offers the install).
+- Screen (`src/systems/Screen.js`): on touch devices the first tap requests fullscreen + landscape lock (not when
+  installed). `toggleFullscreen()` also in PauseScene (F key / row 14).
+- PWA (`vite-plugin-pwa`, config in vite.config.js; `src/systems/Pwa.js`): manifest fullscreen + landscape, icons
+  in `public/icons/`, service worker precaches the whole build (offline play). Registered 2 s after the game is
+  ready; a new deploy shows the DOM banner "NUOVA VERSIONE – AGGIORNA" (reload on tap, × closes). Dev server has
+  no service worker: test PWA with `npm run build && npm run preview`.
 - MenuScene: title "CORPORATE ODYSSEY", character select (Jack / Wendy, big preview of the sprites, keyboard
   left/right + Enter/Space, or tap), controls help for PC and mobile, level selector (from `LEVEL_META`,
   default 1-1; chips wrap on more rows). Start: `GameState.newGame(char); startLevel(this, levelIndex)`.

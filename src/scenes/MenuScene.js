@@ -4,6 +4,8 @@ import { startLevel } from '../systems/Trip.js';
 import { GameState } from '../state/GameState.js';
 import { audio } from '../systems/Audio8bit.js';
 import { setupStaticCamera } from '../utils/view.js';
+import { screenInfo, toggleFullscreen } from '../systems/Screen.js';
+import { onInstallChange, install } from '../systems/Pwa.js';
 
 const style = (size, color = '#ffffff', extra = {}) => ({
   fontFamily: FONT, fontSize: `${size}px`, fontStyle: 'bold', color, stroke: '#000000', strokeThickness: 4, ...extra
@@ -12,7 +14,8 @@ const style = (size, color = '#ffffff', extra = {}) => ({
 const CHAR_LABEL = { man: 'JACK', woman: 'WENDY' };
 const CHAR_DESC = { man: 'Digital Specialist', woman: 'Digital Manager' };
 
-// The game is not optimised for phones yet: warn once per session (?mobile=1 forces it, for testing).
+// Phones and tablets: a welcome panel once per session (?mobile=1 forces it, for testing). Its tap is the gesture
+// that turns on fullscreen (Screen.js).
 let mobileNoticeShown = false;
 
 export default class MenuScene extends Phaser.Scene {
@@ -89,7 +92,7 @@ export default class MenuScene extends Phaser.Scene {
     const touch = this.sys.game.device.input.touch;
     const pc = 'PC: FRECCE/WASD muovi, GIU accovacciati, SU/GIU scale\n' +
       'SPAZIO/Z salta (x2 doppio salto)  X corsa  GIU+X scivolata\nC/Q attacca  V/E cambia arma  M audio  P pausa  I brief  ESC esci';
-    const mobile = 'MOBILE: D-PAD a sinistra, SALTA / SCIVOLA (tieni = corsa) / ATTACCA a destra\n' +
+    const mobile = 'MOBILE: pollice a sinistra = levetta (SU/GIU scale), SALTA / SCIVOLA (tieni = corsa) / ATTACCA a destra\n' +
       'Tocca l\'icona dell\'arma per cambiarla  -  i = brief  -  II = pausa';
     this.add.text(GAME_WIDTH / 2, 412, touch ? `${mobile}\n${pc.split('\n')[0]}` : `${pc}\n${mobile.split('\n')[0]}`,
       style(8, '#cccccc', { align: 'center', strokeThickness: 3 })).setOrigin(0.5);
@@ -127,6 +130,19 @@ export default class MenuScene extends Phaser.Scene {
       .setOrigin(1, 0).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => { audio.unlock(); this._toggleAudio(); });
     this._refreshAudio();
+    // Fullscreen toggle, top-left
+    if (screenInfo.canFullscreen) {
+      this.add.text(10, 10, '[ ] SCHERMO INTERO', style(9, '#cccccc', { strokeThickness: 3, padding: { x: 4, y: 4 } }))
+        .setInteractive({ useHandCursor: true })
+        .on('pointerup', () => { audio.unlock(); toggleFullscreen(); });
+    }
+    // Install as an app, shown only while the browser offers it
+    const installBtn = this.add.text(10, screenInfo.canFullscreen ? 30 : 10, '[+] INSTALLA IL GIOCO',
+      style(9, '#ffd800', { strokeThickness: 3, padding: { x: 4, y: 4 } }))
+      .setInteractive({ useHandCursor: true })
+      .on('pointerup', () => { audio.unlock(); install(); });
+    const offInstall = onInstallChange((can) => installBtn.setVisible(can));
+    this.events.once('shutdown', offInstall);
 
     this.starting = false;
     this._buildScenarioChips();
@@ -143,11 +159,14 @@ export default class MenuScene extends Phaser.Scene {
     const veil = this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.75).setOrigin(0).setDepth(100).setInteractive();
     const panel = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 520, 250, 0x10204a, 0.97).setStrokeStyle(3, 0xffd800)
       .setDepth(101);
-    const title = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 90, 'ATTENZIONE', style(20, '#ffd800')).setOrigin(0.5).setDepth(102);
+    const title = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 90, 'BENVENUTO!', style(20, '#ffd800')).setOrigin(0.5).setDepth(102);
+    const tip = screenInfo.isIOS && !screenInfo.standalone
+      ? 'iPhone / iPad: tocca CONDIVIDI\npoi "AGGIUNGI A HOME" e gioca a schermo intero.'
+      : 'Il gioco passa a schermo intero:\ntienilo in orizzontale.';
     const body = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20,
-      'Questa versione è ottimizzata per PC\n(tastiera).\n\nDa smartphone e tablet il gioco funziona\nma è ancora molto difficile da controllare:\nstiamo lavorando alla versione mobile.',
+      `Pollice sinistro: levetta per muoverti.\nA destra: SALTA, ATTACCA, SCIVOLA.\n\n${tip}`,
       style(12, '#ffffff', { align: 'center', strokeThickness: 3, lineSpacing: 4 })).setOrigin(0.5).setDepth(102);
-    const ok = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 85, '[ OK, CONTINUA ]', style(18, '#3ce05a', { padding: { x: 20, y: 8 } }))
+    const ok = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 85, '[ GIOCA ]', style(18, '#3ce05a', { padding: { x: 20, y: 8 } }))
       .setOrigin(0.5).setDepth(102).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => { audio.unlock(); this._closeMobileNotice(); });
     this.tweens.add({ targets: ok, scale: 1.08, duration: 500, yoyo: true, repeat: -1 });
@@ -238,7 +257,7 @@ export default class MenuScene extends Phaser.Scene {
     const rows = [[]];
     let rowW = 0;
     chips.forEach((c) => {
-      if (rowW + c.width > 740 && rows[rows.length - 1].length) { rows.push([]); rowW = 0; }
+      if (rowW + c.width > GAME_WIDTH - 60 && rows[rows.length - 1].length) { rows.push([]); rowW = 0; }
       rows[rows.length - 1].push(c);
       rowW += c.width + gap;
     });

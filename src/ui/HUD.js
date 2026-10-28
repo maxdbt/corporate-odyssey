@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { FONT, GAME_WIDTH, GAME_HEIGHT, TEX, WEAPON_LABEL } from '../config/constants.js';
+import { FONT, GAME_WIDTH, GAME_HEIGHT, TEX, WEAPON_LABEL, IS_TOUCH } from '../config/constants.js';
 import { COURSES, COURSE_TEX } from '../systems/Canteen.js';
 
 const STATUS_LABEL = {
@@ -28,15 +28,19 @@ const textStyle = (size, color = '#ffffff') => ({
   fontFamily: FONT, fontSize: `${size}px`, fontStyle: 'bold', color, stroke: '#000000', strokeThickness: 3
 });
 
+// Bigger HUD on touch screens: the top strip is laid out on GAME_WIDTH / HUD_SCALE (never under 800) and scaled up.
+export const HUD_SCALE = IS_TOUCH ? Phaser.Math.Clamp(GAME_WIDTH / 800, 1, 1.2) : 1;
+const W = GAME_WIDTH / HUD_SCALE;
+
 // 8-bit HUD drawn in UIScene (fixed, unaffected by the game camera).
 export default class HUD {
   constructor(scene, onWeaponTap) {
     this.scene = scene;
-    this.root = scene.add.container(0, 0).setDepth(10);
+    this.root = scene.add.container(0, 0).setDepth(10).setScale(HUD_SCALE);
     this.time = 0;
 
     // Top strip background
-    const strip = scene.add.rectangle(0, 0, GAME_WIDTH, 44, 0x000000, 0.85).setOrigin(0, 0);
+    const strip = scene.add.rectangle(0, 0, W, 44, 0x000000, 0.85).setOrigin(0, 0);
     this.root.add(strip);
 
     // Mental health bar
@@ -53,13 +57,13 @@ export default class HUD {
     this.root.add([this.hpText, this.stressText, this.panicText]);
 
     // Level name & timer (center)
-    this.levelText = scene.add.text(GAME_WIDTH / 2, 4, '', textStyle(10, '#ffd800')).setOrigin(0.5, 0);
-    this.root.add(scene.add.image(GAME_WIDTH / 2 - 26, 30, TEX.UI_CLOCK));
-    this.timerText = scene.add.text(GAME_WIDTH / 2 - 16, 30, '', textStyle(13)).setOrigin(0, 0.5);
+    this.levelText = scene.add.text(W / 2, 4, '', textStyle(10, '#ffd800')).setOrigin(0.5, 0);
+    this.root.add(scene.add.image(W / 2 - 26, 30, TEX.UI_CLOCK));
+    this.timerText = scene.add.text(W / 2 - 16, 30, '', textStyle(13)).setOrigin(0, 0.5);
     this.root.add([this.levelText, this.timerText]);
 
     // Counters (right)
-    const rx = 520;
+    const rx = W / 2 + 120;
     this.root.add(scene.add.image(rx, 12, TEX.UI_EURO));
     this.euroText = scene.add.text(rx + 9, 12, '', textStyle(11, '#ffe066')).setOrigin(0, 0.5);
     this.root.add(scene.add.image(rx, 32, TEX.UI_TICKET));
@@ -70,7 +74,7 @@ export default class HUD {
     this.root.add([this.euroText, this.ticketText, this.vacText]);
 
     // Weapon / device box (tap to switch)
-    const wx = 690;
+    const wx = W - 110;
     this.weaponBox = scene.add.rectangle(wx, 22, 100, 38, 0x1a1a40, 0.85).setStrokeStyle(2, 0x7fffd4);
     this.deviceIcon = scene.add.image(wx - 34, 22, TEX.LAPTOP);
     this.weaponIcon = scene.add.image(wx - 12, 22, TEX.P_EMAIL).setScale(1.4);
@@ -88,14 +92,14 @@ export default class HUD {
     this.root.add(this.statusText);
 
     // Boss bar
-    this.bossRoot = scene.add.container(GAME_WIDTH / 2, 62).setVisible(false);
+    this.bossRoot = scene.add.container(GAME_WIDTH / 2, 62 * HUD_SCALE).setScale(HUD_SCALE).setVisible(false);
     this.bossBg = scene.add.rectangle(0, 0, 304, 14, 0x000000, 0.8).setStrokeStyle(2, 0xffffff);
     this.bossFill = scene.add.rectangle(-150, 0, 300, 10, 0xff3030).setOrigin(0, 0.5);
     this.bossName = scene.add.text(0, -14, '', textStyle(10, '#ff8080')).setOrigin(0.5);
     this.bossRoot.add([this.bossBg, this.bossFill, this.bossName]);
 
     // Fog overlay ("HUD appannato")
-    this.fogGfx = scene.add.graphics().setDepth(20).setAlpha(0);
+    this.fogGfx = scene.add.graphics().setDepth(20).setAlpha(0).setScale(HUD_SCALE);
     this._drawFog();
 
     // Center banner
@@ -108,12 +112,12 @@ export default class HUD {
     const g = this.fogGfx;
     g.clear();
     g.fillStyle(0xdde6ee, 0.82);
-    g.fillRect(0, 0, GAME_WIDTH, 70);
+    g.fillRect(0, 0, W, 70);
     // Condensation blobs
     for (let i = 0; i < 60; i++) {
       g.fillStyle(0xffffff, Phaser.Math.FloatBetween(0.2, 0.6));
       const s = Phaser.Math.Between(4, 14);
-      g.fillRect(Phaser.Math.Between(0, GAME_WIDTH), Phaser.Math.Between(0, 66), s, s);
+      g.fillRect(Phaser.Math.Between(0, W), Phaser.Math.Between(0, 66), s, s);
     }
   }
 
@@ -188,7 +192,7 @@ export default class HUD {
     if (!b) { this.budgetBox?.setVisible(false); return; }
     const s = this.scene;
     if (!this.budgetBox) {
-      this.budgetBox = s.add.container(GAME_WIDTH - 156, 50);
+      this.budgetBox = s.add.container(W - 156, 50);
       const bg = s.add.rectangle(0, 0, 150, 32, 0x103a20, 0.9).setOrigin(0).setStrokeStyle(2, 0x000000);
       const icon = s.add.image(12, 16, TEX.BUDGET);
       const label = s.add.text(24, 3, 'BUDGET TRASFERTA', textStyle(7, '#9dffb0'));
@@ -215,7 +219,7 @@ export default class HUD {
     if (!meal) { this.tray?.setVisible(false); return; }
     if (!this.tray) {
       const s = this.scene;
-      this.tray = s.add.container(GAME_WIDTH - 156, 50);
+      this.tray = s.add.container(W - 156, 50);
       const bg = s.add.rectangle(0, 0, 150, 34, 0xd84a2a, 0.9).setOrigin(0).setStrokeStyle(2, 0x000000);
       const label = s.add.text(75, 1, 'VASSOIO', textStyle(7, '#ffe066')).setOrigin(0.5, 0);
       this.trayIcons = COURSES.map((c, i) => {

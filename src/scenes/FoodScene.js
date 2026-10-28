@@ -7,7 +7,7 @@ import { FOOD_MENUS, FOOD_OUTCOMES, FOOD_PRICE } from '../data/trip.js';
 import { tstyle, tripHud, resultPanel, effectLines } from '../ui/TripUI.js';
 import { ensureToiletTextures } from './ToiletScene.js';
 
-const CARD_X = [150, 400, 650];
+const CARD_X = [GAME_WIDTH / 2 - 250, GAME_WIDTH / 2, GAME_WIDTH / 2 + 250];
 const CARD_Y = 214;
 const CARD_W = 220;
 const CARD_H = 236;
@@ -74,7 +74,7 @@ export default class FoodScene extends Phaser.Scene {
     for (let x = 0; x < GAME_WIDTH; x += 64) g.fillStyle(c0.counterLine).fillRect(x, 362, 2, 88);
     this.add.image(60, 432, TEX.COOK1).setOrigin(0.5, 1).setScale(2.5);
     const c = GameState.character || 'man';
-    this.player = this.add.image(740, 432, playerTex(c, 'idle')).setOrigin(0.5, 1).setScale(2.5).setFlipX(true);
+    this.player = this.add.image(GAME_WIDTH - 60, 432, playerTex(c, 'idle')).setOrigin(0.5, 1).setScale(2.5).setFlipX(true);
   }
 
   card(d, i) {

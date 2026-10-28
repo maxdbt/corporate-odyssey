@@ -639,7 +639,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.isDizzy()) {
       const cam = this.scene.cameras.main;
       cam.setRotation(Math.sin(this.clock / 420) * 0.045);
-      cam.setZoom(RENDER_SCALE * (1.02 + Math.sin(this.clock / 610) * 0.025));
+      cam.setZoom((this.scene.camZoom || RENDER_SCALE) * (1.02 + Math.sin(this.clock / 610) * 0.025));
     }
 
     // Mount follows the rider (bobbing while moving).
@@ -721,7 +721,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     const cam = this.scene && this.scene.cameras && this.scene.cameras.main;
     if (!cam) return;
     cam.setRotation(0);
-    cam.setZoom(RENDER_SCALE);
+    cam.setZoom(this.scene.camZoom || RENDER_SCALE);
   }
 
   _floatText(str, color) {

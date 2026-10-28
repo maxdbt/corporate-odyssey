@@ -183,7 +183,10 @@ export default class JourneyScene extends Phaser.Scene {
   drawCabin(plane) {
     const W = GAME_WIDTH;
     const g = this.add.graphics();
-    const AISLE_L = 352, AISLE_R = 512, VX = 432;
+    // Composed for 800 wide: on wider screens the window wall gets deeper and the rest moves right by DX.
+    const DX = (W - 800) / 2;
+    const AISLE_L = 352 + DX, AISLE_R = 512 + DX, VX = 432 + DX;
+    this.aisleX = VX;
     const C = plane
       ? { wall: 0xe8e4dc, ceil: 0xd0ccc4, carpet: 0x34406a, stripe: 0x4a5a8a, floor: 0x9a968e, seat: 0x2a4a8a, seatHi: 0x3a5aa0, seatFg: 0x24407a, seatDk: 0x1a3060, cushion: 0x1f3a70 }
       : { wall: 0xd4dcd4, ceil: 0xbcc6bc, carpet: 0x5a5e66, stripe: 0x6e727a, floor: 0x8a8e86, seat: 0x8a2a2a, seatHi: 0xa83a3a, seatFg: 0x7a2424, seatDk: 0x5a1a1a, cushion: 0x6a2020 };
@@ -239,14 +242,15 @@ export default class JourneyScene extends Phaser.Scene {
       this.time.addEvent({ delay: 900, loop: true, callback: () => speed.setText(`${Phaser.Math.Between(287, 300)} km/h`) });
     }
     // Window wall on the left: two portholes with clouds (plane) or two wide windows with the landscape (train)
-    g.fillStyle(plane ? 0xd8d4cc : 0xc4ccc4).fillPoints([{ x: 0, y: 84 }, { x: 96, y: 96 }, { x: 96, y: 300 }, { x: 0, y: 330 }], true);
-    this.portholes = plane ? [[28, 150, 34, 56], [72, 160, 26, 46]] : [[26, 160, 44, 96], [72, 166, 34, 76]];
+    g.fillStyle(plane ? 0xd8d4cc : 0xc4ccc4).fillPoints([{ x: 0, y: 84 }, { x: 96 + DX, y: 96 }, { x: 96 + DX, y: 300 }, { x: 0, y: 330 }], true);
+    this.portholes = (plane ? [[28, 150, 34, 56], [72, 160, 26, 46]] : [[26, 160, 44, 96], [72, 166, 34, 76]])
+      .map(([x, ...r]) => [x * (96 + DX) / 96, ...r]);
     this.sky = this.add.graphics();
     this.portholes.forEach(([x, y, w, h]) => g.lineStyle(4, plane ? 0xb8b4ac : 0x8a928a).strokeRoundedRect(x - w / 2 - 2, y - h / 2 - 2, w + 4, h + 4, plane ? 10 : 3));
     this.skyX = 0;
 
     // Our row: four seats (2 + aisle + 2) with the passengers sitting in them
-    const SEATS = [168, 288, 576, 696];
+    const SEATS = [168, 288, 576, 696].map((x) => x + DX);
     const seatBack = this.add.graphics();
     SEATS.forEach((sx) => {
       seatBack.fillStyle(C.seat).fillRoundedRect(sx - 46, 112, 92, 104, 12);
@@ -277,7 +281,7 @@ export default class JourneyScene extends Phaser.Scene {
     if (plane) this.tweens.add({ targets: others[1], angle: 2, duration: 260, yoyo: true, repeat: -1 });
     else this.tweens.add({ targets: others[1], scaleY: 2.04, duration: 1100, yoyo: true, repeat: -1 });
     this.tweens.add({ targets: [this.player, this.neighbour, others[0]], y: 209, duration: plane ? 1300 : 420, yoyo: true, repeat: -1 });
-    this.bubbleAt = { x: 330, y: 92 };
+    this.bubbleAt = { x: 330 + DX, y: 92 };
 
     // Flight attendant / bar trolley, pushed down the aisle when food is served
     this.hostess = this.add.container(VX, 150).setScale(0.6).setVisible(false);
@@ -287,7 +291,7 @@ export default class JourneyScene extends Phaser.Scene {
   showHostess(on) {
     if (!this.hostess) return;
     if (on) {
-      this.hostess.setVisible(true).setPosition(432, 150).setScale(0.6);
+      this.hostess.setVisible(true).setPosition(this.aisleX, 150).setScale(0.6);
       this.tweens.add({ targets: this.hostess, y: 238, scale: 0.85, duration: 900, ease: 'Sine.easeOut' });
     } else if (this.hostess.visible) {
       this.tweens.add({ targets: this.hostess, y: 150, scale: 0.6, alpha: 0, duration: 600, onComplete: () => this.hostess.setVisible(false).setAlpha(1) });

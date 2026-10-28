@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, DEPTH, TEX, ANIM, FONT } from '../config/constants.js';
 import { pinToView, viewLeft } from '../utils/view.js';
 
-// Themed parallax backgrounds drawn with Graphics primitives (no images).
+// Themed parallax backgrounds drawn with Graphics primitives (no images). Parallax is horizontal only:
+// vertically the layers move with the world (scrollFactorY 1) so they stay aligned when the touch camera scrolls up.
 const THEMES = {
   xmas:    { top: 0x2b2f4a, bottom: 0x4b4f6e, wall: 0xc9bfa6, wallDark: 0xa89c80 },
   summer:  { top: 0xffc36b, bottom: 0xffe7b0, wall: 0xe8d7a8, wallDark: 0xcdb682 },
@@ -24,14 +25,14 @@ const rnd = (seed) => {
 
 export function drawBackground(scene, theme, worldW) {
   const t = THEMES[theme] || THEMES.xmas;
-  const sky = pinToView(scene.add.graphics(), 0, 0, 0).setDepth(DEPTH.BG);
+  const sky = pinToView(scene.add.graphics(), 0, 0, 0, 1).setDepth(DEPTH.BG);
   sky.fillGradientStyle(t.top, t.top, t.bottom, t.bottom, 1);
   sky.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
   const farW = worldW * 0.25 + GAME_WIDTH;
   const midW = worldW * 0.5 + GAME_WIDTH;
-  const far = pinToView(scene.add.graphics(), 0, 0, 0.25, 0).setDepth(DEPTH.BG + 1);
-  const mid = pinToView(scene.add.graphics(), 0, 0, 0.5, 0).setDepth(DEPTH.BG + 2);
+  const far = pinToView(scene.add.graphics(), 0, 0, 0.25, 1).setDepth(DEPTH.BG + 1);
+  const mid = pinToView(scene.add.graphics(), 0, 0, 0.5, 1).setDepth(DEPTH.BG + 2);
   const r = rnd(theme.length * 977);
 
   switch (theme) {
@@ -222,10 +223,10 @@ function drawCanteenDiners(scene, worldW) {
   const S = 0.8;             // smaller = farther away
   const nearW = worldW * SF + GAME_WIDTH;
   // Far floor the diners sit on, darker than the playable checkerboard.
-  const floor = pinToView(scene.add.graphics(), 0, 0, 0, 0).setDepth(DEPTH.BG + 3);
+  const floor = pinToView(scene.add.graphics(), 0, 0, 0, 1).setDepth(DEPTH.BG + 3);
   floor.fillStyle(0x5f8078, 1).fillRect(0, TOP + 26, GAME_WIDTH, GAME_HEIGHT - TOP - 26);
   floor.fillStyle(0x4a6660, 1).fillRect(0, TOP + 26, GAME_WIDTH, 3);
-  const tables = pinToView(scene.add.graphics(), 0, 0, SF, 0).setDepth(DEPTH.BG + 4);
+  const tables = pinToView(scene.add.graphics(), 0, 0, SF, 1).setDepth(DEPTH.BG + 4);
   const diners = [];
   const r = rnd(4242);
   for (let x = 30; x < nearW; x += 230 + Math.floor(r() * 60)) {
@@ -235,7 +236,7 @@ function drawCanteenDiners(scene, worldW) {
     for (let i = 0; i < seats; i++) {
       const dx = x + 18 + i * ((w - 36) / Math.max(1, seats - 1));
       const d = scene.add.sprite(0, 0, TEX.EATER_A1).setOrigin(0.5, 1).setDepth(DEPTH.BG + 3).setTint(0xc8d0cc).setScale(S);
-      pinToView(d, dx, TOP + 8, SF, 0);
+      pinToView(d, dx, TOP + 8, SF, 1);
       d.px = dx;
       d.setFlipX(r() < 0.5);
       d.play({ key: DINER_ANIMS[Math.floor(r() * 3)], frameRate: 1.5 + r() * 2, startFrame: Math.floor(r() * 2) });
@@ -264,7 +265,7 @@ function drawCanteenDiners(scene, worldW) {
       const t = scene.add.text(0, 0, Phaser.Utils.Array.GetRandom(DINER_LINES), {
         fontFamily: FONT, fontSize: '7px', fontStyle: 'bold', color: '#ffffff', stroke: '#000', strokeThickness: 2
       }).setOrigin(0.5, 1).setDepth(DEPTH.BG + 5).setAlpha(0.9);
-      pinToView(t, d.px, TOP - 16, SF, 0);
+      pinToView(t, d.px, TOP - 16, SF, 1);
       scene.tweens.add({ targets: t, y: t.y - 10, alpha: 0, delay: 700, duration: 600, onComplete: () => t.destroy() });
     }
   });

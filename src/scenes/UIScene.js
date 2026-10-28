@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
-import HUD from '../ui/HUD.js';
+import HUD, { HUD_SCALE } from '../ui/HUD.js';
 import TouchControls from '../ui/TouchControls.js';
 import { audio } from '../systems/Audio8bit.js';
 import { setupStaticCamera } from '../utils/view.js';
+import { GAME_WIDTH } from '../config/constants.js';
 
 // Overlay scene: HUD + touch controls, rendered above the game camera.
 // Public methods are safe to call before create() has run.
@@ -39,12 +40,13 @@ export default class UIScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-I', () => overlay('BriefScene'));
     this.input.keyboard?.on('keydown-P', () => overlay('PauseScene'));
     this.input.keyboard?.on('keydown-ESC', () => overlay('QuitScene'));
-    [['i', 761, 'BriefScene'], ['II', 785, 'PauseScene']].forEach(([label, x, key]) => {
-      this.add.rectangle(x, 22, 20, 30, 0x1a1a40, 0.85).setStrokeStyle(2, 0xffd800).setDepth(11)
+    const s = HUD_SCALE;
+    [['i', GAME_WIDTH - 39 * s, 'BriefScene'], ['II', GAME_WIDTH - 15 * s, 'PauseScene']].forEach(([label, x, key]) => {
+      this.add.rectangle(x, 22 * s, 20, 30, 0x1a1a40, 0.85).setStrokeStyle(2, 0xffd800).setDepth(11).setScale(s)
         .setInteractive({ useHandCursor: true }).on('pointerdown', () => overlay(key));
-      this.add.text(x, 22, label, {
+      this.add.text(x, 22 * s, label, {
         fontFamily: 'monospace', fontSize: '12px', fontStyle: 'bold', color: '#ffd800', stroke: '#000', strokeThickness: 3
-      }).setOrigin(0.5).setDepth(12);
+      }).setOrigin(0.5).setDepth(12).setScale(s);
     });
     this.input.keyboard?.on('keydown-M', () => {
       const muted = audio.toggleMute();

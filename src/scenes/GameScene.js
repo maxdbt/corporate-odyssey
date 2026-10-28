@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, DEPTH, EVENTS, TEX, WEAPON_LABEL, RENDER_SCALE } from '../config/constants.js';
-import { viewLeft, setViewLeft } from '../utils/view.js';
+import { GAME_WIDTH, GAME_HEIGHT, DEPTH, EVENTS, TEX, WEAPON_LABEL, RENDER_SCALE, TOUCH_ZOOM } from '../config/constants.js';
+import { viewLeft, setViewLeft, viewWidth } from '../utils/view.js';
 import { GameState } from '../state/GameState.js';
 import { LEVELS } from '../levels/index.js';
 import Player from '../entities/Player.js';
@@ -55,7 +55,9 @@ export default class GameScene extends Phaser.Scene {
     this.dropThroughUntil = 0;
     this.hazards = [];
     this.levelBounds = { width: level.width, height: GAME_HEIGHT };
-    this.cameras.main.setRotation(0).setZoom(RENDER_SCALE);
+    // Base zoom of the platform camera (the drunk sway and the boss arenas go back to it / to RENDER_SCALE).
+    this.camZoom = RENDER_SCALE * TOUCH_ZOOM;
+    this.cameras.main.setRotation(0).setZoom(this.camZoom);
 
     // World: no floor/ceiling collision so pits work.
     this.physics.world.setBounds(0, -200, level.width, GAME_HEIGHT + 400);
@@ -119,6 +121,8 @@ export default class GameScene extends Phaser.Scene {
     if (level.autoscroll) {
       this.autoscroll = { speed: level.autoscroll, startAt: this.time.now + 1800 };
       setViewLeft(cam, Math.max(0, sx - 120));
+      // Horizontal scroll is driven by updateAutoscroll; the zoomed touch camera still follows vertically.
+      if (TOUCH_ZOOM > 1) cam.startFollow(this.player, true, 0, 0.12);
     } else {
       this.autoscroll = null;
       cam.startFollow(this.player, true, 0.12, 0.12);
@@ -514,8 +518,16 @@ export default class GameScene extends Phaser.Scene {
     }
     const cam = this.cameras.main;
     cam.stopFollow();
-    cam.pan(a.left + (a.right - a.left) / 2, GAME_HEIGHT / 2, 600, 'Sine.easeInOut', false, (c, prog) => {
-      if (prog === 1) cam.setBounds(a.left, 0, a.right - a.left, GAME_HEIGHT);
+    // Arenas are 800 wide: on wider screens the view extends to the left, over the locked entrance.
+    // The touch camera zooms out to show the whole arena.
+    if (this.camZoom !== RENDER_SCALE) {
+      this.camZoom = RENDER_SCALE;
+      cam.zoomTo(RENDER_SCALE, 600, 'Sine.easeInOut');
+    }
+    const camLeft = Math.max(0, Math.min(a.left, a.right - GAME_WIDTH));
+    const camW = Math.max(a.right - camLeft, GAME_WIDTH);
+    cam.pan(camLeft + camW / 2, GAME_HEIGHT / 2, 600, 'Sine.easeInOut', false, (c, prog) => {
+      if (prog === 1) cam.setBounds(camLeft, 0, camW, GAME_HEIGHT);
     });
     // Lock the arena entrance.
     this.arenaWall = this.add.zone(a.left - 8, GAME_HEIGHT / 2, 16, GAME_HEIGHT * 2);
@@ -618,13 +630,13 @@ export default class GameScene extends Phaser.Scene {
   updateAutoscroll(time, delta) {
     const a = this.autoscroll;
     const cam = this.cameras.main;
-    const maxScroll = this.level.width - GAME_WIDTH;
+    const maxScroll = this.level.width - viewWidth(cam);
     if (time >= a.startAt && viewLeft(cam) < maxScroll) {
       setViewLeft(cam, Math.min(maxScroll, viewLeft(cam) + a.speed * delta / 1000));
     }
     const p = this.player;
     const left = viewLeft(cam) + 12;
-    const right = viewLeft(cam) + GAME_WIDTH - 12;
+    const right = viewLeft(cam) + viewWidth(cam) - 12;
     if (p.x < left) {
       if (p.body.blocked.right || p.body.touching.right) {
         GameState.addHp(-40);

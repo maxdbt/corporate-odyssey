@@ -1,6 +1,6 @@
 {
   "name": "corporate-odyssey",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "private": true,
   "description": "Corporate Odyssey - platform 2D 8-bit in Phaser 3",
   "type": "module",
@@ -14,6 +14,7 @@
     "phaser": "^3.90.0"
   },
   "devDependencies": {
-    "vite": "^6.4.4"
+    "vite": "^6.4.4",
+    "vite-plugin-pwa": "^2.0.0"
   }
 }

@@ -3,6 +3,7 @@ import { FONT, GAME_WIDTH, GAME_HEIGHT, LEVEL_META } from '../config/constants.j
 import { GameState } from '../state/GameState.js';
 import { audio } from '../systems/Audio8bit.js';
 import { setupStaticCamera } from '../utils/view.js';
+import { screenInfo, toggleFullscreen } from '../systems/Screen.js';
 
 const style = (size, color = '#000000', extra = {}) => ({
   fontFamily: FONT, fontSize: `${size}px`, fontStyle: 'bold', color, ...extra
@@ -136,6 +137,7 @@ export default class PauseScene extends Phaser.Scene {
     cell('A', 13, 'R = RICOMINCIA LIVELLO', '#7f6000');
     cell('C', 13, 'U = TORNA AL MENU', '#7f6000');
     cell('A', 14, '(se passa il capo, sembri al lavoro)', '#a0a0a0');
+    if (screenInfo.canFullscreen) cell('C', 14, 'F = SCHERMO INTERO', '#7f6000');
 
     // Interactive "buttons" for touch
     const btn = (col, row, cb) => {
@@ -147,6 +149,7 @@ export default class PauseScene extends Phaser.Scene {
     btn('C', 12, () => this.openBrief());
     btn('A', 13, () => this.restart());
     btn('C', 13, () => this.toMenu());
+    if (screenInfo.canFullscreen) btn('C', 14, toggleFullscreen);
 
     // Selected cell with blinking border + "PAUSA" sheet tab
     this.sel = this.add.rectangle(this.colX[1], gy + 4 * ROW_H, COLS[1].w, ROW_H).setOrigin(0).setStrokeStyle(2, 0x000000);
@@ -167,6 +170,7 @@ export default class PauseScene extends Phaser.Scene {
       kb.on('keydown-I', () => this.openBrief());
       kb.on('keydown-R', () => this.restart());
       kb.on('keydown-U', () => this.toMenu());
+      kb.on('keydown-F', toggleFullscreen);
       kb.on('keydown-UP', () => this.moveSel(-1));
       kb.on('keydown-DOWN', () => this.moveSel(1));
     }

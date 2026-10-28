@@ -90,7 +90,7 @@ export default class BeachScene extends Phaser.Scene {
     // Sky bands
     [0x3fa9f5, 0x5bb8f7, 0x78c6f9, 0x95d4fb, 0xb3e2fd].forEach((col, i) => g.fillStyle(col).fillRect(0, i * 46, GAME_WIDTH, 46));
     // Sun
-    const sun = this.add.image(680, 80, 'beach_sun').setScale(1.6);
+    const sun = this.add.image(GAME_WIDTH - 120, 80, 'beach_sun').setScale(1.6);
     this.tweens.add({ targets: sun, angle: 360, duration: 12000, repeat: -1 });
     this.tweens.add({ targets: sun, scale: 1.75, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
     // Clouds drifting
@@ -130,9 +130,10 @@ export default class BeachScene extends Phaser.Scene {
     g.fillStyle(0xff8c1a).fillRect(ux + 41, FEET_Y - 11, 6, 6);
     g.fillStyle(0x3ce05a).fillRect(ux + 46, FEET_Y - 20, 1, 8);
     // Deck chair on the right
-    g.fillStyle(0x6b4a2b).fillRect(640, FEET_Y - 24, 4, 24).fillRect(700, FEET_Y - 12, 4, 12);
-    g.fillStyle(0x2a6ad8).fillRect(640, FEET_Y - 26, 66, 6);
-    g.fillStyle(0x2a6ad8).fillRect(626, FEET_Y - 46, 16, 22);
+    const dx = GAME_WIDTH - 160;
+    g.fillStyle(0x6b4a2b).fillRect(dx, FEET_Y - 24, 4, 24).fillRect(dx + 60, FEET_Y - 12, 4, 12);
+    g.fillStyle(0x2a6ad8).fillRect(dx, FEET_Y - 26, 66, 6);
+    g.fillStyle(0x2a6ad8).fillRect(dx - 14, FEET_Y - 46, 16, 22);
   }
 
   drawWaves(t) {

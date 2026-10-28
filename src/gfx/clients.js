@@ -189,19 +189,19 @@ function temple(scene, g) {
   g.fillStyle(0x6a4a2a);
   for (let row = 0; row < 4; row++) {
     for (let x = 70, k = row; x < W - 70; x += 22, k++) {
-      if (x > 250 && x < 550 && row < 3) continue;
+      if (Math.abs(x - W / 2) < 150 && row < 3) continue;
       glyphs[k % 4](x, 70 + row * 34);
     }
   }
   // Columns with papyrus capitals
-  [28, 226, 574, 772].forEach((cx) => {
+  [28, W / 2 - 174, W / 2 + 174, W - 28].forEach((cx) => {
     g.fillStyle(0xc8a060).fillRect(cx - 18, 60, 36, FLOOR_Y - 60);
     g.fillStyle(0xb08a4a).fillRect(cx - 18, 60, 6, FLOOR_Y - 60);
     for (let y = 120; y < FLOOR_Y; y += 70) g.fillStyle(LAPIS).fillRect(cx - 18, y, 36, 4).fillStyle(0xd02020).fillRect(cx - 18, y + 4, 36, 3);
     g.fillStyle(0x3ca03c).fillRect(cx - 26, 50, 52, 12).fillStyle(GOLD).fillRect(cx - 26, 48, 52, 3).fillRect(cx - 26, 62, 52, 3);
   });
   // Torches
-  [130, 670].forEach((tx) => {
+  [130, W - 130].forEach((tx) => {
     g.fillStyle(0x6a4a2a).fillRect(tx - 3, 210, 6, 26).fillStyle(GOLD).fillRect(tx - 8, 204, 16, 6);
     const flame = scene.add.rectangle(tx, 196, 10, 14, 0xff9a20);
     scene.add.rectangle(tx, 200, 5, 7, 0xffe060);
@@ -225,14 +225,14 @@ function iceTemple(scene, g) {
     for (let x = row % 2 ? 20 : 0; x < W; x += 40) g.fillRect(x, y, 2, 24);
   }
   // Windows with the aurora
-  [[40, 70], [620, 70]].forEach(([x, y]) => {
+  [[40, 70], [W - 180, 70]].forEach(([x, y]) => {
     g.fillStyle(0x0a1a3a).fillRect(x, y, 140, 90);
     g.fillStyle(0x3cf0a0, 0.7).fillRect(x, y + 30, 140, 10).fillStyle(0x60a0ff, 0.6).fillRect(x, y + 42, 140, 6);
     g.fillStyle(0xffffff).fillRect(x + 20, y + 14, 2, 2).fillRect(x + 90, y + 8, 2, 2).fillRect(x + 120, y + 60, 2, 2);
     g.lineStyle(6, 0xe8f6ff).strokeRect(x, y, 140, 90);
   });
   // Ice columns
-  [226, 574].forEach((cx) => {
+  [W / 2 - 174, W / 2 + 174].forEach((cx) => {
     g.fillStyle(0xe8f6ff).fillRect(cx - 18, 50, 36, FLOOR_Y - 50);
     g.fillStyle(0xffffff).fillRect(cx - 12, 50, 5, FLOOR_Y - 50);
     g.fillStyle(0xa8d0ec).fillRect(cx + 10, 50, 4, FLOOR_Y - 50);
@@ -264,10 +264,10 @@ function seaPalace(scene, g) {
     g.fillStyle(Phaser.Display.Color.GetColor(col.r, col.g, col.b)).fillRect(0, i * 38, W, 38);
   }
   // Light rays from the surface
-  [120, 330, 560, 700].forEach((x, i) => g.fillStyle(0xffffff, 0.06).fillPoints([
+  [120, 330, 560, W - 100].forEach((x, i) => g.fillStyle(0xffffff, 0.06).fillPoints([
     { x, y: 30 }, { x: x + 40, y: 30 }, { x: x + 120 + i * 10, y: FLOOR_Y }, { x: x + 40 + i * 10, y: FLOOR_Y }], true));
   // Coral pillars
-  [36, 764].forEach((cx) => {
+  [36, W - 36].forEach((cx) => {
     g.fillStyle(0xff7a8a).fillRect(cx - 16, 60, 32, FLOOR_Y - 60);
     for (let y = 80; y < FLOOR_Y; y += 40) g.fillStyle(0xd05060).fillCircle(cx - 16, y, 7).fillCircle(cx + 16, y + 20, 7);
     g.fillStyle(0xffb0b8).fillRect(cx - 8, 60, 4, FLOOR_Y - 60);
@@ -278,7 +278,7 @@ function seaPalace(scene, g) {
   // Sand floor, seaweed, bubbles
   g.fillStyle(0xd8c890).fillRect(0, FLOOR_Y, W, GAME_HEIGHT - FLOOR_Y);
   for (let x = 10; x < W; x += 37) g.fillStyle(0xc0b078).fillRect(x, FLOOR_Y + 8 + (x % 3) * 8, 6, 2);
-  [90, 170, 300, 520, 650, 720].forEach((x) => scene.add.image(x, FLOOR_Y, TEX.SEAWEED).setOrigin(0.5, 1).setScale(2));
+  [90, 170, 300, 520, W - 150, W - 80].forEach((x) => scene.add.image(x, FLOOR_Y, TEX.SEAWEED).setOrigin(0.5, 1).setScale(2));
   scene.add.particles(0, 0, TEX.FX_BUBBLE, {
     x: { min: 0, max: W }, y: FLOOR_Y, speedY: { min: -60, max: -25 }, speedX: { min: -8, max: 8 }, lifespan: 7000, frequency: 220, alpha: { start: 0.8, end: 0.2 }
   });

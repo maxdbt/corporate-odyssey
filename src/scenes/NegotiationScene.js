@@ -469,7 +469,7 @@ export default class NegotiationScene extends Phaser.Scene {
     if (!casting) {
       b.x += this.bossDir * BOSS_SPEED * dt;
       if (b.x < 420) this.bossDir = 1;
-      else if (b.x > 700) this.bossDir = -1;
+      else if (b.x > GAME_WIDTH - 100) this.bossDir = -1;
     }
     b.setFlipX(p.x < b.x);
     b.setTexture(cfg.attack === 'crab' ? cfg.tex[Math.floor(time / 260) % 2] : cfg.tex[casting ? 1 : 0]);

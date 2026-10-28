@@ -11,9 +11,12 @@ export function setupStaticCamera(scene) {
 const offsetX = (cam) => cam.width * 0.5 * (1 - 1 / cam.zoom);
 export const viewLeft = (cam) => cam.scrollX + offsetX(cam);
 export const setViewLeft = (cam, x) => { cam.scrollX = x - offsetX(cam); };
+// Logical width shown by the camera (GAME_WIDTH, less with the touch zoom).
+export const viewWidth = (cam) => cam.width / cam.zoom;
 
 // Position an object with scrollFactor < 1 as if the camera were unzoomed: (x, y) are view coordinates
-// for scrollFactor 0, or parallax coordinates for 0 < scrollFactor < 1.
+// for scrollFactor 0, or parallax coordinates for 0 < scrollFactor < 1. With the touch zoom these objects
+// are magnified around the view centre (full-screen veils still cover it).
 export function pinToView(obj, x, y, sfx = 0, sfy = sfx) {
   const dx = (GAME_WIDTH * (RENDER_SCALE - 1)) / 2;
   const dy = (GAME_HEIGHT * (RENDER_SCALE - 1)) / 2;
