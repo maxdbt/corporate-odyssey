@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, TEX, playerTex } from '../config/constants.js';
+import { GAME_WIDTH, GAME_HEIGHT, TEX, IS_TOUCH, playerTex } from '../config/constants.js';
 import { GameState } from '../state/GameState.js';
 import { audio } from '../systems/Audio8bit.js';
 import { setupStaticCamera } from '../utils/view.js';
@@ -10,8 +10,11 @@ const SONG_S = 25;
 const BPM_START = 110;
 const BPM_END = 128;
 const FALL_S = 1.6;          // time an arrow takes from the top to the hit line
-const PERFECT_S = 0.07;
-const GOOD_S = 0.15;
+// Touch screens get a wider timing window (a tap is less precise than a key).
+const PERFECT_S = IS_TOUCH ? 0.1 : 0.07;
+const GOOD_S = IS_TOUCH ? 0.2 : 0.15;
+const ARROW_SCALE = IS_TOUCH ? 1.8 : 1.5;
+const IDLE_TINT = 0x8a8a9a;   // target outline when no arrow is on it; lit with the lane colour when it is
 const GOOD_PRECISION = 0.6;  // >= 60% precision: prize, otherwise a disaster
 const HIT_Y = 390;
 const SPAWN_Y = 40;
@@ -73,7 +76,8 @@ const OUTCOMES = {
 const bpmAt = (t) => BPM_START + (BPM_END - BPM_START) * Phaser.Math.Clamp(t / SONG_S, 0, 1);
 
 // 1-1 SALA FESTE (overlay over GameScene, entered through PartyDoor): a 25 s "just dance" contest on a
-// Christmas disco track that speeds up. Arrows fall in 4 lanes: press the matching arrow on the line.
+// Christmas disco track that speeds up. Arrows fall in 4 lanes: press the matching arrow on the line (on touch
+// screens tap the target arrow itself; its outline lights up while a falling arrow is on it).
 // Precision >= 60% wins a random prize, otherwise a random disaster. Rivals' scores are only flavour.
 export default class PartyScene extends Phaser.Scene {
   constructor() {
@@ -123,9 +127,12 @@ export default class PartyScene extends Phaser.Scene {
       const lane = KEYS[ev.key];
       if (lane !== undefined) this.press(lane);
     });
-    if (this.sys.game.device.input.touch) this.touchButtons();
+    if (this.sys.game.device.input.touch) this.touchLanes();
     this.countText = this.add.text(GAME_WIDTH / 2, 200, '', tstyle(48, '#ffd800', { strokeThickness: 8 })).setOrigin(0.5).setDepth(40);
-    this.add.text(GAME_WIDTH / 2, 260, 'Premi le FRECCE (o WASD) quando toccano la linea!', tstyle(11, '#ffffff'))
+    const howto = this.sys.game.device.input.touch
+      ? 'Tocca la freccia a destra quando quella che cade ci arriva sopra e si illumina!'
+      : 'Premi le FRECCE (o WASD) quando toccano la linea!';
+    this.add.text(GAME_WIDTH / 2, 260, howto, tstyle(11, '#ffffff'))
       .setOrigin(0.5).setDepth(40).setName('howto');
     this.phase = 'dance';
     this.cameras.main.fadeIn(300, 0, 0, 0);
@@ -174,7 +181,8 @@ export default class PartyScene extends Phaser.Scene {
   drawLanes() {
     this.add.rectangle(PANEL_X, GAME_HEIGHT / 2 + 10, 250, GAME_HEIGHT - 20, 0x000000, 0.55).setStrokeStyle(2, 0xff5ab4);
     this.add.rectangle(PANEL_X, HIT_Y, 244, 2, 0xffffff, 0.35);
-    this.targets = LANES.map((l) => this.add.image(l.x, HIT_Y, 'dance_target').setAngle(l.angle).setScale(1.5).setTint(l.color).setAlpha(0.7));
+    this.targets = LANES.map((l) => this.add.image(l.x, HIT_Y, 'dance_target').setAngle(l.angle).setScale(ARROW_SCALE)
+      .setTint(IDLE_TINT).setAlpha(0.8));
     this.judgeText = this.add.text(PANEL_X, 300, '', tstyle(18, '#ffffff', { strokeThickness: 6 })).setOrigin(0.5).setDepth(30);
   }
 
@@ -187,11 +195,12 @@ export default class PartyScene extends Phaser.Scene {
     this.timeText = this.add.text(PLAYER_X - 60, 100, '', tstyle(10, '#9be7ff')).setOrigin(0.5);
   }
 
-  touchButtons() {
+  // Each lane's lower part is a tap zone around its target arrow (several fingers at once are fine).
+  touchLanes() {
+    this.input.addPointer(3);
     LANES.forEach((l, i) => {
-      const b = this.add.image(44 + i * 62, 408, 'dance_arrow').setAngle(l.angle).setScale(1.8).setTint(l.color).setAlpha(0.8).setDepth(35)
-        .setInteractive();
-      b.on('pointerdown', () => { if (this.phase === 'dance') this.press(i); });
+      this.add.zone(l.x, HIT_Y - 70, 60, 200).setInteractive()
+        .on('pointerdown', () => { if (this.phase === 'dance') this.press(i); });
     });
   }
 
@@ -202,8 +211,8 @@ export default class PartyScene extends Phaser.Scene {
   press(lane) {
     const t = this.songT;
     const l = LANES[lane];
-    this.targets[lane].setScale(1.8);
-    this.tweens.add({ targets: this.targets[lane], scale: 1.5, duration: 120 });
+    this.targets[lane].setScale(ARROW_SCALE * 1.2);
+    this.tweens.add({ targets: this.targets[lane], scale: ARROW_SCALE, duration: 120 });
     if (t < -0.2) return;
     let best = null;
     this.arrows.forEach((a) => {
@@ -302,7 +311,7 @@ export default class PartyScene extends Phaser.Scene {
       const left = a.t - t;
       if (left > FALL_S) return;
       const l = LANES[a.lane];
-      if (!a.sprite) a.sprite = this.add.image(l.x, SPAWN_Y, 'dance_arrow').setAngle(l.angle).setScale(1.5).setTint(l.color).setDepth(20);
+      if (!a.sprite) a.sprite = this.add.image(l.x, SPAWN_Y, 'dance_arrow').setAngle(l.angle).setScale(ARROW_SCALE).setTint(l.color).setDepth(20);
       a.sprite.y = HIT_Y - (left / FALL_S) * (HIT_Y - SPAWN_Y);
       if (left < -GOOD_S) {
         a.done = true;
@@ -310,6 +319,14 @@ export default class PartyScene extends Phaser.Scene {
         this.tweens.add({ targets: a.sprite, alpha: 0, y: a.sprite.y + 30, duration: 200, onComplete: (tw, [s]) => s.destroy() });
         this.judge('miss', l);
       }
+    });
+
+    // Light a target's outline while an arrow is inside its timing window.
+    const ready = [false, false, false, false];
+    this.arrows.forEach((a) => { if (!a.done && Math.abs(a.t - t) <= GOOD_S) ready[a.lane] = true; });
+    this.targets.forEach((tg, i) => {
+      if (ready[i]) tg.setTint(LANES[i].color).setAlpha(1);
+      else tg.setTint(IDLE_TINT).setAlpha(0.8);
     });
 
     if (time > (this.poseUntil || 0) && this.player.texture.key !== playerTex(this.char, 'idle')) {

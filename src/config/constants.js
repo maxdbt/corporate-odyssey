@@ -26,7 +26,7 @@ export const RENDER_SCALE = (() => {
 
 // Extra zoom of the platform camera on touch screens: the view shows less level (it then follows the player
 // vertically too) so the characters are bigger on a phone. Boss arenas zoom back out to 1.
-export const TOUCH_ZOOM = IS_TOUCH ? 1.2 : 1;
+export const TOUCH_ZOOM = IS_TOUCH ? 1.5 : 1;
 
 export const FONT = 'monospace';
 
@@ -123,6 +123,7 @@ export const TEX = {
   LAPTOP: 'laptop',           // 18x12
   SMARTPHONE: 'smartphone',   // 10x16
   PROMOTION: 'promotion',     // 16x16
+  WINGS_ITEM: 'wings_item',   // 28x16 promotion star with wings (3-1 on touch screens)
   RAISE: 'raise',             // 16x16
   CAR: 'car',                 // 26x14
   TERMINAL: 'terminal',       // 24x26 (quiz computer)

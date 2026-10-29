@@ -98,6 +98,7 @@ const TRAIN = [
   () => {
     const phone = GameState.hasItem('phone');
     const charger = GameState.hasItem('charger');
+    const earbuds = GameState.hasItem('earbuds');
     return {
       bubble: 'MI SENTI? MI SENTI?!',
       title: 'Il Wi-Fi del treno',
@@ -106,9 +107,11 @@ const TRAIN = [
         {
           label: 'Faccio hotspot con il telefono',
           disabled: phone ? null : 'non hai il telefono',
-          run: () => (charger
-            ? { title: 'CALL SALVATA', color: GOOD, effects: { stress: -5 }, lines: ['Il capo non si e\' accorto di nulla.'] }
-            : { title: 'TELEFONO SCARICO!', color: BAD, effects: { stress: 15 }, lines: ['Senza caricabatterie si spegne a meta\' call.'] })
+          run: () => (!charger
+            ? { title: 'TELEFONO SCARICO!', color: BAD, effects: { stress: 15 }, lines: ['Senza caricabatterie si spegne a meta\' call.'] }
+            : earbuds
+              ? { title: 'CALL SALVATA', color: GOOD, effects: { stress: -5 }, lines: ['Il capo non si e\' accorto di nulla.'] }
+              : { title: 'TUTTA LA CARROZZA: SHHH!', color: BAD, effects: { stress: 10 }, lines: ['Call salvata, ma senza auricolari', 'sei in vivavoce: il vagone si lamenta.'] })
         },
         {
           label: 'Aspetto che torni il segnale',

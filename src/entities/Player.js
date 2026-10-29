@@ -13,6 +13,8 @@ const DOUBLE_JUMP_V = -380;
 const SWIM_V = -220;
 const CLIMB_SPEED = 120;
 const MAX_FALL = 650;
+const WING_FLAP_V = -330;   // promotion wings (3-1 on touch screens)
+const WING_GLIDE = 200;      // max fall speed with the wings
 const COYOTE_MS = 80;
 const JUMP_BUFFER_MS = 100;
 const SLIDE_MS = 450;
@@ -198,6 +200,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       case 'shield':
         this._floatText('AUTO AZIENDALE!', '#7fd4ff');
         break;
+      case 'wings':
+        audio.sfx('powerup');
+        this._floatText('LE ALI!', '#ffd800');
+        break;
       case 'upgrade':
         this._floatText('UPGRADE BUSINESS!', '#ffd800');
         break;
@@ -268,6 +274,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   takeDamage(hp, stress, sourceX) {
     if (this.hasStatus('promotion') || this.hasStatus('invuln')) return false;
+    if (this.scene.time.now < (this.scene.inputLockUntil ?? 0)) return false;   // frozen in a dialogue
     if (this.hasShield()) {
       this.clearStatus(this.hasStatus('shield') ? 'shield' : 'upgrade');
       this.applyStatus('invuln', 1000);
@@ -471,6 +478,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         m.flapAt = this.clock;
         audio.sfx('doublejump');
         this._puff();
+      } else if (input.jumpPressed && !canCoyote && !m && this.hasStatus('wings')) {
+        // Promotion wings: every jump in mid-air is a flap, no limit.
+        this._jump(this.y > 90 ? WING_FLAP_V : 0);   // ceiling: stays under the HUD
+        this.jumpCutAvailable = false;   // a quick tap is a full flap
+        this.flapAt = this.clock;
+        audio.sfx('doublejump');
+        this._puff();
       } else if (input.jumpPressed && !canCoyote && !this.doubleJumpUsed && !m) {
         this.doubleJumpUsed = true;
         this._jump(DOUBLE_JUMP_V);
@@ -484,6 +498,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       }
       if (body.velocity.y >= 0) this.jumpCutAvailable = false;
       if (body.velocity.y > MAX_FALL) body.setVelocityY(MAX_FALL);
+      if (this.hasStatus('wings') && !m && body.velocity.y > WING_GLIDE) body.setVelocityY(WING_GLIDE);
     }
 
     this._updateVisuals(input);
@@ -664,6 +679,17 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       }
     }
 
+    // Promotion wings on the back: open in the air, beating faster right after a flap.
+    const flying = this.hasStatus('wings') && !this.mount;
+    if (flying && !this.wingSprite) {
+      this.wingSprite = this.scene.add.image(this.x, this.y, TEX.CAMEL_WING).setOrigin(0.5, 1).setDepth(DEPTH.PLAYER - 1).setTint(0xfff4c0);
+    }
+    if (this.wingSprite) {
+      const beat = this.clock - (this.flapAt || -9999) < 300 ? 50 : 120;
+      this.wingSprite.setVisible(flying).setPosition(this.x - this.facing * 8, this.y - this.displayHeight * 0.35)
+        .setFlipX(this.facing < 0).setScale(0.9, grounded ? 0.7 : (Math.floor(this.clock / beat) % 2 ? 0.9 : -0.6));
+    }
+
     // Umbrella as a parasol in the desert sun.
     if (this.env.parasol) {
       if (!this.parasol) this.parasol = this.scene.add.image(this.x, this.y, TEX.UMBRELLA_OPEN).setOrigin(0.5, 1).setDepth(DEPTH.PLAYER + 2);
@@ -755,6 +781,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.shieldGfx) this.shieldGfx.destroy();
     if (this.mount) { this.mount.sprite.destroy(); this.mount.wings?.destroy(); this.mount.head?.destroy(); }
     if (this.parasol) this.parasol.destroy();
+    if (this.wingSprite) this.wingSprite.destroy();
     try { this._resetCamera(); } catch (e) { /* camera already gone on shutdown */ }
     super.preDestroy();
   }

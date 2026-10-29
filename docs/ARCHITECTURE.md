@@ -58,8 +58,9 @@ call before `create()` has run (guard internally):
   flags). Touch layout (`src/ui/TouchControls.js`): floating joystick wherever the left thumb lands (below the
   HUD; up/down = ladders / crouch), compact buttons bottom-right "SALTA", "SCIVOLA" (held = run, press = slide),
   "ATTACCA"; tapping the HUD weapon icon = switchWeaponPressed. Shown only if `this.sys.game.device.input.touch`.
-- Touch screens (`IS_TOUCH`, `(pointer: coarse)`): the game camera zooms `TOUCH_ZOOM` (1.2) more (boss arenas
-  zoom back) and the HUD is drawn at `HUD_SCALE` (up to 1.2).
+- Touch screens (`IS_TOUCH`, `(pointer: coarse)`): the game camera zooms `TOUCH_ZOOM` (1.5) more (boss arenas
+  zoom back) and the HUD is drawn at `HUD_SCALE` (up to 1.2). With the zoom the camera follow offset eases to
+  `-facing*90` (look-ahead towards where the player faces; not in autoscroll or boss fights).
 
 ## Player (PLAYER/UI) — `src/entities/Player.js`
 `export default class Player extends Phaser.Physics.Arcade.Sprite`
@@ -93,7 +94,11 @@ call before `create()` has run (guard internally):
   - `raise` (15000): only a marker (collectible values doubled by GameScene).
   - `shield` (Infinity): company car shield, visual outline/ring; removed by first damage.
   - `invuln` (ms): post-hit invincibility frames (blinking).
-- `takeDamage(hp, stress, sourceX)` → boolean. Ignored if `promotion` or `invuln`. If `shield`: remove shield,
+  - `wings` (Infinity): promotion wings (item `wings`, only in 3-1 on touch screens, on the first post-it of both
+    runs): every jump in mid-air is a flap (-330, no jump cut, ceiling y 90), fall speed capped at 200, wing sprite
+    on the back. Cleared when the boss fight starts and on respawn.
+- `takeDamage(hp, stress, sourceX)` → boolean. Ignored if `promotion` or `invuln`, or while
+  `scene.time.now < scene.inputLockUntil` (GameScene: short dialogues blank the input and freeze the player). If `shield`: remove shield,
   give `invuln` 1000, return false. Else apply `GameState.addHp(-hp)`, `GameState.addStress(stress)`,
   knockback away from sourceX, `invuln` 1000, `audio.sfx('hurt')`, return true.
 - `bounce(v = -350)` — after stomping an enemy.
@@ -218,12 +223,14 @@ Effect keys (all optional): `stress` (delta), `stressSet` (absolute), `hp` (delt
 grants device 'laptop' if none), `promotion` (seconds).
 
 1-1 SALA FESTE: `level.partyDoor: [x, y]` → `PartyDoor` (`src/systems/PartyDoor.js`, textures in `src/gfx/party.js`):
-double door with neon sign and an elf bouncer; UP next to it (edge of `input.up`, updated after the input in
-GameScene.update) opens the `PartyScene` overlay. Once per level attempt (rebuilt on restart): afterwards the sign
-reads "FESTA FINITA" and the elf answers "SEI GIA' ENTRATO!". PartyScene: 25 s "just dance" on Jingle Bells
+double door with neon sign and an elf bouncer; walking (or jumping) past it (within 30 px, not from the platforms
+above) starts a 3-line speech-bubble chat with the bouncer (1.1 s per line, `scene.inputLockUntil` freezes the
+player), then the `PartyScene` overlay opens by itself. Once per level attempt (rebuilt on restart): afterwards the
+sign reads "FESTA FINITA". PartyScene: 25 s "just dance" on Jingle Bells
 (sequenced per beat with `audio.note`, 110 → 128 BPM); the chart is precomputed from the beat times (every 2 beats,
-every beat, then a few extra off-beats in the last 20%), arrows ← ↓ ↑ → fall in 4 lanes (arrows / WASD, 4 buttons only
-on touch devices). Judgement ≤0.07 s PERFETTO (100), ≤0.15 s BENE (50), else SBAGLIATO (passed arrows and stray
+every beat, then a few extra off-beats in the last 20%), arrows ← ↓ ↑ → fall in 4 lanes (arrows / WASD; on touch devices
+the target arrows themselves are the tap zones, multi-touch). Targets are grey and light up in the lane colour while
+an arrow is inside the BENE window. Judgement ≤0.07 s PERFETTO (100), ≤0.15 s BENE (50) (touch: 0.1 / 0.2 s), else SBAGLIATO (passed arrows and stray
 presses too); combo multiplier x2/x3/x4 at 10/20/30. Precision = (perfect + 0.6·bene) / (arrows + stray): ≥ 60% →
 random prize (aumento 12 € lordi, viaggio a Coccia di Morto, cotechino a vita), else random disaster (ciuco di
 Alicudi -20 s, vino sul CEO, Jingle Bells al CdA). Rivals' scores on the board are flavour only. The outcome
@@ -287,7 +294,9 @@ One trip in stages, with a BUDGET bar carried across them in `GameState.trip`
 (`{ items, transport, budget, maxBudget, stageIndex, stageBudget }`; `hasItem / budget / canAfford / spend / addBudget`).
 - Stages are `LEVEL_META` entries with `trip: true`; entries with `scene` are static scenes (DestinationScene, PackingScene,
   TransportScene, JourneyScene plane/train, NegotiationScene), the others are GameScene levels.
-- The suitcase holds `SUITCASE_SIZE` (10) items; `itemTex(id, character)` gives per-character icons for
+- The suitcase holds `SUITCASE_SIZE` (6) items; with it full, PARTI opens the suitcase check (first missing essential, or
+  "Sei sicuro di avere tutto?" + a random `PACKING_HINTS` doubt about an item left out, useful or bait) where up to `EXTRA_SLOTS` (4) more places can be bought for `EXTRA_SLOT_PRICE` (5 €)
+  each: `trip.extraSlots`, subtracted from the budget by `setTransport` (`extraSlotsCost()`); `itemTex(id, character)` gives per-character icons for
   underwear, suit and swimsuit.
 - ALWAYS start a level with `startLevel(scene, index)` and advance with `goNext(scene, index)`: they route to the
   static scene and pick the branch: 4-1 Il Cliente Lontano (DestinationScene: choose Sede Sud / Nord / Marittima,

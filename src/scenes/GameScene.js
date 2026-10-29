@@ -113,6 +113,7 @@ export default class GameScene extends Phaser.Scene {
     this.partyDoor = level.partyDoor ? new PartyDoor(this, ...level.partyDoor) : null;
     this.revenueDoor = level.revenueDoor ? new RevenueDoor(this, ...level.revenueDoor) : null;
     this.forcedRunUntil = 0;
+    this.inputLockUntil = 0;
 
     // Camera
     const cam = this.cameras.main;
@@ -400,6 +401,10 @@ export default class GameScene extends Phaser.Scene {
         ui?.message?.('LA PROMOZIONE! INVINCIBILE!', '#ffd800', 1600);
         audio.sfx('powerup');
         break;
+      case 'wings':
+        p.applyStatus('wings', Infinity);
+        ui?.message?.('PROMOZIONE: TI SPUNTANO LE ALI!\nSALTA IN ARIA PER VOLARE', '#ffd800', 2400);
+        break;
       case 'raise':
         p.applyStatus('raise', 15000);
         ui?.message?.('L\'AUMENTO! BONUS x2 PER 15s', '#7CFC00', 1600);
@@ -509,6 +514,7 @@ export default class GameScene extends Phaser.Scene {
     if (!b || this.bossSpawned || this.player.x < b.triggerX) return;
     this.bossSpawned = true;
     this.bossActive = true;
+    this.player.clearStatus('wings');   // the wings only help across the level, not against the boss
     const a = b.arena;
     // Free checkpoint at the arena entrance: dying in the boss fight restarts from here.
     if (b.checkpoint && !GameState.checkpoint?.boss) {
@@ -667,11 +673,13 @@ export default class GameScene extends Phaser.Scene {
     let input = this.inputCtl.update();
     // Stomach ache: runs to the right on its own.
     if (time < this.forcedRunUntil) input = { ...input, left: false, right: true, run: true, jump: false, jumpPressed: false, attackPressed: false };
+    // Short dialogues (e.g. the party bouncer): the player stands still.
+    if (time < this.inputLockUntil) input = { ...input, left: false, right: false, up: false, down: false, jump: false, run: false, jumpPressed: false, attackPressed: false, slidePressed: false };
     if (input.jumpPressed || input.attackPressed) audio.unlock?.();
 
     this.hazards.forEach((h) => h.update?.(time, delta));
     this.tripLevel?.update(time, delta);
-    this.partyDoor?.update(input);
+    this.partyDoor?.update();
     this.revenueDoor?.update(input);
     this.zones.update(time, delta, p);
     this.updateLadderDrop(input);
@@ -679,6 +687,11 @@ export default class GameScene extends Phaser.Scene {
 
     p.update(time, delta, input);
     p.resetEnv();
+    // Zoomed touch camera: little room ahead, so it leans towards where the player is facing.
+    if (TOUCH_ZOOM > 1 && !this.autoscroll && !this.bossActive) {
+      const off = this.cameras.main.followOffset;
+      off.x += (-p.facing * 90 - off.x) * Math.min(1, delta / 600);
+    }
 
     this.weapons.update();
     this.cleanupBullets();

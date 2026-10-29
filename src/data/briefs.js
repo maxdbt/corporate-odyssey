@@ -8,7 +8,7 @@ export const BRIEFS = {
       'Il collega logorroico ti blocca: liberati e scappa.',
       'Salta sulle icone di Teams per eliminarle: se ti toccano, stress!',
       'Trova un laptop per sparare e-mail ai nemici.',
-      'C\'è la SALA FESTE: premi SU davanti alla porta e sfida i colleghi a ballo!'
+      'C\'è la SALA FESTE: passa davanti alla porta e il buttafuori ti fa entrare a sfidare i colleghi a ballo!'
     ]
   },
   '1-2': {

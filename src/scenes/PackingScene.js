@@ -3,10 +3,10 @@ import { GAME_WIDTH, GAME_HEIGHT } from '../config/constants.js';
 import { GameState } from '../state/GameState.js';
 import { audio } from '../systems/Audio8bit.js';
 import { setupStaticCamera } from '../utils/view.js';
-import { TRIP_ITEMS, SUITCASE_SIZE, ESSENTIALS, itemLabel, itemById } from '../data/trip.js';
+import { TRIP_ITEMS, SUITCASE_SIZE, EXTRA_SLOTS, EXTRA_SLOT_PRICE, ESSENTIALS, PACKING_HINTS, itemLabel, itemById } from '../data/trip.js';
 import { itemTex } from '../gfx/trip.js';
 import { ensureTrip, goNext } from '../systems/Trip.js';
-import { tstyle, resultPanel } from '../ui/TripUI.js';
+import { tstyle, resultPanel, choiceDialog } from '../ui/TripUI.js';
 
 const COLS = 5;
 const CELL_W = 144;
@@ -16,7 +16,9 @@ const GRID_X = (GAME_WIDTH - (COLS * CELL_W + (COLS - 1) * GAP)) / 2;
 const GRID_Y = 84;
 const DEST = { desert: ' nel deserto', glacier: ' sul ghiacciaio', sea: ' in fondo al mare' };
 
-// Trip stage 1: pick SUITCASE_SIZE items out of TRIP_ITEMS. The last grid cell is the "PARTI" button.
+// Trip stage 1: pick SUITCASE_SIZE items out of TRIP_ITEMS. The last grid cell is the "PARTI" button. With the
+// suitcase full, PARTI opens the check ("Hai dimenticato: ..." / "Sei sicuro di avere tutto?"), where up to
+// EXTRA_SLOTS more places can be bought for EXTRA_SLOT_PRICE each (trip.extraSlots, taken from the trip fund).
 export default class PackingScene extends Phaser.Scene {
   constructor() {
     super('PackingScene');
@@ -26,6 +28,7 @@ export default class PackingScene extends Phaser.Scene {
     this.levelIndex = data?.levelIndex ?? 0;
     this.leg = data?.leg || null;
     this.chosen = [];
+    this.extra = 0;
     this.cursor = 0;
     this.done = false;
   }
@@ -68,19 +71,23 @@ export default class PackingScene extends Phaser.Scene {
     // Suitcase with the chosen items
     const sy = 376;
     this.suitcase = this.add.container(GAME_WIDTH / 2, sy);
-    const sw = SUITCASE_SIZE * 44 + 30;
+    const all = SUITCASE_SIZE + EXTRA_SLOTS;
+    const sw = all * 44 + 30;
     this.suitcase.add([
       this.add.rectangle(0, 4, sw + 8, 64, 0x000000, 0.4),
       this.add.rectangle(0, 0, sw, 60, 0x8a4a1a).setStrokeStyle(3, 0x3a1a08),
       this.add.rectangle(0, -36, 60, 12, 0x3a1a08),
       this.add.rectangle(0, -36, 44, 6, 0x8a4a1a)
     ]);
-    this.slots = Array.from({ length: SUITCASE_SIZE }, (_, i) => {
+    this.slots = Array.from({ length: all }, (_, i) => {
       const x = -sw / 2 + 37 + i * 44;
       this.suitcase.add(this.add.rectangle(x, 0, 38, 38, 0x5a2a0a).setStrokeStyle(1, 0x3a1a08));
       const img = this.add.image(x, 0, 'trip_laptop').setScale(2).setVisible(false);
-      this.suitcase.add(img);
-      return img;
+      // Extra places still to buy: closed, with the price on them.
+      const lock = i < SUITCASE_SIZE ? null : this.add.text(x, 0, `${EXTRA_SLOT_PRICE}€`, tstyle(10, '#ffd800'))
+        .setOrigin(0.5).setBackgroundColor('#2a1404').setPadding(4, 11);
+      this.suitcase.add(lock ? [img, lock] : img);
+      return { img, lock };
     });
     this.countText = this.add.text(GAME_WIDTH / 2 + sw / 2 + 16, sy, '', tstyle(16, '#ffffff')).setOrigin(0, 0.5);
     this.add.text(GAME_WIDTH / 2, 438, 'FRECCE scegli  -  INVIO/SPAZIO metti o togli  -  oppure TOCCA un oggetto', tstyle(9, '#cccccc')).setOrigin(0.5);
@@ -128,7 +135,7 @@ export default class PackingScene extends Phaser.Scene {
     if (at >= 0) {
       this.chosen.splice(at, 1);
       audio.sfx('select');
-    } else if (this.chosen.length >= SUITCASE_SIZE) {
+    } else if (this.chosen.length >= this.capacity()) {
       audio.sfx('hurt');
       this.tweens.add({ targets: this.suitcase, x: GAME_WIDTH / 2 + 6, duration: 50, yoyo: true, repeat: 3 });
       this.flash('VALIGIA PIENA! TOGLI QUALCOSA', '#ff8080');
@@ -137,6 +144,10 @@ export default class PackingScene extends Phaser.Scene {
       audio.sfx('coin');
     }
     this.refresh();
+  }
+
+  capacity() {
+    return SUITCASE_SIZE + this.extra;
   }
 
   flash(text, color) {
@@ -148,7 +159,7 @@ export default class PackingScene extends Phaser.Scene {
   refresh() {
     this.cells.forEach((cell, i) => {
       if (cell.go) {
-        const left = SUITCASE_SIZE - this.chosen.length;
+        const left = this.capacity() - this.chosen.length;
         cell.label.setText(left > 0 ? `ANCORA ${left}\nOGGETT${left === 1 ? 'O' : 'I'}` : 'CHIUDI LA\nVALIGIA E PARTI!');
         cell.bg.setFillStyle(left > 0 ? 0x2a3a2a : 0x1f8a2a, 0.95);
         return;
@@ -159,24 +170,68 @@ export default class PackingScene extends Phaser.Scene {
     });
     const c = this.cells[this.cursor];
     this.cursorBox.setPosition(c.x - 3, c.y - 3);
-    this.slots.forEach((img, i) => {
+    this.slots.forEach(({ img, lock }, i) => {
       const id = this.chosen[i];
       img.setVisible(!!id);
       if (id) img.setTexture(itemTex(id, this.character));
+      lock?.setVisible(i >= this.capacity());
     });
-    this.countText.setText(`${this.chosen.length}/${SUITCASE_SIZE}`).setColor(this.chosen.length === SUITCASE_SIZE ? '#7CFC00' : '#ffffff');
+    const cap = this.capacity();
+    this.countText.setText(`${this.chosen.length}/${cap}`).setColor(this.chosen.length === cap ? '#7CFC00' : '#ffffff');
+  }
+
+  // "Sei sicuro di avere tutto?" plus a doubt about a random item left out (useful or bait).
+  doubt() {
+    const left = Object.keys(PACKING_HINTS).filter((id) => !this.chosen.includes(id));
+    return left.length ? `Sei sicuro di avere tutto? ${PACKING_HINTS[Phaser.Utils.Array.GetRandom(left)]}` : 'Sei sicuro di avere tutto?';
+  }
+
+  missing() {
+    return ESSENTIALS.filter((id) => !this.chosen.includes(id)).map((id) => itemLabel(itemById(id), this.character));
   }
 
   confirm() {
-    if (this.chosen.length < SUITCASE_SIZE) {
+    const left = this.capacity() - this.chosen.length;
+    if (left > 0) {
       audio.sfx('hurt');
-      this.flash(`C'E' ANCORA POSTO PER ${SUITCASE_SIZE - this.chosen.length} OGGETTI!`, '#ffb000');
+      this.flash(`C'E' ANCORA POSTO PER ${left} OGGETT${left === 1 ? 'O' : 'I'}!`, '#ffb000');
       return;
     }
     this.done = true;
+    if (this.extra < EXTRA_SLOTS) this.check();
+    else this.finish();
+  }
+
+  // Suitcase check with the chance to buy one more place.
+  check() {
+    const missing = this.missing();
+    const more = EXTRA_SLOTS - this.extra;
+    audio.sfx(missing.length ? 'hurt' : 'select');
+    choiceDialog(this, {
+      title: 'Controllo valigia',
+      textHeight: 72,
+      text: (missing.length ? `Hai dimenticato: ${missing[0]}${missing.length > 1 ? ' (e non solo...)' : ''}` : this.doubt())
+        + `\n\nPuoi aggiungere ancora ${more} oggett${more === 1 ? 'o' : 'i'} con un piccolo extra: ${EXTRA_SLOT_PRICE} € l'uno, dal budget della trasferta.`,
+      options: [
+        { label: 'AGGIUNGI UN ALTRO OGGETTO IN VALIGIA', note: `-${EXTRA_SLOT_PRICE} € di budget` },
+        { label: 'PARTI COSI\'', note: missing.length ? 'speriamo bene...' : '' }
+      ],
+      onPick: (i) => {
+        if (i === 1) { this.finish(); return; }
+        this.extra++;
+        this.done = false;
+        audio.sfx('coin');
+        this.flash(`POSTO EXTRA IN VALIGIA: -${EXTRA_SLOT_PRICE} € DI BUDGET`, '#ffd800');
+        this.refresh();
+      }
+    });
+  }
+
+  finish() {
     GameState.trip.items = [...this.chosen];
+    GameState.trip.extraSlots = this.extra;
     audio.sfx('powerup');
-    const missing = ESSENTIALS.filter((id) => !this.chosen.includes(id)).map((id) => itemLabel(itemById(id), this.character));
+    const missing = this.missing();
     const lines = missing.length
       ? ['HAI DIMENTICATO:', ...missing, '', 'Speriamo di non pentirsene...']
       : ['C\'e\' tutto l\'essenziale.', 'Si parte!'];

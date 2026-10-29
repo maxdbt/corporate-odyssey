@@ -1,6 +1,9 @@
 // Mondo 4 "La Trasferta": suitcase items, transport, prices.
 
-export const SUITCASE_SIZE = 10;
+export const SUITCASE_SIZE = 6;
+// Extra places bought at the suitcase check, paid from the trip fund (the budget left after the ticket shrinks).
+export const EXTRA_SLOTS = 4;
+export const EXTRA_SLOT_PRICE = 5;
 
 // Every item can go in the suitcase; tex = `trip_${id}` (16x16, see gfx/trip.js).
 // label can depend on the character (man/woman).
@@ -34,6 +37,26 @@ export const itemById = (id) => TRIP_ITEMS.find((i) => i.id === id);
 
 // Forgetting these is reported by the suitcase check.
 export const ESSENTIALS = ['laptop', 'phone', 'charger', 'toothbrush', 'underwear'];
+
+// Suitcase check: a doubt about one item left out, to tempt the player into buying an extra place. Some are really
+// useful (on some legs), others are bait (toilet paper is never used).
+export const PACKING_HINTS = {
+  jacket: 'E se fa freddo? Forse sarebbe utile un piumino.',
+  banana: 'Magari una banana per uno spuntino?',
+  earbuds: 'Delle cuffiette per rilassarti in viaggio o fare le call?',
+  sleepmask: 'Una mascherina per un pisolino durante il viaggio?',
+  antacid: 'E se il cibo del viaggio non ti va giu\'? Delle pasticche per l\'acidita\'?',
+  umbrella: 'E se piove? O se c\'e\' un sole che spacca? Un ombrello...',
+  swimsuit: 'E se l\'hotel ha la piscina? Il costume...',
+  dates: 'Qualcosa di energetico per il viaggio? Dei datteri?',
+  toothpaste: 'Lo spazzolino senza dentifricio... sicuro?',
+  suit: 'Ti presenti al cliente vestito cosi\'? Qualcosa di elegante...',
+  idcard: 'E il documento? Ai controlli lo chiedono sempre.',
+  adapter: 'E se le prese sono diverse? Un adattatore...',
+  cards: 'Dei biglietti da visita per fare colpo sul cliente?',
+  notebook: 'Un quaderno per gli appunti della riunione?',
+  toiletpaper: 'Carta igienica? In trasferta non si sa mai...'
+};
 
 // Used when a stage is started on its own from the menu (debug).
 export const DEFAULT_SUITCASE = ['laptop', 'phone', 'charger', 'toothbrush', 'toothpaste', 'underwear', 'idcard', 'suit', 'adapter', 'dates'];

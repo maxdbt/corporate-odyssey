@@ -10,6 +10,7 @@ const STATUS_LABEL = {
   asleep: 'ADDORMENTATO',
   stuck: 'BLOCCATO',
   promotion: 'PROMOZIONE',
+  wings: 'ALI',
   raise: 'AUMENTO x2',
   shield: 'AUTO AZIENDALE',
   upgrade: 'UPGRADE BUSINESS'
@@ -17,7 +18,7 @@ const STATUS_LABEL = {
 
 const STATUS_COLOR = {
   drunk: '#ffe680', nausea: '#b8f070', frozen: '#9be7ff', cold: '#bfefff', asleep: '#c0a0ff', stuck: '#ff9f40',
-  promotion: '#ffd800', raise: '#7dff7d', shield: '#7fd4ff', upgrade: '#ffd800'
+  promotion: '#ffd800', wings: '#ffd800', raise: '#7dff7d', shield: '#7fd4ff', upgrade: '#ffd800'
 };
 
 const WEAPON_TEX = {

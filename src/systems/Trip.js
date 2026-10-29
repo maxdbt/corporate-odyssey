@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { GameState } from '../state/GameState.js';
 import { LEVELS } from '../levels/index.js';
-import { TRANSPORT, DEFAULT_SUITCASE, BUDGET_TO_EURO } from '../data/trip.js';
+import { TRANSPORT, DEFAULT_SUITCASE, BUDGET_TO_EURO, EXTRA_SLOT_PRICE } from '../data/trip.js';
 
 const indexOf = (id) => LEVELS.findIndex((l) => l.id === id);
 
@@ -51,7 +51,7 @@ export const isTripStage = (index) => !!LEVELS[index]?.trip;
 export function ensureTrip(index) {
   const id = LEVELS[index]?.id;
   if (id === '4-1') {
-    GameState.trip = { items: [], transport: null, budget: 0, maxBudget: 0, stageIndex: -1, stageBudget: 0 };
+    GameState.trip = { items: [], extraSlots: 0, transport: null, budget: 0, maxBudget: 0, stageIndex: -1, stageBudget: 0 };
     return GameState.trip;
   }
   if (!GameState.trip) {
@@ -70,10 +70,13 @@ export function beginStage(index) {
   return trip;
 }
 
+// Euro already spent on extra suitcase places (taken from the trip fund together with the ticket).
+export const extraSlotsCost = () => (GameState.trip?.extraSlots || 0) * EXTRA_SLOT_PRICE;
+
 export function setTransport(kind) {
   const t = GameState.trip;
   t.transport = kind;
-  t.budget = TRANSPORT[kind].budget;
+  t.budget = TRANSPORT[kind].budget - extraSlotsCost();
   t.maxBudget = t.budget;
 }
 
